@@ -28,7 +28,7 @@
     Open your browser and go to http://localhost:3000
     . You should see the Next.js app running.
 
-**Backend setup (optional, only if you need Firebase functions/emulators)**
+**Backend setup**
 
 1. Move into the backend folder: cd ../backend
 2. Install backend dependencies: npm install
