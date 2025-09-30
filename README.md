@@ -34,5 +34,3 @@
 2. Install backend dependencies: npm install
 3. Make sure you have Firebase CLI installed: npm install -g firebase-tools
 4. Login to Firebase (if you haven’t already): firebase login
-
-firebase deploy
