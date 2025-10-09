@@ -83,4 +83,65 @@ const deleteStep = async (stepId: string) => {
   await deleteDoc(stepDocRef);
 };
 
+// User progress operations
+
+const startUserProgress = async (userId: string, moduleId: string) => {
+  const progressRef = doc(db, `users/${userId}/progress/${moduleId}`);
+
+  const progressData = {
+    completedStepIds: [],
+    lastViewedAt: new Date(),
+    quizScores: {},
+    startedAt: new Date(),
+    completedAt: null,
+  };
+
+  await setDoc(progressRef, progressData);
+  return { id: progressRef.id, ...progressData };
+};
+
+const getUserProgress = async (userId: string, moduleId: string) => {
+  const progressRef = doc(db, `users/${userId}/progress/${moduleId}`);
+  return await getDoc(progressRef);
+};
+
+const updateUserProgress = async (
+  userId: string,
+  moduleId: string,
+  completedStepId: string
+) => {
+  const progressRef = doc(db, `users/${userId}/progress/${moduleId}`);
+  const progressDoc = await getDoc(progressRef);
+
+  if (progressDoc.exists()) {
+    const progressData = progressDoc.data();
+    const updatedStepIds = [
+      ...(progressData.completeStepIds || []),
+      completedStepId,
+    ];
+    await setDoc(
+      progressRef,
+      { completeStepIds: updatedStepIds },
+      { merge: true }
+    );
+  } else {
+    await setDoc(progressRef, { completeStepIds: [completedStepId] });
+  }
+};
+
 // Query helpers (getPublicModules, getUserModules, etc.)
+
+const getPublicModules = async () => {
+  const publicModulesQuery = query(
+    modulesCollection,
+    where("isPublic", "==", true)
+  );
+  const publicModulesSnapshot = await getDocs(publicModulesQuery);
+
+  return publicModulesSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+};
+
+const getUserModules = async (userId: string) => {};
