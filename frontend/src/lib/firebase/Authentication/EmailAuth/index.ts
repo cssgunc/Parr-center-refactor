@@ -7,6 +7,8 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebaseConfig";
 import { EmailAuthProvider } from "firebase/auth/web-extension";
+import { generateFirebaseAuthErrorMessage } from "../ErrorHandler";
+import { FirebaseError } from "firebase/app";
 
 /**
  *Register's user accounts in firebase auth
@@ -38,7 +40,9 @@ export const registerUser = async (
     await sendEmailVerification(user);
     alert(`A verifcation email has been sent to your email address ${name}`);
   } catch (error) {
-    console.log(error);
+    if (error instanceof FirebaseError) {
+      generateFirebaseAuthErrorMessage(error);
+    }
   } finally {
   }
 };
@@ -69,7 +73,9 @@ export const loginUserWithEmailAndPassword = async (
 
     console.log(email, password);
   } catch (error) {
-    console.log(error);
+    if (error instanceof FirebaseError) {
+      generateFirebaseAuthErrorMessage(error);
+    }
   } finally {
   }
 };
@@ -110,6 +116,8 @@ export const updateUserPassword = async (
 
     //Navigation
   } catch (error) {
-    console.log(error);
+    if (error instanceof FirebaseError) {
+      generateFirebaseAuthErrorMessage(error);
+    }
   }
 };
