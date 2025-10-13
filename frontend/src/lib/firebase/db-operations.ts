@@ -9,41 +9,56 @@ import {
   deleteDoc,
   query,
   where,
+  serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
-
-const usersCollection = collection(db, "users");
-const modulesCollection = collection(db, "modules");
-const stepsCollection = collection(db, "steps");
-const userProgressCollection = collection(db, "progress");
+import { User, Module, Step, UserProgress } from "./types";
 
 // Module CRUD operations
 
-// Get module by ID - DOES NOT include steps subcollection
-const getModulebyId = async (moduleId: string) => {
-  const moduleDocRef = doc(modulesCollection, moduleId);
+// get module by ID - DOES NOT include steps subcollection
+const getModulebyId = async (moduleId: string): Promise<Module> => {
+  const moduleDocRef = doc(db, "modules", moduleId);
   const moduleDoc = await getDoc(moduleDocRef);
+
   if (moduleDoc.exists()) {
-    return { id: moduleDoc.id, ...moduleDoc.data() };
+    return { id: moduleDoc.id, ...moduleDoc.data() } as Module;
   } else {
     throw new Error("Module not found");
   }
 };
 
-const createModule = async (moduleData: any) => {
-  const moduleDocRef = await addDoc(modulesCollection, moduleData);
-  return { id: moduleDocRef.id, ...moduleData };
+const createModule = async (moduleData: Partial<Module>): Promise<Module> => {
+  const newModule = {
+    ...moduleData,
+    stepCount: moduleData.stepCount || 0,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  const moduleDocRef = await addDoc(collection(db, "modules"), newModule);
+  return { id: moduleDocRef.id, ...moduleData } as Module;
 };
 
 const updateModule = async (moduleId: string, moduleData: any) => {
-  const moduleDocRef = doc(modulesCollection, moduleId);
+  const moduleDocRef = doc(db, "modules", moduleId);
   await setDoc(moduleDocRef, moduleData, { merge: true });
   return { id: moduleId, ...moduleData };
 };
 
-const deleteModule = async (moduleId: string) => {
-  const moduleDocRef = doc(modulesCollection, moduleId);
+const deleteModule = async (moduleId: string, deleteSteps: boolean = true) => {
+  const moduleDocRef = doc(db, "modules", moduleId);
+  if (deleteSteps) {
+    const stepsRef = collection(db, "modules", moduleId, "steps");
+    const stepsSnapshot = await getDocs(stepsRef);
+
+    // Use batch write to delete all steps efficiently
+    const batch = writeBatch(db);
+    stepsSnapshot.docs.forEach((stepDoc) => {
+      batch.delete(stepDoc.ref);
+    });
+    await batch.commit();
+  }
   await deleteDoc(moduleDocRef);
-  // TODO: Does not delete subcollections (steps), need to consider how to implement that.
 };
 
 // Step CRUD operations
