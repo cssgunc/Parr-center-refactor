@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono } from "next/font/google";
+import { Playfair_Display, Work_Sans, Alegreya } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
+const playfairDisplay = Playfair_Display({
+  variable: "--font-primary",
   subsets: ["latin"],
 });
 
-const robotoMono = Roboto_Mono({
-  variable: "--font-mono",
+const workSans = Work_Sans({
+  variable: "--font-secondary",
+  subsets: ["latin"],
+});
+
+const alegreya = Alegreya({
+  variable: "--font-tertiary",
   subsets: ["latin"],
 });
 
@@ -24,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${robotoMono.variable}`}>
+      <body className={`${playfairDisplay.variable} ${workSans.variable} ${alegreya.variable}`}>
         {children}
       </body>
     </html>
