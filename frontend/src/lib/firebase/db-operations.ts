@@ -5,12 +5,14 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   addDoc,
   deleteDoc,
   query,
   where,
   serverTimestamp,
   writeBatch,
+  orderBy,
 } from "firebase/firestore";
 import { User, Module, Step, UserProgress } from "./types";
 
@@ -62,40 +64,85 @@ const deleteModule = async (moduleId: string, deleteSteps: boolean = true) => {
 };
 
 // Step CRUD operations
-const getStepById = async (stepId: string) => {
-  const stepDocRef = doc(stepsCollection, stepId);
+const getStepById = async (moduleId: string, stepId: string): Promise<Step> => {
+  const stepDocRef = doc(db, "modules", moduleId, "steps", stepId);
   const stepDoc = await getDoc(stepDocRef);
   if (stepDoc.exists()) {
-    return { id: stepDoc.id, ...stepDoc.data() };
+    return { id: stepDoc.id, ...stepDoc.data() } as Step;
   } else {
     throw new Error("Step not found");
   }
 };
 
 // Get steps by module ID
-const getStepByModuleId = async (moduleId: string) => {
-  const stepsQuery = query(stepsCollection, where("moduleId", "==", moduleId));
+const getStepByModuleId = async (moduleId: string): Promise<Step[]> => {
+  const stepsRef = collection(db, "modules", moduleId, "steps");
+  const stepsQuery = query(stepsRef, orderBy("order", "asc"));
   const stepsSnapshot = await getDocs(stepsQuery);
-  stepsSnapshot.forEach((doc) => {
-    console.log({ id: doc.id, ...doc.data() });
+  // stepsSnapshot.forEach((doc) => {
+  //   console.log({ id: doc.id, ...doc.data() });
+  // });
+  return stepsSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Step[];
+};
+
+const createStep = async (
+  moduleId: string,
+  stepData: Partial<Step>
+): Promise<Step> => {
+  const newStep = {
+    ...stepData,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  const stepsRef = collection(db, "modules", moduleId, "steps");
+  const stepDocRef = await addDoc(stepsRef, newStep);
+
+  // Update Parent Module's step count
+  const moduleDocRef = doc(db, "modules", moduleId);
+  const moduleDoc = await getDoc(moduleDocRef);
+  if (moduleDoc.exists()) {
+    const currentCount = moduleDoc.data().stepCount || 0;
+    await updateDoc(moduleDocRef, {
+      stepCount: currentCount + 1,
+      updatedAt: serverTimestamp(),
+    });
+  }
+  return { id: stepDocRef.id, ...stepData } as Step;
+};
+
+const updateStep = async (
+  moduleId: string,
+  stepId: string,
+  stepData: Partial<Step>
+) => {
+  const stepDocRef = doc(db, "modules", moduleId, "steps", stepId);
+  await updateDoc(stepDocRef, {
+    ...stepData,
+    updatedAt: serverTimestamp(),
   });
-  return stepsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+  // Update parent module's updatedAt
+  const moduleDocRef = doc(db, "modules", moduleId);
+  await updateDoc(moduleDocRef, { updatedAt: serverTimestamp() });
 };
 
-const createStep = async (stepData: any) => {
-  const stepDocRef = await addDoc(stepsCollection, stepData);
-  return { id: stepDocRef.id, ...stepData };
-};
-
-const updateStep = async (stepId: string, stepData: any) => {
-  const stepDocRef = doc(stepsCollection, stepId);
-  await setDoc(stepDocRef, stepData, { merge: true });
-  return { id: stepId, ...stepData };
-};
-
-const deleteStep = async (stepId: string) => {
-  const stepDocRef = doc(stepsCollection, stepId);
+export const deleteStep = async (moduleId: string, stepId: string) => {
+  const stepDocRef = doc(db, "modules", moduleId, "steps", stepId);
   await deleteDoc(stepDocRef);
+
+  // Update parent module's stepCount (decrement)
+  const moduleDocRef = doc(db, "modules", moduleId);
+  const moduleDoc = await getDoc(moduleDocRef);
+  if (moduleDoc.exists()) {
+    const currentCount = moduleDoc.data().stepCount || 0;
+    await updateDoc(moduleDocRef, {
+      stepCount: Math.max(0, currentCount - 1), // Don't go below 0
+      updatedAt: serverTimestamp(),
+    });
+  }
 };
 
 // User progress operations
