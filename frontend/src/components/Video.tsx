@@ -1,12 +1,13 @@
 import YouTube, { YouTubeProps } from 'react-youtube';
 
-export default function Video(props: { youtubeUrl: string; thumbnailUrl?: string; duration?: number }) {
+export default function Video(props: { youtubeUrl: string; thumbnailUrl?: string; duration?: number ; module?: string}) {
 
   const videoId = getYouTubeId(props.youtubeUrl);
 
   const handleEnd: YouTubeProps['onEnd'] = (event) => {
     console.log('Video completed!', event);
     // CALL HELPER FUNCTION TO STORE PROGRESS that will be defined in /src/lib/firebase/db-operations.ts
+    // updateUserProgress(userId, moduleId, completedStepId)
   };
 
   return (
