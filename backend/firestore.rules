@@ -54,7 +54,9 @@ service cloud.firestore {
 
         function hasOnlyOnePayloadType() {
           let payloadKeys = ['video', 'quiz', 'flashcards'];
-          let present = payloadKeys.filter(k => k in request.resource.data);
+          let present = payloadKeys.filter(function(k) {
+            return k in request.resource.data;
+          });
           return present.size() == 1;
         }
 
