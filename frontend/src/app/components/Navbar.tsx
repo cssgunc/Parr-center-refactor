@@ -16,7 +16,7 @@ export default function Navbar() {
 		<AppBar
 			position="static"
 			sx={{
-				backgroundColor: '#B3D4E5',
+				backgroundColor: 'secondary.main',
 				boxShadow: 'none',
 			}}
 		>
@@ -48,7 +48,7 @@ export default function Navbar() {
 							href="/modules"
 							variant="contained"
 							sx={{
-								backgroundColor: '#003366',
+								backgroundColor: 'primary.main',
 								color: 'white',
 								textTransform: 'none',
 								fontSize: '16px',
@@ -64,7 +64,7 @@ export default function Navbar() {
 							component={Link}
 							href="/profile"
 							sx={{
-								color: '#003366',
+								color: 'primary.main',
 							}}
 						>
 							<AccountCircle sx={{ fontSize: 40 }} />
