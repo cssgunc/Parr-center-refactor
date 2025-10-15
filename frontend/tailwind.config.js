@@ -10,6 +10,10 @@ module.exports = {
       colors: {
         'light-carolina-blue': '#DBEBF6',
         'carolina-blue': '#4B9CD3',
+        'secondary-maroon': '#B14C59',
+        'secondary-light-maroon': '#BE897E',
+        'primary-athletics-navy': '#13294B',
+        'warm-grey-4': '#B5ADA5',
       },
       fontFamily: {
         primary: ['var(--font-primary)', 'serif'],
