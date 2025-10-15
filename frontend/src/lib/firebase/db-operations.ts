@@ -19,7 +19,7 @@ import { User, Module, Step, UserProgress } from "./types";
 // Module CRUD operations
 
 // get module by ID - DOES NOT include steps subcollection
-const getModulebyId = async (moduleId: string): Promise<Module> => {
+export const getModulebyId = async (moduleId: string): Promise<Module> => {
   const moduleDocRef = doc(db, "modules", moduleId);
   const moduleDoc = await getDoc(moduleDocRef);
 
@@ -30,7 +30,9 @@ const getModulebyId = async (moduleId: string): Promise<Module> => {
   }
 };
 
-const createModule = async (moduleData: Partial<Module>): Promise<Module> => {
+export const createModule = async (
+  moduleData: Partial<Module>
+): Promise<Module> => {
   const newModule = {
     ...moduleData,
     stepCount: moduleData.stepCount || 0,
@@ -41,13 +43,16 @@ const createModule = async (moduleData: Partial<Module>): Promise<Module> => {
   return { id: moduleDocRef.id, ...moduleData } as Module;
 };
 
-const updateModule = async (moduleId: string, moduleData: any) => {
+export const updateModule = async (moduleId: string, moduleData: any) => {
   const moduleDocRef = doc(db, "modules", moduleId);
   await setDoc(moduleDocRef, moduleData, { merge: true });
   return { id: moduleId, ...moduleData };
 };
 
-const deleteModule = async (moduleId: string, deleteSteps: boolean = true) => {
+export const deleteModule = async (
+  moduleId: string,
+  deleteSteps: boolean = true
+) => {
   const moduleDocRef = doc(db, "modules", moduleId);
   if (deleteSteps) {
     const stepsRef = collection(db, "modules", moduleId, "steps");
@@ -64,7 +69,10 @@ const deleteModule = async (moduleId: string, deleteSteps: boolean = true) => {
 };
 
 // Step CRUD operations
-const getStepById = async (moduleId: string, stepId: string): Promise<Step> => {
+export const getStepById = async (
+  moduleId: string,
+  stepId: string
+): Promise<Step> => {
   const stepDocRef = doc(db, "modules", moduleId, "steps", stepId);
   const stepDoc = await getDoc(stepDocRef);
   if (stepDoc.exists()) {
@@ -75,7 +83,7 @@ const getStepById = async (moduleId: string, stepId: string): Promise<Step> => {
 };
 
 // Get steps by module ID
-const getStepByModuleId = async (moduleId: string): Promise<Step[]> => {
+export const getStepByModuleId = async (moduleId: string): Promise<Step[]> => {
   const stepsRef = collection(db, "modules", moduleId, "steps");
   const stepsQuery = query(stepsRef, orderBy("order", "asc"));
   const stepsSnapshot = await getDocs(stepsQuery);
@@ -88,7 +96,7 @@ const getStepByModuleId = async (moduleId: string): Promise<Step[]> => {
   })) as Step[];
 };
 
-const createStep = async (
+export const createStep = async (
   moduleId: string,
   stepData: Partial<Step>
 ): Promise<Step> => {
@@ -113,7 +121,7 @@ const createStep = async (
   return { id: stepDocRef.id, ...stepData } as Step;
 };
 
-const updateStep = async (
+export const updateStep = async (
   moduleId: string,
   stepId: string,
   stepData: Partial<Step>
@@ -147,14 +155,14 @@ export const deleteStep = async (moduleId: string, stepId: string) => {
 
 // User progress operations
 
-const startUserProgress = async (userId: string, moduleId: string) => {
-  const progressRef = doc(db, `users/${userId}/progress/${moduleId}`);
+export const startUserProgress = async (userId: string, moduleId: string) => {
+  const progressRef = doc(db, "users", userId, "progress", moduleId);
 
   const progressData = {
     completedStepIds: [],
-    lastViewedAt: new Date(),
+    lastViewedAt: serverTimestamp(),
     quizScores: {},
-    startedAt: new Date(),
+    startedAt: serverTimestamp(),
     completedAt: null,
   };
 
@@ -162,48 +170,75 @@ const startUserProgress = async (userId: string, moduleId: string) => {
   return { id: progressRef.id, ...progressData };
 };
 
-const getUserProgress = async (userId: string, moduleId: string) => {
-  const progressRef = doc(db, `users/${userId}/progress/${moduleId}`);
-  return await getDoc(progressRef);
+export const getUserProgress = async (userId: string, moduleId: string) => {
+  const progressRef = doc(db, "users", userId, "progress", moduleId);
+  const progressDoc = await getDoc(progressRef);
+  if (!progressDoc.exists()) {
+    return null;
+  }
+  return { id: progressDoc.id, ...progressDoc.data() };
 };
 
-const updateUserProgress = async (
+export const markStepCompleted = async (
   userId: string,
   moduleId: string,
-  completedStepId: string
+  stepId: string
 ) => {
-  const progressRef = doc(db, `users/${userId}/progress/${moduleId}`);
+  const progressRef = doc(db, "users", userId, "progress", moduleId);
   const progressDoc = await getDoc(progressRef);
 
   if (progressDoc.exists()) {
     const progressData = progressDoc.data();
-    const updatedStepIds = [
-      ...(progressData.completeStepIds || []),
-      completedStepId,
-    ];
-    await setDoc(
-      progressRef,
-      { completeStepIds: updatedStepIds },
-      { merge: true }
-    );
+    if (!progressData.completedStepIds.includes(stepId)) {
+      await updateDoc(progressRef, {
+        completedStepIds: [...progressData.completedStepIds, stepId],
+        lastViewedAt: serverTimestamp(),
+      });
+    }
   } else {
-    await setDoc(progressRef, { completeStepIds: [completedStepId] });
+    // Create new progress if none exists
+    await setDoc(progressRef, {
+      completedStepIds: [stepId],
+      lastViewedAt: serverTimestamp(),
+      quizScores: {},
+      startedAt: serverTimestamp(),
+      completedAt: null,
+    });
   }
 };
+
+// export const updateQuizScore = async (userId: string, moduleId: string, stepId: string, score: number) => {};
+
+// export const completeModule = async (userId: string, moduleId: string) => {};
 
 // Query helpers (getPublicModules, getUserModules, etc.)
 
 const getPublicModules = async () => {
+  const modulesRef = collection(db, "modules");
   const publicModulesQuery = query(
-    modulesCollection,
-    where("isPublic", "==", true)
+    modulesRef,
+    where("isPublic", "==", true),
+    orderBy("createdAt", "desc")
   );
   const publicModulesSnapshot = await getDocs(publicModulesQuery);
 
   return publicModulesSnapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
-  }));
+  })) as Module[];
 };
 
-const getUserModules = async (userId: string) => {};
+const getUserModules = async (userId: string) => {
+  const modulesRef = collection(db, "modules");
+  const collaboratoryQuery = query(
+    modulesRef,
+    where("collaborators", "array-contains", userId),
+    orderBy("updatedAt", "desc")
+  );
+
+  const collaboratorSnapshot = await getDocs(collaboratoryQuery);
+  return collaboratorSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Module[];
+};
