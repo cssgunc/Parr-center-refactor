@@ -1,4 +1,7 @@
+// Client-side db operations
+
 import { db } from "./firebaseConfig";
+
 import {
   collection,
   doc,
@@ -19,7 +22,7 @@ import { User, Module, Step, UserProgress } from "./types";
 // Module CRUD operations
 
 // get module by ID - DOES NOT include steps subcollection
-export const getModulebyId = async (moduleId: string): Promise<Module> => {
+export const getModuleById = async (moduleId: string): Promise<Module> => {
   const moduleDocRef = doc(db, "modules", moduleId);
   const moduleDoc = await getDoc(moduleDocRef);
 
@@ -83,7 +86,7 @@ export const getStepById = async (
 };
 
 // Get steps by module ID
-export const getStepByModuleId = async (moduleId: string): Promise<Step[]> => {
+export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
   const stepsRef = collection(db, "modules", moduleId, "steps");
   const stepsQuery = query(stepsRef, orderBy("order", "asc"));
   const stepsSnapshot = await getDocs(stepsQuery);
