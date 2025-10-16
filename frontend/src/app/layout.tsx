@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Work_Sans, Alegreya } from "next/font/google";
+import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from '@/lib/theme';
+import Navbar from '../components/Navbar';
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-primary",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const workSans = Work_Sans({
-  variable: "--font-secondary",
-  subsets: ["latin"],
-});
-
-const alegreya = Alegreya({
-  variable: "--font-tertiary",
+const robotoMono = Roboto_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -29,8 +29,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${playfairDisplay.variable} ${workSans.variable} ${alegreya.variable}`}>
-        {children}
+      <body className={`${inter.variable} ${robotoMono.variable}`}>
+        <AppRouterCacheProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Navbar />
+            {children}
+          </ThemeProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
