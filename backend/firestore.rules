@@ -26,7 +26,10 @@ service cloud.firestore {
     && request.resource.data.description is string
     && request.resource.data.isPublic is bool
     && request.resource.data.tags is list
-    && request.resource.data.stepCount is int;
+    && request.resource.data.stepCount is int
+    && (!('collaborators' in request.resource.data) || request.resource.data.collaborators is list)
+    && (!('publishedVersion' in request.resource.data) || request.resource.data.publishedVersion is int)
+    && (!('thumbnailUrl' in request.resource.data) || request.resource.data.thumbnailUrl is string);
   }
 
   function validateProgress() {
@@ -34,13 +37,14 @@ service cloud.firestore {
     && request.resource.data.completedStepIds is list
     && request.resource.data.quizScores is map
     && request.resource.data.lastViewedAt is timestamp
-    && request.resource.data.startedAt is timestamp;
+    && request.resource.data.startedAt is timestamp
+    && (request.resource.data.completedAt == null || request.resource.data.completedAt is timestamp);
   }
 
   function validateStep() {
     return request.resource.data.keys().hasAll(['title', 'type', 'order', 'createdBy', 'createdAt', 'updatedAt'])
     && request.resource.data.title is string
-    && request.resource.data.type in ['video', 'quiz', 'flashcards']
+    && request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse']
     && request.resource.data.order is int
     && request.resource.data.createdBy is string
     && hasMatchingPayloadType()
@@ -49,12 +53,12 @@ service cloud.firestore {
 
   function hasMatchingPayloadType() {
     let t = request.resource.data.type;
-    return (t == 'video' && 'video' in request.resource.data) || (t == 'quiz' && 'quiz' in request.resource.data) || (t == 'flashcards' && 'flashcards' in request.resource.data);
+    return (t == 'video' && 'video' in request.resource.data) || (t == 'quiz' && 'quiz' in request.resource.data) || (t == 'flashcards' && 'flashcards' in request.resource.data) || (t == 'freeResponse' && 'freeResponse' in request.resource.data);
   }
 
   function validatePayload() {
     let t = request.resource.data.type;
-    return (t == 'video' && validateVideoPayload()) || (t == 'quiz' && validateQuizPayload()) || (t == 'flashcards' && validateFlashcardsPayload());
+    return (t == 'video' && validateVideoPayload()) || (t == 'quiz' && validateQuizPayload()) || (t == 'flashcards' && validateFlashcardsPayload()) || (t == 'freeResponse' && validateFreeResponsePayload());
   }
 
   function validateVideoPayload() {
@@ -86,6 +90,13 @@ service cloud.firestore {
       && f.cards[0].front is string
       && f.cards[0].back is string
       && (!('studyMode' in f) || f.studyMode in ['spaced', 'random']);
+  }
+
+  function validateFreeResponsePayload() {
+    let f = request.resource.data.freeResponse;
+    return f.prompt is string
+      && (!('sampleAnswer' in f) || f.sampleAnswer is string)
+      && (!('maxLength' in f) || (f.maxLength is int && f.maxLength > 0 && f.maxLength <= 10000));
   }
 
   match /databases/{database}/documents {
