@@ -9,7 +9,6 @@ import { auth } from "@/lib/firebase/firebaseConfig";
 import { EmailAuthProvider } from "firebase/auth/web-extension";
 import { generateFirebaseAuthErrorMessage } from "../ErrorHandler";
 import { FirebaseError } from "firebase/app";
-import { SetStateAction } from "react";
 import { toast } from "sonner";
 
 /**
@@ -27,10 +26,6 @@ export const registerUser = async (
   password: string
 ) => {
   try {
-    console.log(name);
-    console.log(email);
-    console.log(password);
-
     //Create User
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -38,7 +33,6 @@ export const registerUser = async (
       password
     );
     const user = userCredential.user;
-    console.log(user);
 
     //Send verifcation email to the user
     await sendEmailVerification(user);
@@ -76,8 +70,6 @@ export const loginUserWithEmailAndPassword = async (
       toast.error("Please verify your email to login");
       return;
     }
-
-    console.log(email, password);
   } catch (error) {
     if (error instanceof FirebaseError) {
       generateFirebaseAuthErrorMessage(error);
@@ -85,6 +77,12 @@ export const loginUserWithEmailAndPassword = async (
   }
 };
 
+/**Updates user's password
+ *
+ * @param currentPassword - User's current password
+ * @param newPassword - User's new password
+ * @returns - null
+ */
 export const updateUserPassword = async (
   currentPassword: string,
   newPassword: string

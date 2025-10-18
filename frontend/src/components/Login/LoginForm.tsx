@@ -7,7 +7,6 @@ import { signInUserWithGoogleAuth } from "@/lib/firebase/Authentication/GoogleAu
 
 import { toast } from "sonner";
 import { FcGoogle } from "react-icons/fc";
-import { PasswordSharp, PasswordTwoTone } from "@mui/icons-material";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -136,8 +135,11 @@ export default function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${
+                  error ? "border-red-500" : "border-gray-300"
+                } `}
               />
+              {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
             </div>
 
             <div className="mb-8">

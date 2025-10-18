@@ -1,7 +1,10 @@
 import { FirebaseError } from "firebase/app";
 
 //https://firebase.google.com/docs/auth/admin/errors
-
+/**
+ *
+ * @param error - Error thrown by Firebase
+ */
 export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
   let message: string;
 
