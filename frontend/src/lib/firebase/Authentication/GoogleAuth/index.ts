@@ -4,6 +4,9 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, googleAuthProvider } from "../../firebaseConfig";
 import { toast } from "sonner";
 
+/** Signs user in with Google
+ *
+ */
 export const signInUserWithGoogleAuth = async () => {
   try {
     const result = await signInWithPopup(auth, googleAuthProvider);

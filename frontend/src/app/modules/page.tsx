@@ -1,4 +1,4 @@
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box } from "@mui/material";
 
 export default function ModulesPage() {
   return (
