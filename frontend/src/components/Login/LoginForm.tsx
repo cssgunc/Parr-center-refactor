@@ -63,7 +63,7 @@ export default function LoginForm() {
   };
   const handleForgotPassword = () => {
     console.log("Forgot password clicked");
-    // Add your forgot password logic here
+    router.push("/forgotpassword");
   };
 
   const handleSignUp = () => {

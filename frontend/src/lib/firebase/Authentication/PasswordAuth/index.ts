@@ -3,14 +3,12 @@ import { auth } from "@/lib/firebase/firebaseConfig";
 import { generateFirebaseAuthErrorMessage } from "../ErrorHandler";
 import { FirebaseError } from "firebase/app";
 
+/** Sends user email to reset their password
+ *
+ * @param email  - Email to send reset password link
+ */
 export const forgotPassword = async (email: string) => {
   try {
-    //Check if email exists
-    if (email === "") {
-      alert("Please enter in your email address");
-      return;
-    }
-
     //Send Reset Password Link
     await sendPasswordResetEmail(auth, email);
 
@@ -19,6 +17,5 @@ export const forgotPassword = async (email: string) => {
     if (error instanceof FirebaseError) {
       generateFirebaseAuthErrorMessage(error);
     }
-  } finally {
   }
 };
