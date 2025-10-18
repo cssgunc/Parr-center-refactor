@@ -16,22 +16,21 @@ export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState<"email" | "password" | null>(
+    null
+  );
 
   const handleSubmit = async () => {
     if (!email.trim()) {
       setError("Please enter your email.");
+      setErrorField("email");
       return;
     }
     if (!password.trim()) {
       setError("Please enter your password.");
+      setErrorField("password");
       return;
     }
-
-    console.log("Login attempt:", {
-      email,
-      password,
-      rememberMe,
-    });
 
     setLoading(true);
     try {
@@ -42,9 +41,21 @@ export default function LoginForm() {
       router.push("/");
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(error.message);
+        const message = error.message.toLowerCase();
+        setError(error.message);
+        if (message.includes("email") || message.includes("user")) {
+          setErrorField("email");
+        } else if (
+          message.includes("password") ||
+          message.includes("credential")
+        ) {
+          setErrorField("password");
+        } else {
+          setErrorField("password");
+        }
       } else {
-        toast.error("Login failed.");
+        setError("Login failed. Please try again.");
+        setErrorField("password");
       }
     } finally {
       setLoading(false);
@@ -53,13 +64,14 @@ export default function LoginForm() {
 
   const handleBack = () => {
     console.log("Back button clicked");
-    router.back();
+    router.push("/");
   };
 
   const handleGoogleLogin = () => {
     console.log("Google sign up clicked");
     signInUserWithGoogleAuth();
   };
+
   const handleForgotPassword = () => {
     console.log("Forgot password clicked");
     router.push("/forgotpassword");
@@ -107,10 +119,14 @@ export default function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={handleKeyPress}
                 className={`w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  error ? "border-red-500" : "border-gray-300"
+                  error && errorField == "email"
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
               />
-              {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+              {errorField === "email" && error && (
+                <p className="mt-1 text-sm text-red-600">{error}</p>
+              )}
             </div>
 
             <div className="mb-4">
@@ -136,10 +152,14 @@ export default function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyPress}
                 className={`w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${
-                  error ? "border-red-500" : "border-gray-300"
+                  error && (errorField === "password" || "firebase")
+                    ? "border-red-500"
+                    : "border-gray-300"
                 } `}
               />
-              {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+              {errorField === "password" && error && (
+                <p className="mt-1 text-sm text-red-600">{error}</p>
+              )}
             </div>
 
             <div className="mb-8">
