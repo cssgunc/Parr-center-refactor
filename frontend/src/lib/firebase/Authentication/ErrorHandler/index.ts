@@ -3,120 +3,179 @@ import { FirebaseError } from "firebase/app";
 //https://firebase.google.com/docs/auth/admin/errors
 
 export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
+  let message: string;
+
   switch (error?.code) {
     case "auth/claims-too-large":
-      return "Custom claims payload exceeds the 1000-byte limit.";
+      message = "Custom claims payload exceeds the 1000-byte limit.";
+      break;
     case "auth/email-already-exists":
-      return "That email is already in use.";
+      message = "That email is already in use.";
+      break;
     case "auth/id-token-expired":
-      return "Your session has expired. Please sign in again.";
+      message = "Your session has expired. Please sign in again.";
+      break;
     case "auth/id-token-revoked":
-      return "Your session was revoked. Please sign in again.";
+      message = "Your session was revoked. Please sign in again.";
+      break;
     case "auth/insufficient-permission":
-      return "Insufficient permission to access this auth resource.";
+      message = "Insufficient permission to access this auth resource.";
+      break;
     case "auth/internal-error":
-      return "Auth server encountered an unexpected error. Try again.";
+      message = "Auth server encountered an unexpected error. Try again.";
+      break;
     case "auth/invalid-argument":
-      return "Invalid argument provided to an Auth method.";
+      message = "Invalid argument provided to an Auth method.";
+      break;
     case "auth/invalid-claims":
-      return "Provided custom claims are invalid.";
+      message = "Provided custom claims are invalid.";
+      break;
     case "auth/invalid-continue-uri":
-      return "Continue URL must be a valid URL.";
+      message = "Continue URL must be a valid URL.";
+      break;
     case "auth/invalid-creation-time":
-      return "Creation time must be a valid UTC date string.";
+      message = "Creation time must be a valid UTC date string.";
+      break;
     case "auth/invalid-credential":
-      return "Admin SDK credential is not valid for this action.";
+      message = "Invalid credentials";
+      break;
     case "auth/invalid-disabled-field":
-      return 'The "disabled" user property must be a boolean.';
+      message = 'The "disabled" user property must be a boolean.';
+      break;
     case "auth/invalid-display-name":
-      return "Display name must be a non-empty string.";
+      message = "Display name must be a non-empty string.";
+      break;
     case "auth/invalid-dynamic-link-domain":
-      return "Dynamic link domain is not configured or authorized.";
+      message = "Dynamic link domain is not configured or authorized.";
+      break;
     case "auth/invalid-email":
-      return "Email must be a valid address.";
+      message = "Email must be a valid address.";
+      break;
     case "auth/invalid-email-verified":
-      return 'The "emailVerified" property must be a boolean.';
+      message = 'The "emailVerified" property must be a boolean.';
+      break;
     case "auth/invalid-hash-algorithm":
-      return "Unsupported hash algorithm.";
+      message = "Unsupported hash algorithm.";
+      break;
     case "auth/invalid-hash-block-size":
-      return "Hash block size must be a valid number.";
+      message = "Hash block size must be a valid number.";
+      break;
     case "auth/invalid-hash-derived-key-length":
-      return "Hash derived key length must be a valid number.";
+      message = "Hash derived key length must be a valid number.";
+      break;
     case "auth/invalid-hash-key":
-      return "Hash key must be a valid byte buffer.";
+      message = "Hash key must be a valid byte buffer.";
+      break;
     case "auth/invalid-hash-memory-cost":
-      return "Hash memory cost must be a valid number.";
+      message = "Hash memory cost must be a valid number.";
+      break;
     case "auth/invalid-hash-parallelization":
-      return "Hash parallelization must be a valid number.";
+      message = "Hash parallelization must be a valid number.";
+      break;
     case "auth/invalid-hash-rounds":
-      return "Hash rounds must be a valid number.";
+      message = "Hash rounds must be a valid number.";
+      break;
     case "auth/invalid-hash-salt-separator":
-      return "Hash salt separator must be a valid byte buffer.";
+      message = "Hash salt separator must be a valid byte buffer.";
+      break;
     case "auth/invalid-id-token":
-      return "Provided ID token is not a valid Firebase ID token.";
+      message = "Provided ID token is not a valid Firebase ID token.";
+      break;
     case "auth/invalid-last-sign-in-time":
-      return "Last sign-in time must be a valid UTC date string.";
+      message = "Last sign-in time must be a valid UTC date string.";
+      break;
     case "auth/invalid-page-token":
-      return "Next page token must be a valid non-empty string.";
+      message = "Next page token must be a valid non-empty string.";
+      break;
     case "auth/invalid-password":
-      return "Password must be at least 6 characters.";
+      message = "Password must be at least 6 characters.";
+      break;
     case "auth/invalid-password-hash":
-      return "Password hash must be a valid byte buffer.";
+      message = "Password hash must be a valid byte buffer.";
+      break;
     case "auth/invalid-password-salt":
-      return "Password salt must be a valid byte buffer.";
+      message = "Password salt must be a valid byte buffer.";
+      break;
     case "auth/invalid-phone-number":
-      return "Phone number must be E.164 format (e.g. +15551234567).";
+      message = "Phone number must be E.164 format (e.g. +15551234567).";
+      break;
     case "auth/invalid-photo-url":
-      return "Photo URL must be a valid URL string.";
+      message = "Photo URL must be a valid URL string.";
+      break;
     case "auth/invalid-provider-data":
-      return "providerData must be an array of UserInfo objects.";
+      message = "providerData must be an array of UserInfo objects.";
+      break;
     case "auth/invalid-provider-id":
-      return "providerId must be a supported provider identifier.";
+      message = "providerId must be a supported provider identifier.";
+      break;
     case "auth/invalid-oauth-responsetype":
-      return "Exactly one OAuth responseType must be set to true.";
+      message = "Exactly one OAuth responseType must be set to true.";
+      break;
     case "auth/invalid-session-cookie-duration":
-      return "Session cookie duration must be 5 minutes to 2 weeks (ms).";
+      message = "Session cookie duration must be 5 minutes to 2 weeks (ms).";
+      break;
     case "auth/invalid-uid":
-      return "UID must be a non-empty string up to 128 characters.";
+      message = "UID must be a non-empty string up to 128 characters.";
+      break;
     case "auth/invalid-user-import":
-      return "User record to import is invalid.";
+      message = "User record to import is invalid.";
+      break;
     case "auth/maximum-user-count-exceeded":
-      return "Maximum number of users to import exceeded.";
+      message = "Maximum number of users to import exceeded.";
+      break;
     case "auth/missing-android-pkg-name":
-      return "Android package name is required if the app must be installed.";
+      message =
+        "Android package name is required if the app must be installed.";
+      break;
     case "auth/missing-continue-uri":
-      return "A valid continue URL is required.";
+      message = "A valid continue URL is required.";
+      break;
     case "auth/missing-hash-algorithm":
-      return "Importing password hashes requires a hash algorithm.";
+      message = "Importing password hashes requires a hash algorithm.";
+      break;
     case "auth/missing-ios-bundle-id":
-      return "iOS bundle ID is required.";
+      message = "iOS bundle ID is required.";
+      break;
     case "auth/missing-uid":
-      return "A UID is required for this operation.";
+      message = "A UID is required for this operation.";
+      break;
     case "auth/missing-oauth-client-secret":
-      return "OIDC code flow requires an OAuth client secret.";
+      message = "OIDC code flow requires an OAuth client secret.";
+      break;
     case "auth/operation-not-allowed":
-      return "This sign-in provider is disabled for the project.";
+      message = "This sign-in provider is disabled for the project.";
+      break;
     case "auth/phone-number-already-exists":
-      return "That phone number is already in use.";
+      message = "That phone number is already in use.";
+      break;
     case "auth/project-not-found":
-      return "No Firebase project found for the provided credentials.";
+      message = "No Firebase project found for the provided credentials.";
     case "auth/reserved-claims":
-      return "One or more custom claims are reserved (e.g., sub, iss, exp).";
+      message = "One or more custom claims are reserved (e.g., sub, iss, exp).";
+      break;
     case "auth/session-cookie-expired":
-      return "Session cookie has expired.";
+      message = "Session cookie has expired.";
+      break;
     case "auth/session-cookie-revoked":
-      return "Session cookie has been revoked.";
+      message = "Session cookie has been revoked.";
+      break;
     case "auth/too-many-requests":
-      return "Too many requests. Please slow down and try again.";
+      message = "Too many requests. Please slow down and try again.";
+      break;
     case "auth/uid-already-exists":
-      return "That UID is already in use.";
+      message = "That UID is already in use.";
+      break;
     case "auth/unauthorized-continue-uri":
-      return "Continue URL domain is not whitelisted in Firebase Console.";
+      message = "Continue URL domain is not whitelisted in Firebase Console.";
+      break;
     case "auth/user-disabled":
-      return "This user account has been disabled by an administrator.";
+      message = "This user account has been disabled by an administrator.";
+      break;
     case "auth/user-not-found":
-      return "No user found for the provided identifier.";
+      message = "No user found for the provided identifier.";
+      break;
     default:
-      return "An unexpected authentication error occurred.";
+      message = "An unexpected authentication error occurred.";
   }
+  throw new Error(message);
 };

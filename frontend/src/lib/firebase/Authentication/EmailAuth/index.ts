@@ -9,6 +9,8 @@ import { auth } from "@/lib/firebase/firebaseConfig";
 import { EmailAuthProvider } from "firebase/auth/web-extension";
 import { generateFirebaseAuthErrorMessage } from "../ErrorHandler";
 import { FirebaseError } from "firebase/app";
+import { SetStateAction } from "react";
+import { toast } from "sonner";
 
 /**
  *Register's user accounts in firebase auth
@@ -16,6 +18,8 @@ import { FirebaseError } from "firebase/app";
  * @param name - User's Name
  * @param email - User's Email
  * @param password - User's Password
+ *
+ * @throws Firebase error if instanceOf firebase error
  */
 export const registerUser = async (
   name: string,
@@ -38,12 +42,14 @@ export const registerUser = async (
 
     //Send verifcation email to the user
     await sendEmailVerification(user);
-    alert(`A verifcation email has been sent to your email address ${name}`);
+    toast.success(
+      `A verifcation email has been sent to your email address ${name}`
+    );
   } catch (error) {
     if (error instanceof FirebaseError) {
       generateFirebaseAuthErrorMessage(error);
     }
-  } finally {
+    throw error;
   }
 };
 
@@ -67,7 +73,7 @@ export const loginUserWithEmailAndPassword = async (
     );
     const user = userCredential.user;
     if (user.emailVerified === false) {
-      alert("Please verify your email to login");
+      toast.error("Please verify your email to login");
       return;
     }
 
@@ -76,7 +82,6 @@ export const loginUserWithEmailAndPassword = async (
     if (error instanceof FirebaseError) {
       generateFirebaseAuthErrorMessage(error);
     }
-  } finally {
   }
 };
 
