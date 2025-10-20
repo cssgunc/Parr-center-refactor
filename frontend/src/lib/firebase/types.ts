@@ -35,10 +35,47 @@ export interface Module {
   thumbnailUrl?: string;
 }
 
-// Step
-export interface Step {
+// Step type payloads
+export interface VideoPayload {
+  youtubeUrl: string;
+  thumbnailUrl?: string;
+  durationSec?: number;
+}
+
+export interface QuizQuestion {
+  prompt: string;
+  choices: string[];
+  correctIndex: number;
+  explanation?: string;
+}
+
+export interface QuizPayload {
+  shuffle: boolean;
+  questions: QuizQuestion[];
+  passingScore: number; // 0-100
+}
+
+export interface Flashcard {
+  front: string;
+  back: string;
+}
+
+export interface FlashcardsPayload {
+  title?: string;
+  cards: Flashcard[];
+  studyMode?: "spaced" | "random";
+}
+
+export interface FreeResponsePayload {
+  prompt: string;
+  sampleAnswer?: string;
+  maxLength?: number;
+}
+
+// Base Step Interface
+export interface StepBase {
   id: string;
-  type: string; // "video" | "quiz" | "flashcards" | "freeResponse" | any future type
+  type: StepType;
   title: string;
   order: number;
   estimatedMinutes?: number;
@@ -46,6 +83,31 @@ export interface Step {
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  // Any type specific data goes here as arbitrary fields
-  [key: string]: any;
 }
+
+export type StepType = "video" | "quiz" | "flashcards" | "freeResponse";
+
+// Specific Step Interfaces
+
+export interface VideoStep extends StepBase {
+  type: "video";
+  video: VideoPayload;
+}
+
+export interface QuizStep extends StepBase {
+  type: "quiz";
+  quiz: QuizPayload;
+}
+
+export interface FlashcardsStep extends StepBase {
+  type: "flashcards";
+  flashcards: FlashcardsPayload;
+}
+
+export interface FreeResponseStep extends StepBase {
+  type: "freeResponse";
+  freeResponse: FreeResponsePayload;
+}
+
+// Step type used throughout the app
+export type Step = VideoStep | QuizStep | FlashcardsStep | FreeResponseStep;
