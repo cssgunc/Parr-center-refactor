@@ -104,12 +104,12 @@ describe("Module CRUD Operations", () => {
 
   describe("updateModule", () => {
     it("should update module with new data", async () => {
-      (setDoc as jest.Mock).mockResolvedValue(undefined);
+      (updateDoc as jest.Mock).mockResolvedValue(undefined);
       (serverTimestamp as jest.Mock).mockReturnValue("TIMESTAMP");
 
       await updateModule("module123", { title: "Updated Title" });
 
-      expect(setDoc).toHaveBeenCalledWith(
+      expect(updateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           title: "Updated Title",

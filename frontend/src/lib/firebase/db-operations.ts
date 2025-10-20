@@ -48,7 +48,10 @@ export const createModule = async (
 
 export const updateModule = async (moduleId: string, moduleData: any) => {
   const moduleDocRef = doc(db, "modules", moduleId);
-  await setDoc(moduleDocRef, { ...moduleData, updatedAt: serverTimestamp() });
+  await updateDoc(moduleDocRef, {
+    ...moduleData,
+    updatedAt: serverTimestamp(),
+  });
   return { id: moduleId, ...moduleData };
 };
 
