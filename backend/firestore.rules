@@ -99,18 +99,96 @@ service cloud.firestore {
       && (!('maxLength' in f) || (f.maxLength is int && f.maxLength > 0 && f.maxLength <= 10000));
   }
 
+  function validateStepUpdate() {
+    let allowedFields = [
+      'title',
+      'type',
+      'order',
+      'updatedAt',
+      'video',
+      'quiz',
+      'flashcards',
+      'freeResponse'
+    ];
+    return request.resource.data.keys().hasOnly(allowedFields)
+      && request.resource.data.diff(resource.data).affectedKeys().size() > 0
+      && (
+        !('title' in request.resource.data) || request.resource.data.title is string
+      )
+      && (
+        !('order' in request.resource.data) || request.resource.data.order is int
+      )
+      && (
+        !('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp
+      )
+      && (
+        !('type' in request.resource.data) || request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse']
+      )
+      && (
+        resource.data.createdBy == request.resource.data.createdBy
+      )
+      && (
+        resource.data.createdAt == request.resource.data.createdAt
+      );
+  }
+
+  function validateModuleUpdate() {
+    let allowedFields = [
+      'title',
+      'description',
+      'isPublic',
+      'tags',
+      'updatedAt',
+      'stepCount',
+      'publishedVersion',
+      'thumbnailUrl',
+      'collaborators'
+    ];
+    return request.resource.data.keys().hasOnly(allowedFields)
+      && request.resource.data.diff(resource.data).affectedKeys().size() > 0
+      && (
+        !('title' in request.resource.data) || request.resource.data.title is string
+      )
+      && (
+        !('description' in request.resource.data) || request.resource.data.description is string
+      )
+      && (
+        !('isPublic' in request.resource.data) || request.resource.data.isPublic is bool
+      )
+      && (
+        !('tags' in request.resource.data) || request.resource.data.tags is list
+      )
+      && (
+        !('stepCount' in request.resource.data) || request.resource.data.stepCount is int
+      )
+      && (
+        !('publishedVersion' in request.resource.data) || request.resource.data.publishedVersion is int
+      )
+      && (
+        !('thumbnailUrl' in request.resource.data) || request.resource.data.thumbnailUrl is string
+      )
+      && (
+        !('collaborators' in request.resource.data) || request.resource.data.collaborators is list
+      )
+      && resource.data.createdBy == request.resource.data.createdBy
+      && resource.data.createdAt == request.resource.data.createdAt;
+  }
+
   match /databases/{database}/documents {
 
     // MODULES
     match /modules/{moduleId} {
       allow read: if (resource.data.isPublic != null && resource.data.isPublic == true) || isOwner() || isCollaborator();
       allow create: if isSignedIn() && validateModule() && request.resource.data.createdBy == request.auth.uid;
-      allow update, delete: if isOwner() || isCollaborator();
+      allow update: if (isOwner() || isCollaborator()) && validateModuleUpdate();
+      allow delete: if isOwner() || isCollaborator();
 
       // STEPS
       match /steps/{stepId} {
         allow read: if parent().data.isPublic == true || isOwner() || isCollaborator();
-        allow create, update, delete: if (isOwner() || isCollaborator()) && validateStep();
+        allow create: if (isOwner() || isCollaborator()) && validateStep();
+        allow update: if (isOwner() || isCollaborator()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator();
       }
     }
 
