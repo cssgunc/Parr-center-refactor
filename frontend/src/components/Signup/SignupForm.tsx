@@ -57,11 +57,6 @@ export default function SignUpForm() {
     }
   };
 
-  const handleGoogleSignUp = () => {
-    console.log("Google sign up clicked");
-    // Add Google OAuth logic here
-  };
-
   const handleBack = () => {
     console.log("Back button clicked");
     router.back();
@@ -192,26 +187,6 @@ export default function SignUpForm() {
           >
             {loading ? "Loading..." : "Sign Up"}
           </button>
-
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">or</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <button
-              onClick={handleGoogleSignUp}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium text-base hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-sm"
-            >
-              <FcGoogle size={25} />
-              Continue with Google
-            </button>
-          </div>
         </div>
       </div>
     </div>
