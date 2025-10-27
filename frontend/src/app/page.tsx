@@ -1,16 +1,4 @@
-/**
- * MAIN APPLICATION PAGE
- * 
- * This is the root page component that serves as the entry point for the application.
- * It implements a view switcher between home, student portal, and admin dashboard.
- * 
- * The component uses local state to manage which view is currently displayed:
- * - 'home': Shows the landing page with navigation options
- * - 'student': Shows the student learning portal with modules
- * - 'admin': Shows the admin dashboard for module management
- */
-
-"use client"; // This directive tells Next.js this component should run on the client side
+"use client";
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
@@ -49,16 +37,6 @@ export default function Home() {
   // ===== RENDER LOGIC =====
   
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex flex-1">
-        <Sidebar selectedModule={selectedModule} onSelect={setSelectedModule} />
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">
-            <ModuleContentMUI moduleId={selectedModule} content={modulesContent[selectedModule]} />
-          </div>
-        </main>
-      </div>
-      <FooterMUI />
     <div className="min-h-screen bg-gray-50">
       {/* CONDITIONAL RENDERING BASED ON CURRENT VIEW */}
       {currentView === 'home' ? (
@@ -114,11 +92,11 @@ export default function Home() {
             <Sidebar selectedModule={selectedModule} onSelect={setSelectedModule} />
             <main className="flex-1 overflow-auto">
               <div className="p-6">
-                <ModuleContent moduleId={selectedModule} content={modulesContent[selectedModule]} />
+                <ModuleContentMUI moduleId={selectedModule} content={modulesContent[selectedModule]} />
               </div>
             </main>
           </div>
-          <Footer />
+          <FooterMUI />
         </div>
       ) : (
         // ===== ADMIN VIEW =====
