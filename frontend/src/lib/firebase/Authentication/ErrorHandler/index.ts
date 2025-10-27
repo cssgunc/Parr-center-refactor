@@ -153,6 +153,7 @@ export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
       break;
     case "auth/project-not-found":
       message = "No Firebase project found for the provided credentials.";
+      break;
     case "auth/reserved-claims":
       message = "One or more custom claims are reserved (e.g., sub, iss, exp).";
       break;

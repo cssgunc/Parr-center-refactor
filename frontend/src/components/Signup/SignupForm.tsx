@@ -181,6 +181,7 @@ export default function SignUpForm() {
           </div>
 
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={loading}
             className="w-full max-w-[200px] mx-auto block bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-full transition-colors text-lg disabled:opacity-50 mb-8"

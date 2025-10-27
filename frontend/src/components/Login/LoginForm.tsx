@@ -92,6 +92,7 @@ export default function LoginForm() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <button
+          type="button"
           onClick={handleBack}
           className="mb-8 w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white hover:bg-slate-700 transition-colors"
           aria-label="Go back"
@@ -175,11 +176,12 @@ export default function LoginForm() {
             </div>
 
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={loading}
               className="w-full max-w-[200px] mx-auto block bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-full disabled:opacity-50 transition-colors text-lg"
             >
-              Sumbit
+              Submit
             </button>
           </div>
 
@@ -188,6 +190,7 @@ export default function LoginForm() {
               Don't have an account?{" "}
             </span>
             <button
+              type="button"
               onClick={handleSignUp}
               className="text-blue-500 hover:text-blue-600 italic"
             >
@@ -204,6 +207,7 @@ export default function LoginForm() {
           </div>
           <div className="grid grid-cols-1 gap-4">
             <button
+              type="button"
               onClick={handleGoogleLogin}
               disabled={loading}
               className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium text-base hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-sm"

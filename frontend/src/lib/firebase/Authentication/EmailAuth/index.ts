@@ -6,7 +6,7 @@ import {
   updatePassword,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebaseConfig";
-import { EmailAuthProvider } from "firebase/auth/web-extension";
+import { EmailAuthProvider } from "firebase/auth";
 import { generateFirebaseAuthErrorMessage } from "../ErrorHandler";
 import { FirebaseError } from "firebase/app";
 import { toast } from "sonner";
@@ -37,7 +37,7 @@ export const registerUser = async (
     //Send verifcation email to the user
     await sendEmailVerification(user);
     toast.success(
-      `A verifcation email has been sent to your email address ${name}`
+      `A verifcation email has been sent to your email address: ${email}`
     );
   } catch (error) {
     if (error instanceof FirebaseError) {

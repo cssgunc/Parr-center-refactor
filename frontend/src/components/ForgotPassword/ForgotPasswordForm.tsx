@@ -73,6 +73,7 @@ export default function ForgotPasswordForm() {
             </p>
 
             <button
+              type="button"
               onClick={handleBackToLogin}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-full transition-colors"
             >
@@ -119,6 +120,7 @@ export default function ForgotPasswordForm() {
           </div>
 
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={loading}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-full transition-colors text-lg disabled:opacity-50 mb-6"
@@ -128,6 +130,7 @@ export default function ForgotPasswordForm() {
 
           <div className="text-center">
             <button
+              type="button"
               onClick={handleBackToLogin}
               className="text-blue-500 hover:text-blue-600 text-sm"
             >
