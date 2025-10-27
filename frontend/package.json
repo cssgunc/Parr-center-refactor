@@ -11,6 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@types/uuid": "^10.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.4",
@@ -23,7 +24,9 @@
     "react-dom": "18.2.0",
     "react-firebase-hooks": "^5.1.1",
     "react-icons": "^5.5.0",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "uuid": "^13.0.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -34,9 +37,9 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.3",
+    "jest": "^30.2.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18",
-    "jest": "^30.2.0",
     "ts-jest": "^29.4.5",
     "typescript": "^5"
   }

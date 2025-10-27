@@ -219,7 +219,7 @@ export const markStepCompleted = async (
 
 // Query helpers (getPublicModules, getUserModules, etc.)
 
-const getPublicModules = async () => {
+export const getPublicModules = async () => {
   const modulesRef = collection(db, "modules");
   const publicModulesQuery = query(
     modulesRef,
@@ -234,7 +234,7 @@ const getPublicModules = async () => {
   })) as Module[];
 };
 
-const getUserModules = async (userId: string) => {
+export const getUserModules = async (userId: string) => {
   const modulesRef = collection(db, "modules");
   const collaboratoryQuery = query(
     modulesRef,
