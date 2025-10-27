@@ -72,6 +72,7 @@ export default function SignUpForm() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <button
+          type="button"
           onClick={handleBack}
           className="mb-8 w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white hover:bg-slate-700 transition-colors"
         >

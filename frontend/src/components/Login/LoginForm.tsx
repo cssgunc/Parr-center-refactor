@@ -4,6 +4,8 @@ import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { loginUserWithEmailAndPassword } from "@/lib/firebase/Authentication/EmailAuth";
 import { signInUserWithGoogleAuth } from "@/lib/firebase/Authentication/GoogleAuth";
+import { FirebaseError } from "firebase/app";
+import { generateFirebaseAuthErrorMessage } from "@/lib/firebase/Authentication/ErrorHandler/index";
 
 import { toast } from "sonner";
 import { FcGoogle } from "react-icons/fc";
@@ -16,9 +18,9 @@ export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [errorField, setErrorField] = useState<"email" | "password" | null>(
-    null
-  );
+  const [errorField, setErrorField] = useState<
+    "email" | "password" | "firebase" | null
+  >(null);
 
   const handleSubmit = async () => {
     if (!email.trim()) {
@@ -67,9 +69,25 @@ export default function LoginForm() {
     router.push("/");
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Google sign up clicked");
-    signInUserWithGoogleAuth();
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      console.log("Google sign up clicked");
+      await signInUserWithGoogleAuth();
+      router.push("/");
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        const { message, field } = generateFirebaseAuthErrorMessage(error);
+        setError(message);
+        setErrorField(field);
+      } else {
+        setError("Couldn’t sign in. Please try again.");
+        setErrorField(null);
+      }
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -153,7 +171,8 @@ export default function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyPress}
                 className={`w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${
-                  error && (errorField === "password" || "firebase")
+                  error &&
+                  (errorField === "password" || errorField === "firebase")
                     ? "border-red-500"
                     : "border-gray-300"
                 } `}
