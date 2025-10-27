@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import Footer from "@/components/Footer";
-import ModuleContent from "@/components/ModuleContent";
+import FooterMUI from "@/components/FooterMUI";
+import ModuleContentMUI from "@/components/ModuleContentMUI";
 import modulesContent from "@/data/modulesContent";
 
 
@@ -16,11 +16,11 @@ export default function Home() {
         <Sidebar selectedModule={selectedModule} onSelect={setSelectedModule} />
         <main className="flex-1 overflow-auto">
           <div className="p-6">
-            <ModuleContent moduleId={selectedModule} content={modulesContent[selectedModule]} />
+            <ModuleContentMUI moduleId={selectedModule} content={modulesContent[selectedModule]} />
           </div>
         </main>
       </div>
-      <Footer />
+      <FooterMUI />
     </div>
   );
 }
