@@ -52,7 +52,7 @@ export default function Navbar() {
 								color: 'white',
 								textTransform: 'none',
 								fontSize: '16px',
-                borderRadius: '16px',
+                				borderRadius: '16px',
 								px: 3,
 								py: 1,
 							}}
