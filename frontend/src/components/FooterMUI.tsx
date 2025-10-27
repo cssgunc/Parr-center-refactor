@@ -6,8 +6,8 @@ export default function FooterMUI() {
     <Box
       component="footer"
       sx={{
-        bgcolor: '#4B9CD3',
-        color: 'white',
+        bgcolor: 'info.main',
+        color: 'common.white',
         py: 4,
         px: 3,
       }}

@@ -19,7 +19,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           sx={{
             fontFamily: 'var(--font-secondary)',
             fontWeight: 'bold',
-            color: '#1f2937',
+            color: (t) => t.palette.grey[800],
           }}
         >
           Module {moduleId}
@@ -27,7 +27,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         <Typography 
           sx={{
             mt: 2,
-            color: '#374151',
+            color: (t) => t.palette.grey[700],
             fontFamily: 'var(--font-secondary)',
           }}
         >
@@ -52,7 +52,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           fontFamily: 'var(--font-primary)',
           fontSize: '2.25rem',
           fontWeight: 'bold',
-          color: '#B14C59',
+          color: (t) => t.palette.error.main,
           mb: 0.5,
         }}
       >
@@ -66,7 +66,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           fontFamily: 'var(--font-secondary)',
           fontSize: '2.25rem',
           fontWeight: 'bold',
-          color: '#B14C59',
+          color: (t) => t.palette.error.main,
           mb: 1,
         }}
       >
@@ -76,7 +76,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
       <Typography
         sx={{
           fontFamily: 'var(--font-secondary)',
-          color: '#BE897E',
+          color: (t) => t.palette.warning.main,
           fontSize: '1.25rem',
           mb: 1,
         }}
@@ -97,13 +97,13 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
             py: 1.5,
             px: 2,
             borderRadius: 4,
-            bgcolor: '#13294B',
+            bgcolor: (t) => t.palette.common.black,
             fontFamily: 'var(--font-secondary)',
             fontWeight: 'bold',
             color: 'white',
             fontSize: '1.25rem',
             '&:hover': {
-              bgcolor: '#1a3457',
+              bgcolor: (t) => t.palette.common.black,
             },
           }}
         >
@@ -115,12 +115,12 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
             py: 1.5,
             px: 2,
             borderRadius: 4,
-            bgcolor: '#13294B',
+            bgcolor: (t) => t.palette.common.black,
             fontFamily: 'var(--font-secondary)',
             color: 'white',
             fontSize: '1rem',
             '&:hover': {
-              bgcolor: '#1a3457',
+              bgcolor: (t) => t.palette.common.black,
             },
           }}
         >
@@ -158,16 +158,16 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  border: '1px solid #d1d5db',
+                  border: (t) => `1px solid ${t.palette.grey[300]}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 'bold',
-                  color: '#1f2937',
+                  color: (t) => t.palette.grey[800],
                   minWidth: 32,
                   p: 0,
                   '&:hover': {
-                    bgcolor: '#f3f4f6',
+                    bgcolor: (t) => t.palette.grey[100],
                   },
                 }}
               >
@@ -178,7 +178,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
                   sx={{
                     width: 64,
                     height: 1,
-                    bgcolor: '#e5e7eb',
+                    bgcolor: (t) => t.palette.grey[200],
                   }}
                 />
               )}
@@ -203,8 +203,8 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         </Typography>
         <Typography
           sx={{
-            color: 'black',
-            lineHeight: 'relaxed',
+            color: (t) => t.palette.common.black,
+            lineHeight: '1.6',
             ml: '5vw',
           }}
         >
