@@ -7,6 +7,7 @@ import { FirebaseError } from "firebase/app";
  */
 export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
   let message: string;
+  let field: "email" | "password" | "firebase" | null = null;
 
   switch (error?.code) {
     case "auth/claims-too-large":
@@ -14,6 +15,7 @@ export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
       break;
     case "auth/email-already-exists":
       message = "That email is already in use.";
+      field = "email";
       break;
     case "auth/id-token-expired":
       message = "Your session has expired. Please sign in again.";
@@ -41,6 +43,7 @@ export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
       break;
     case "auth/invalid-credential":
       message = "Invalid credentials";
+      field = "password";
       break;
     case "auth/invalid-disabled-field":
       message = 'The "disabled" user property must be a boolean.';
@@ -53,6 +56,7 @@ export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
       break;
     case "auth/invalid-email":
       message = "Email must be a valid address.";
+      field = "email";
       break;
     case "auth/invalid-email-verified":
       message = 'The "emailVerified" property must be a boolean.';
@@ -92,6 +96,7 @@ export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
       break;
     case "auth/invalid-password":
       message = "Password must be at least 6 characters.";
+      field = "password";
       break;
     case "auth/invalid-password-hash":
       message = "Password hash must be a valid byte buffer.";
@@ -174,12 +179,14 @@ export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
       break;
     case "auth/user-disabled":
       message = "This user account has been disabled by an administrator.";
+      field = "email";
       break;
     case "auth/user-not-found":
       message = "No user found for the provided identifier.";
+      field = "email";
       break;
     default:
       message = "An unexpected authentication error occurred.";
   }
-  throw new Error(message);
+  return { message, field };
 };

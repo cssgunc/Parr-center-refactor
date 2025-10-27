@@ -65,14 +65,12 @@ export default function LoginForm() {
   };
 
   const handleBack = () => {
-    console.log("Back button clicked");
     router.push("/");
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      console.log("Google sign up clicked");
       await signInUserWithGoogleAuth();
       router.push("/");
     } catch (error) {
@@ -81,22 +79,19 @@ export default function LoginForm() {
         setError(message);
         setErrorField(field);
       } else {
-        setError("Couldn’t sign in. Please try again.");
+        setError("Couldn't sign in. Please try again.");
         setErrorField(null);
       }
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleForgotPassword = () => {
-    console.log("Forgot password clicked");
     router.push("/forgotpassword");
   };
 
   const handleSignUp = () => {
-    console.log("Sign up clicked");
     router.push("/signup");
   };
 
@@ -133,7 +128,7 @@ export default function LoginForm() {
               </label>
               <input
                 type="text"
-                id="username"
+                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={handleKeyPress}
