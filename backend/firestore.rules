@@ -200,7 +200,8 @@ service cloud.firestore {
 
       // PROGRESS
       match /progress/{moduleId} {
-        allow read, write: if isSignedIn() && request.auth.uid == userId && validateProgress();
+        allow write: if isSignedIn() && request.auth.uid == userId && validateProgress();
+        allow read: if isSignedIn() && request.auth.uid == userId;
       }
     }
   }

@@ -5,52 +5,10 @@ import { useRouter } from "next/navigation";
 import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { Timestamp } from "firebase/firestore";
 import { User, UserProgress } from "../../lib/firebase/types";
-import { signOut } from "firebase/auth";
-// import { auth } from "../../lib/firebase/firebaseConfig";
-
-//  Mock Data
-const mockTimestamp = Timestamp.fromDate(new Date("2024-08-15T12:00:00Z"));
-
-const mockUser: User = {
-  id: "mock-user-001",
-  email: "wyatt.smith@unc.edu",
-  displayname: "Wyatt Smith",
-  photoURL: "https://api.dicebear.com/7.x/initials/svg?seed=Wyatt%20Smith",
-  createdAt: mockTimestamp,
-  lastLoginAt: Timestamp.now(),
-};
-
-const mockModules = [
-  { id: "mod1", title: "Ethics in Public Life", stepCount: 5 },
-  { id: "mod2", title: "Leadership Foundations", stepCount: 7 },
-  { id: "mod3", title: "Decision-Making Workshop", stepCount: 4 },
-];
-
-const mockProgress: Record<string, UserProgress> = {
-  mod1: {
-    completedStepIds: ["1", "2", "3", "4"],
-    lastViewedAt: mockTimestamp,
-    quizScores: {},
-    startedAt: mockTimestamp,
-    completedAt: null,
-  },
-  mod2: {
-    completedStepIds: ["1", "2"],
-    lastViewedAt: mockTimestamp,
-    quizScores: {},
-    startedAt: mockTimestamp,
-    completedAt: null,
-  },
-  mod3: {
-    completedStepIds: ["1", "2", "3", "4"],
-    lastViewedAt: mockTimestamp,
-    quizScores: {},
-    startedAt: mockTimestamp,
-    completedAt: mockTimestamp,
-  },
-};
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../lib/firebase/firebaseConfig";
+import { getPublicModules, getUserProgress } from "../../lib/firebase/db-operations";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -59,42 +17,29 @@ export default function ProfilePage() {
   const [progressData, setProgressData] = useState<Record<string, UserProgress>>({});
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  // ======================================
-  // 🔹 Simulate data fetching (Mock Phase)
-  // ======================================
-  // In production, replace this with Firebase Auth listener
-  // and Firestore helper calls from lib/firebase/db-operations.
-  const timeout = setTimeout(() => {
-    setUser(mockUser);
-    setModules(mockModules);
-    setProgressData(mockProgress);
-    setLoading(false);
-  }, 800);
 
-  return () => clearTimeout(timeout);
-}, []);
-
-/* 
-===============================================================
-💡 FUTURE IMPLEMENTATION (when Firebase is live)
-===============================================================
 useEffect(() => {
   // 1️⃣ Watch for Auth state (get current user)
   const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
     if (!currentUser) {
-      router.push("/signin");
+      router.push("/login");
       return;
     }
 
     // Set the authenticated user
-    setUser(currentUser as User);
-
+    setUser({
+      id: currentUser.uid,
+      email: currentUser.email || "",
+      displayname: currentUser.displayName || "",
+      photoURL: currentUser.photoURL || "",
+      createdAt: currentUser.metadata.creationTime ? new Date(currentUser.metadata.creationTime) : new Date(),
+      lastLoginAt: currentUser.metadata.lastSignInTime ? new Date(currentUser.metadata.lastSignInTime) : new Date(),
+    });
+    
     // 2️⃣ Fetch available modules
     const fetchedModules = await getPublicModules();
 
     // 3️⃣ Fetch progress for each module
-    //    Uses helper: getUserProgress(userId, moduleId)
     const progressMap: Record<string, UserProgress> = {};
     for (const mod of fetchedModules) {
       const progress = await getUserProgress(currentUser.uid, mod.id);
@@ -102,8 +47,7 @@ useEffect(() => {
         progressMap[mod.id] = progress;
       }
     }
-
-    // 4️⃣ Store data in state
+    console.log(progressMap);
     setModules(fetchedModules);
     setProgressData(progressMap);
     setLoading(false);
@@ -111,7 +55,7 @@ useEffect(() => {
 
   return () => unsubscribe();
 }, [router]);
-*/
+
 
   if (loading) {
     return (
@@ -166,11 +110,11 @@ useEffect(() => {
               </p>
               <p>
                 <span className="font-medium text-gray-700">Joined:</span>{" "}
-                {user.createdAt.toDate().toLocaleDateString()}
+                {user.createdAt.toLocaleDateString()}
               </p>
               <p>
                 <span className="font-medium text-gray-700">Last Active:</span>{" "}
-                {user.lastLoginAt.toDate().toLocaleString()}
+                {user.lastLoginAt.toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -237,16 +181,16 @@ useEffect(() => {
           </button>
 
           <button
-            // onClick={() =>
-            //   signOut(auth)
-            //     .then(() => {
-            //       console.log("✅ User signed out");
-            //       router.push("/signin");
-            //     })
-            //     .catch((error) => {
-            //       console.error("❌ Error signing out:", error);
-            //     })
-            // }
+            onClick={() =>
+              signOut(auth)
+                .then(() => {
+                  console.log("✅ User signed out");
+                  router.push("/login");
+                })
+                .catch((error) => {
+                  console.error("❌ Error signing out:", error);
+                })
+            }
             className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
           >
             Sign Out

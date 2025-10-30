@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
+
 // User
 
 export interface User {
@@ -7,8 +8,8 @@ export interface User {
   email: string;
   displayname: string;
   photoURL?: string;
-  createdAt: Timestamp;
-  lastLoginAt: Timestamp;
+  createdAt: Date;
+  lastLoginAt: Date;
 }
 
 export interface UserProgress {
@@ -28,8 +29,8 @@ export interface Module {
   collaborators?: string[]; // userIds
   isPublic: boolean;
   tags: string[];
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
   stepCount: number;
   publishedVersion?: number;
   thumbnailUrl?: string;
@@ -81,8 +82,8 @@ export interface StepBase {
   estimatedMinutes?: number;
   isOptional: boolean;
   createdBy: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type StepType = "video" | "quiz" | "flashcards" | "freeResponse";
