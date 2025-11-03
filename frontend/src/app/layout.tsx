@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
+<<<<<<< HEAD
 import { Inter, Roboto_Mono, Playfair_Display, Work_Sans, Cormorant_Garamond } from "next/font/google";
+=======
+import {
+  Inter,
+  Roboto_Mono,
+  Playfair_Display,
+  Source_Sans_3,
+  Cormorant_Garamond,
+} from "next/font/google";
+>>>>>>> 9bcf88f (Add AdminRoute component)
 import "./globals.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
@@ -8,6 +18,7 @@ import theme from "@/lib/theme";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({
   variable: "--font-primary",
@@ -50,14 +61,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable}`}>
+      <body
+        className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable}`}
+      >
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <Navbar />
             <Toaster position="top-center" />
+<<<<<<< HEAD
             {children}
             <Footer />
+=======
+            <AuthProvider>{children}</AuthProvider>
+>>>>>>> 9bcf88f (Add AdminRoute component)
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>
