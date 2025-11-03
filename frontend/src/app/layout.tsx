@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-<<<<<<< HEAD
-import { Inter, Roboto_Mono, Playfair_Display, Work_Sans, Cormorant_Garamond } from "next/font/google";
-=======
 import {
   Inter,
   Roboto_Mono,
   Playfair_Display,
-  Source_Sans_3,
+  Work_Sans,
   Cormorant_Garamond,
 } from "next/font/google";
->>>>>>> 9bcf88f (Add AdminRoute component)
 import "./globals.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
@@ -69,12 +65,8 @@ export default function RootLayout({
             <CssBaseline />
             <Navbar />
             <Toaster position="top-center" />
-<<<<<<< HEAD
             {children}
             <Footer />
-=======
-            <AuthProvider>{children}</AuthProvider>
->>>>>>> 9bcf88f (Add AdminRoute component)
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

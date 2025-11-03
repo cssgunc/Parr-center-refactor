@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import ModuleContentMUI from "@/components/ModuleContentMUI";
 import modulesContent from "@/data/modulesContent";
 import ModulesPage from "@/components/ModulesPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useRouter } from "next/navigation";
 
 /**
  * HOME COMPONENT
@@ -16,7 +20,10 @@ import ProtectedRoute from "@/components/ProtectedRoute";
  */
 export default function Home() {
   // ===== STATE MANAGEMENT =====
-
+  /**
+   * Tracks user state that is loggedin on webpage
+   */
+  const { user, isAdmin, loading } = useAuth();
   /**
    * CURRENT VIEW STATE
    *
@@ -36,75 +43,54 @@ export default function Home() {
    */
   const [selectedModule, setSelectedModule] = useState<number>(1);
 
+  /**
+   *NextJS router and redriecting state for webpage navigation
+   */
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const router = useRouter();
+
   // ===== RENDER LOGIC =====
+
+  /**
+   * Auto-Redirect on loading of home page
+   * Set's the view based off whether user is loggedin or not and user's role
+   * */
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        setIsRedirecting(true);
+        router.push("/login");
+      } else if (isAdmin) {
+        setCurrentView("admin");
+      } else {
+        setCurrentView("student");
+      }
+    }
+  }, [user, isAdmin, loading]);
+
+  //Displays loading while AuthContext is fetching role, and userProfile
+  if (loading || isRedirecting) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#f9fafb",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* CONDITIONAL RENDERING BASED ON CURRENT VIEW */}
-      {currentView === "home" ? (
-        // ===== HOME VIEW =====
-        // This is the landing page that users see when they first visit the application
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            {/* Application title and branding */}
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Parr Center Learning Platform
-            </h1>
-
-            {/* Welcome message explaining what the application does */}
-            <p className="text-xl text-gray-600 mb-8">
-              Welcome to the learning management system
-            </p>
-
-            {/* Navigation buttons for accessing different parts of the application */}
-            <div className="space-x-4">
-              {/* Student Portal Button */}
-              <button
-                onClick={() => setCurrentView("student")}
-                className="bg-carolina-blue hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
-              >
-                Student Portal
-              </button>
-
-              {/* Admin Dashboard Button */}
-              <button
-                onClick={() => setCurrentView("admin")}
-                className="bg-primary-athletics-navy hover:bg-blue-900 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
-              >
-                Admin Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : currentView === "student" ? (
-        // ===== STUDENT PORTAL VIEW =====
-        // This is the student-facing learning portal with module content
-        //ProtectedRoute route will redirect to /login if user is not authenticated
-        <ProtectedRoute>
-          <div className="min-h-screen bg-white flex flex-col">
-            {/* Back to Home Button */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
-              <button
-                onClick={() => setCurrentView("home")}
-                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
-              >
-                ← Back to Home
-              </button>
-            </div>
-
-          <div className="flex flex-1">
-            <Sidebar selectedModule={selectedModule} onSelect={setSelectedModule} />
-            <main className="flex-1 overflow-auto">
-              <div className="p-6">
-                <ModuleContentMUI moduleId={selectedModule} content={modulesContent[selectedModule]} />
-              </div>
-            </main>
-          </div>
-        </div>
-      ) : (
-        // ===== ADMIN VIEW =====
-        // This is the admin dashboard where users can manage modules and features
-        <ProtectedRoute>
+      {currentView === "admin" ? (
+        isAdmin ? (
+          // ===== ADMIN VIEW =====
+          // This is the admin dashboard where users can manage modules and feature
           <div>
             {/* Admin Dashboard Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
@@ -115,12 +101,12 @@ export default function Home() {
                 </h1>
 
                 {/* Back to Home Button */}
-                <button
-                  onClick={() => setCurrentView("home")}
-                  className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
-                >
-                  ← Back to Home
-                </button>
+                {/* <button
+                onClick={() => setCurrentView("home")}
+                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+              >
+                ← Back to Home
+              </button> */}
               </div>
             </div>
 
@@ -130,6 +116,39 @@ export default function Home() {
             It handles displaying, creating, editing, and deleting modules and features.
           */}
             <ModulesPage />
+          </div>
+        ) : null
+      ) : (
+        // ===== STUDENT PORTAL VIEW =====
+        // This is the student-facing learning portal with module content
+        //ProtectedRoute route will redirect to /login if user is not authenticated
+        <ProtectedRoute>
+          <div className="min-h-screen bg-white flex flex-col">
+            {/* Back to Home Button */}
+            <div className="bg-white border-b border-gray-200 px-6 py-4">
+              {/* <button
+                onClick={() => setCurrentView("home")}
+                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+              >
+                ← Back to Home
+              </button> */}
+            </div>
+
+            <div className="flex flex-1">
+              <Sidebar
+                selectedModule={selectedModule}
+                onSelect={setSelectedModule}
+              />
+              <main className="flex-1 overflow-auto">
+                <div className="p-6">
+                  <ModuleContentMUI
+                    moduleId={selectedModule}
+                    content={modulesContent[selectedModule]}
+                  />
+                </div>
+              </main>
+            </div>
+            <FooterMUI />
           </div>
         </ProtectedRoute>
       )}

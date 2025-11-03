@@ -4,16 +4,18 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebase/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
-import { Fahkwang } from "next/font/google";
 
 //Interface stores userData
+/**
+ * Will change based on what backend stores for each user profile
+ */
 interface UserProfile {
-  firstName: string;
+  firstName?: string;
   lastName?: string;
   phoneNumber?: string;
-  isAdmin: boolean;
-  createdAt: string;
-  lastActive: string;
+  isAdmin?: boolean;
+  createdAt?: string;
+  lastActive?: string;
 }
 
 interface AuthContextType {
@@ -28,7 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   userProfile: null,
   isAdmin: false,
-  loading: true,
+  loading: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -63,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!loading) {
       fetchUserProfile();
     }
-  }, [user]);
+  }, [user, loading]);
 
   const isAdmin = userProfile?.isAdmin ?? false;
   const isLoading = loading || profileLoading;
@@ -79,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context == undefined) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
