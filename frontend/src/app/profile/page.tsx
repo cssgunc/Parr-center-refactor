@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Container, Typography, Box } from "@mui/material";
 import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -55,27 +56,31 @@ const mockProgress: Record<string, UserProgress> = {
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [modules, setModules] = useState<{ id: string; title: string; stepCount: number }[]>([]);
-  const [progressData, setProgressData] = useState<Record<string, UserProgress>>({});
+  const [modules, setModules] = useState<
+    { id: string; title: string; stepCount: number }[]
+  >([]);
+  const [progressData, setProgressData] = useState<
+    Record<string, UserProgress>
+  >({});
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  // ======================================
-  // 🔹 Simulate data fetching (Mock Phase)
-  // ======================================
-  // In production, replace this with Firebase Auth listener
-  // and Firestore helper calls from lib/firebase/db-operations.
-  const timeout = setTimeout(() => {
-    setUser(mockUser);
-    setModules(mockModules);
-    setProgressData(mockProgress);
-    setLoading(false);
-  }, 800);
+  useEffect(() => {
+    // ======================================
+    // 🔹 Simulate data fetching (Mock Phase)
+    // ======================================
+    // In production, replace this with Firebase Auth listener
+    // and Firestore helper calls from lib/firebase/db-operations.
+    const timeout = setTimeout(() => {
+      setUser(mockUser);
+      setModules(mockModules);
+      setProgressData(mockProgress);
+      setLoading(false);
+    }, 800);
 
-  return () => clearTimeout(timeout);
-}, []);
+    return () => clearTimeout(timeout);
+  }, []);
 
-/* 
+  /* 
 ===============================================================
 💡 FUTURE IMPLEMENTATION (when Firebase is live)
 ===============================================================
@@ -198,9 +203,7 @@ useEffect(() => {
                       <span className="text-gray-800 font-medium">
                         {mod.title}
                       </span>
-                      <span className="text-sm text-gray-500">
-                        {percent}%
-                      </span>
+                      <span className="text-sm text-gray-500">{percent}%</span>
                     </div>
                     <LinearProgress
                       variant="determinate"
@@ -217,7 +220,8 @@ useEffect(() => {
                     />
                     {progress?.completedAt && (
                       <p className="text-xs text-green-600 mt-1">
-                        Completed on {progress.completedAt.toDate().toLocaleDateString()}
+                        Completed on{" "}
+                        {progress.completedAt.toDate().toLocaleDateString()}
                       </p>
                     )}
                   </div>
