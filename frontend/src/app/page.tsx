@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import ModuleContentMUI from "@/components/ModuleContentMUI";
 import modulesContent from "@/data/modulesContent";
 import ModulesPage from "@/components/ModulesPage";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 /**
  * HOME COMPONENT
@@ -24,7 +25,9 @@ export default function Home() {
    * - 'student': Student learning portal with module content
    * - 'admin': Admin dashboard for managing modules and features
    */
-  const [currentView, setCurrentView] = useState<'home' | 'student' | 'admin'>('home');
+  const [currentView, setCurrentView] = useState<"home" | "student" | "admin">(
+    "home"
+  );
 
   /**
    * SELECTED MODULE STATE
@@ -38,7 +41,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* CONDITIONAL RENDERING BASED ON CURRENT VIEW */}
-      {currentView === 'home' ? (
+      {currentView === "home" ? (
         // ===== HOME VIEW =====
         // This is the landing page that users see when they first visit the application
         <div className="min-h-screen flex items-center justify-center">
@@ -57,7 +60,7 @@ export default function Home() {
             <div className="space-x-4">
               {/* Student Portal Button */}
               <button
-                onClick={() => setCurrentView('student')}
+                onClick={() => setCurrentView("student")}
                 className="bg-carolina-blue hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
               >
                 Student Portal
@@ -65,7 +68,7 @@ export default function Home() {
 
               {/* Admin Dashboard Button */}
               <button
-                onClick={() => setCurrentView('admin')}
+                onClick={() => setCurrentView("admin")}
                 className="bg-primary-athletics-navy hover:bg-blue-900 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
               >
                 Admin Dashboard
@@ -73,19 +76,21 @@ export default function Home() {
             </div>
           </div>
         </div>
-      ) : currentView === 'student' ? (
+      ) : currentView === "student" ? (
         // ===== STUDENT PORTAL VIEW =====
         // This is the student-facing learning portal with module content
-        <div className="min-h-screen bg-white flex flex-col">
-          {/* Back to Home Button */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <button
-              onClick={() => setCurrentView('home')}
-              className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
-            >
-              ← Back to Home
-            </button>
-          </div>
+        //ProtectedRoute route will redirect to /login if user is not authenticated
+        <ProtectedRoute>
+          <div className="min-h-screen bg-white flex flex-col">
+            {/* Back to Home Button */}
+            <div className="bg-white border-b border-gray-200 px-6 py-4">
+              <button
+                onClick={() => setCurrentView("home")}
+                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+              >
+                ← Back to Home
+              </button>
+            </div>
 
           <div className="flex flex-1">
             <Sidebar selectedModule={selectedModule} onSelect={setSelectedModule} />
@@ -99,30 +104,34 @@ export default function Home() {
       ) : (
         // ===== ADMIN VIEW =====
         // This is the admin dashboard where users can manage modules and features
-        <div>
-          {/* Admin Dashboard Header */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <div className="flex items-center justify-between">
-              {/* Page title */}
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <ProtectedRoute>
+          <div>
+            {/* Admin Dashboard Header */}
+            <div className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                {/* Page title */}
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Admin Dashboard
+                </h1>
 
-              {/* Back to Home Button */}
-              <button
-                onClick={() => setCurrentView('home')}
-                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
-              >
-                ← Back to Home
-              </button>
+                {/* Back to Home Button */}
+                <button
+                  onClick={() => setCurrentView("home")}
+                  className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  ← Back to Home
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/*
+            {/*
             MODULES PAGE COMPONENT
             This is where all the module management functionality lives.
             It handles displaying, creating, editing, and deleting modules and features.
           */}
-          <ModulesPage />
-        </div>
+            <ModulesPage />
+          </div>
+        </ProtectedRoute>
       )}
     </div>
   );
