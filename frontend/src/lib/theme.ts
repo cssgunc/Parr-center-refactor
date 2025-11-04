@@ -50,6 +50,44 @@ const theme = createTheme({
 				},
 			},
 		},
+		MuiLinearProgress: {
+			styleOverrides: {
+				root: {
+					backgroundColor: '#e5e7eb',
+					borderRadius: 6,
+					'& .MuiLinearProgress-bar': {
+						transition: 'width 0.45s ease',
+						'@media (prefers-reduced-motion: reduce)': {
+							transition: 'none',
+						},
+					},
+				},
+			},
+		},
+		MuiChip: {
+			styleOverrides: {
+				root: {
+					fontWeight: 500,
+				},
+			},
+		},
+		MuiTooltip: {
+			styleOverrides: {
+				tooltip: {
+					backgroundColor: 'white',
+					color: '#374151',
+					border: '1px solid #e5e7eb',
+					boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+					fontSize: '0.875rem',
+				},
+				arrow: {
+					color: 'white',
+					'&::before': {
+						border: '1px solid #e5e7eb',
+					},
+				},
+			},
+		},
 	},
 	shape: {
 		borderRadius: 12,
