@@ -219,7 +219,7 @@ export const markStepCompleted = async (
 
 // Query helpers (getPublicModules, getUserModules, etc.)
 
-export const getPublicModules = async () => {
+export const getPublicModules = async (): Promise<Module[]> => {
   const modulesRef = collection(db, "modules");
   const publicModulesQuery = query(
     modulesRef,
