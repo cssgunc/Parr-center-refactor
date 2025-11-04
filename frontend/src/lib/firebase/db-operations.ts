@@ -182,7 +182,15 @@ export const getUserProgress = async (userId: string, moduleId: string) => {
   if (!progressDoc.exists()) {
     return null;
   }
-  return { id: progressDoc.id, ...progressDoc.data() };
+  const progressData = progressDoc.data();
+  return {
+    id: progressDoc.id,
+    completedStepIds: progressData.completedStepIds || [],
+    lastViewedAt: progressData.lastViewedAt || null,
+    quizScores: progressData.quizScores || {},
+    startedAt: progressData.startedAt || null,
+    completedAt: progressData.completedAt || null,
+  } as UserProgress;
 };
 
 export const markStepCompleted = async (
