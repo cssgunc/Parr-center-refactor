@@ -182,7 +182,15 @@ export const getUserProgress = async (userId: string, moduleId: string) => {
   if (!progressDoc.exists()) {
     return null;
   }
-  return { id: progressDoc.id, ...progressDoc.data() };
+  const progressData = progressDoc.data();
+  return {
+    id: progressDoc.id,
+    completedStepIds: progressData.completedStepIds || [],
+    lastViewedAt: progressData.lastViewedAt || null,
+    quizScores: progressData.quizScores || {},
+    startedAt: progressData.startedAt || null,
+    completedAt: progressData.completedAt || null,
+  } as UserProgress;
 };
 
 export const markStepCompleted = async (
@@ -219,7 +227,7 @@ export const markStepCompleted = async (
 
 // Query helpers (getPublicModules, getUserModules, etc.)
 
-export const getPublicModules = async () => {
+export const getPublicModules = async (): Promise<Module[]> => {
   const modulesRef = collection(db, "modules");
   const publicModulesQuery = query(
     modulesRef,
