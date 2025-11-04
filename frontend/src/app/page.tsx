@@ -1,53 +1,41 @@
-/**
- * MAIN APPLICATION PAGE
- * 
- * This is the root page component that serves as the entry point for the application.
- * It implements a view switcher between home, student portal, and admin dashboard.
- * 
- * The component uses local state to manage which view is currently displayed:
- * - 'home': Shows the landing page with navigation options
- * - 'student': Shows the student learning portal with modules
- * - 'admin': Shows the admin dashboard for module management
- */
-
-"use client"; // This directive tells Next.js this component should run on the client side
+"use client";
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import Footer from "@/components/Footer";
-import ModuleContent from "@/components/ModuleContent";
+import FooterMUI from "@/components/FooterMUI";
+import ModuleContentMUI from "@/components/ModuleContentMUI";
 import modulesContent from "@/data/modulesContent";
 import ModulesPage from "@/components/ModulesPage";
 
 /**
  * HOME COMPONENT
- * 
+ *
  * The main page component that renders home, student, or admin view
  * based on the currentView state. This provides a simple way to navigate
  * between different sections of the application without complex routing.
  */
 export default function Home() {
   // ===== STATE MANAGEMENT =====
-  
+
   /**
    * CURRENT VIEW STATE
-   * 
+   *
    * Tracks which view is currently being displayed:
    * - 'home': Landing page with welcome message and navigation buttons
    * - 'student': Student learning portal with module content
    * - 'admin': Admin dashboard for managing modules and features
    */
   const [currentView, setCurrentView] = useState<'home' | 'student' | 'admin'>('home');
-  
+
   /**
    * SELECTED MODULE STATE
-   * 
+   *
    * Tracks which module is currently selected in the student portal
    */
   const [selectedModule, setSelectedModule] = useState<number>(1);
 
   // ===== RENDER LOGIC =====
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* CONDITIONAL RENDERING BASED ON CURRENT VIEW */}
@@ -60,12 +48,12 @@ export default function Home() {
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Parr Center Learning Platform
             </h1>
-            
+
             {/* Welcome message explaining what the application does */}
             <p className="text-xl text-gray-600 mb-8">
               Welcome to the learning management system
             </p>
-            
+
             {/* Navigation buttons for accessing different parts of the application */}
             <div className="space-x-4">
               {/* Student Portal Button */}
@@ -75,7 +63,7 @@ export default function Home() {
               >
                 Student Portal
               </button>
-              
+
               {/* Admin Dashboard Button */}
               <button
                 onClick={() => setCurrentView('admin')}
@@ -99,16 +87,16 @@ export default function Home() {
               ← Back to Home
             </button>
           </div>
-          
+
           <div className="flex flex-1">
             <Sidebar selectedModule={selectedModule} onSelect={setSelectedModule} />
             <main className="flex-1 overflow-auto">
               <div className="p-6">
-                <ModuleContent moduleId={selectedModule} content={modulesContent[selectedModule]} />
+                <ModuleContentMUI moduleId={selectedModule} content={modulesContent[selectedModule]} />
               </div>
             </main>
           </div>
-          <Footer />
+          <FooterMUI />
         </div>
       ) : (
         // ===== ADMIN VIEW =====
@@ -119,7 +107,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               {/* Page title */}
               <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              
+
               {/* Back to Home Button */}
               <button
                 onClick={() => setCurrentView('home')}
@@ -129,8 +117,8 @@ export default function Home() {
               </button>
             </div>
           </div>
-          
-          {/* 
+
+          {/*
             MODULES PAGE COMPONENT
             This is where all the module management functionality lives.
             It handles displaying, creating, editing, and deleting modules and features.

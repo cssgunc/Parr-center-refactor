@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono } from "next/font/google";
+import { Inter, Roboto_Mono, Playfair_Display, Source_Sans_3, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import theme from '@/lib/theme';
-import Navbar from '../components/Navbar';
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import theme from "@/lib/theme";
+import Navbar from "../components/Navbar";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -15,6 +16,24 @@ const inter = Inter({
 const robotoMono = Roboto_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+});
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-primary",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+});
+
+const workSans = Source_Sans_3({
+  variable: "--font-secondary",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+});
+
+const cormorantGaramond = Cormorant_Garamond({
+  variable: "--font-tertiary",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -29,11 +48,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${robotoMono.variable}`}>
+      <body className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable}`}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <Navbar />
+            <Toaster position="top-center" />
             {children}
           </ThemeProvider>
         </AppRouterCacheProvider>
