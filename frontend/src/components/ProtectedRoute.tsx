@@ -11,14 +11,14 @@ export default function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
       setIsRedirecting(true);
-      router.push("/login");
+      router.replace("/login");
     }
   }, [user, loading, router]);
 

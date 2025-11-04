@@ -9,6 +9,7 @@ import { generateFirebaseAuthErrorMessage } from "@/lib/firebase/Authentication/
 
 import { toast } from "sonner";
 import { FcGoogle } from "react-icons/fc";
+import { auth } from "@/lib/firebase/firebaseConfig";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -38,9 +39,17 @@ export default function LoginForm() {
     try {
       await loginUserWithEmailAndPassword(email, password);
 
+      //Create cookie user's loggedin session
+      const idToken = await auth.currentUser?.getIdToken(true);
+      const resp = await fetch("/api/authSession", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
       //navigate to home page on sucess
       toast.success("Sucessful Login");
-      router.push("/");
+      router.replace("/");
     } catch (error) {
       if (error instanceof Error) {
         const message = error.message.toLowerCase();
@@ -72,7 +81,16 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await signInUserWithGoogleAuth();
-      router.push("/");
+
+      //Create cookie user's loggedin session
+      const idToken = await auth.currentUser?.getIdToken(true);
+      const resp = await fetch("/api/authSession", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      router.replace("/");
     } catch (error) {
       if (error instanceof FirebaseError) {
         const { message, field } = generateFirebaseAuthErrorMessage(error);

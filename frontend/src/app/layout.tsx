@@ -14,7 +14,6 @@ import theme from "@/lib/theme";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Toaster } from "sonner";
-import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({
   variable: "--font-primary",
