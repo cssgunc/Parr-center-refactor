@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Timestamp } from "firebase/firestore";
 import { User, UserProgress } from "../../lib/firebase/types";
 import { signOut } from "firebase/auth";
+import {
+  SectionHeader,
+  OverallProgressBar,
+  ModuleProgressList,
+  type ModuleItem,
+} from "../../components/progress";
 // import { auth } from "../../lib/firebase/firebaseConfig";
 
 //  Mock Data
@@ -55,9 +60,7 @@ const mockProgress: Record<string, UserProgress> = {
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [modules, setModules] = useState<
-    { id: string; title: string; stepCount: number }[]
-  >([]);
+  const [modules, setModules] = useState<ModuleItem[]>([]);
   const [progressData, setProgressData] = useState<Record<string, UserProgress>>(
     {}
   );
@@ -154,14 +157,10 @@ export default function ProfilePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
       <div className="bg-white shadow-lg rounded-2xl p-10 max-w-2xl w-full">
         {/* HEADER */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Your Profile
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Your learning journey across Parr Center modules
-          </p>
-        </div>
+        <SectionHeader
+          title="Your Profile"
+          subtitle="Your learning journey across Parr Center modules"
+        />
 
         {/* USER INFO */}
         {user && (
@@ -198,135 +197,30 @@ export default function ProfilePage() {
         )}
 
         {/* MODULE PROGRESS */}
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        <Box>
+          <Box component="h2" sx={{ fontSize: "1.5rem", fontWeight: 600, mb: 2 }}>
             Module Progress
-          </h2>
+          </Box>
 
-          {modules.length === 0 ? (
-            <p className="text-gray-500 text-center">No modules started yet.</p>
-          ) : (
-            <>
-              {/* OVERALL PROGRESS BAR */}
-              <div className="mb-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-gray-800 font-semibold text-lg">
-                    Overall Progress
-                  </span>
-                  <span className="text-gray-600 font-medium">
-                    {overallPercent}%
-                  </span>
-                </div>
-                <LinearProgress
-                  variant="determinate"
-                  value={overallPercent}
-                  sx={{
-                    height: 12,
-                    borderRadius: 6,
-                    backgroundColor: "#e5e7eb",
-                    "& .MuiLinearProgress-bar": {
-                      backgroundColor: "#2563eb",
-                      transition: "width .45s ease",
-                      "@media (prefers-reduced-motion: reduce)": {
-                        transition: "none",
-                      },
-                    },
-                  }}
-                  aria-label="Overall progress across all modules"
-                />
-                <p className="text-sm text-gray-500 mt-2">
-                  {totalCompleted} of {totalSteps} items completed •{" "}
-                  {completedModulesCount}/{modules.length} modules
-                </p>
-              </div>
-
-              {/* MODULE LIST */}
-              <div className="space-y-6">
-                {modules.map((mod) => {
-                  const progress = progressData[mod.id];
-                  const completedSteps = progress?.completedStepIds.length || 0;
-                  const totalSteps = mod.stepCount || 1;
-                  const percent = Math.round(
-                    (completedSteps / totalSteps) * 100
-                  );
-
-                  // Placeholder quizzesLeft until step types are available:
-                  const quizzesLeft = Math.max(0, totalSteps - completedSteps);
-
-                  const tooltipId = `tooltip-${mod.id}`;
-
-                  return (
-                    <div key={mod.id} className="text-left">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-gray-800 font-medium">
-                          {mod.title}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {percent}%
-                        </span>
-                      </div>
-
-                      <div
-                        className="relative group focus-within:outline-none"
-                        aria-label={`${mod.title} progress: ${completedSteps} of ${totalSteps} items completed`}
-                      >
-                        {/* Make the bar focusable so keyboard users can see the tooltip */}
-                        <div tabIndex={0} aria-describedby={tooltipId}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={percent}
-                            sx={{
-                              height: 10,
-                              borderRadius: 5,
-                              backgroundColor: "#e5e7eb",
-                              "& .MuiLinearProgress-bar": {
-                                backgroundColor:
-                                  percent === 100 ? "#2563eb" : "#60a5fa",
-                                transition: "width .45s ease",
-                                "@media (prefers-reduced-motion: reduce)": {
-                                  transition: "none",
-                                },
-                              },
-                            }}
-                          />
-                        </div>
-
-                        {/* Tooltip (light theme) — appears on hover and focus */}
-                        <div
-                          id={tooltipId}
-                          role="tooltip"
-                          className="
-                            absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-                            bg-white border border-gray-200 rounded-md px-3 py-2
-                            text-sm text-gray-700 whitespace-nowrap
-                            pointer-events-none
-                            opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
-                            transition-opacity duration-200 z-10 shadow-md
-                          "
-                        >
-                          {completedSteps} of {totalSteps} items
-                          {quizzesLeft > 0 &&
-                            ` • ${quizzesLeft} ${
-                              quizzesLeft === 1 ? "quiz" : "quizzes"
-                            } left`}
-                        </div>
-                      </div>
-
-                      {progress?.completedAt && (
-                        <p className="text-xs text-green-600 mt-1">
-                          Completed on{" "}
-                          {progress.completedAt
-                            .toDate()
-                            .toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
+          {modules.length > 0 && (
+            <OverallProgressBar
+              value={overallPercent}
+              label="Overall Progress"
+              totalCompleted={totalCompleted}
+              totalSteps={totalSteps}
+              completedModulesCount={completedModulesCount}
+              totalModulesCount={modules.length}
+            />
           )}
-        </div>
+
+          <ModuleProgressList
+            modules={modules}
+            progressData={progressData}
+            quizzesLeftCalculator={(moduleId, completedSteps, totalSteps) =>
+              Math.max(0, totalSteps - completedSteps)
+            }
+          />
+        </Box>
 
         {/* FOOTER BUTTONS */}
         <div className="text-center mt-10">
