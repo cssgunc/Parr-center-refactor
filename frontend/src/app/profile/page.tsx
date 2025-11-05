@@ -2,120 +2,72 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Container, Typography, Box } from "@mui/material";
-import LinearProgress from "@mui/material/LinearProgress";
+import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { Timestamp } from "firebase/firestore";
 import { User, UserProgress } from "../../lib/firebase/types";
-import { signOut } from "firebase/auth";
-// import { auth } from "../../lib/firebase/firebaseConfig";
-
-//  Mock Data
-const mockTimestamp = Timestamp.fromDate(new Date("2024-08-15T12:00:00Z"));
-
-const mockUser: User = {
-  id: "mock-user-001",
-  email: "wyatt.smith@unc.edu",
-  displayname: "Wyatt Smith",
-  photoURL: "https://api.dicebear.com/7.x/initials/svg?seed=Wyatt%20Smith",
-  createdAt: mockTimestamp,
-  lastLoginAt: Timestamp.now(),
-};
-
-const mockModules = [
-  { id: "mod1", title: "Ethics in Public Life", stepCount: 5 },
-  { id: "mod2", title: "Leadership Foundations", stepCount: 7 },
-  { id: "mod3", title: "Decision-Making Workshop", stepCount: 4 },
-];
-
-const mockProgress: Record<string, UserProgress> = {
-  mod1: {
-    completedStepIds: ["1", "2", "3", "4"],
-    lastViewedAt: mockTimestamp,
-    quizScores: {},
-    startedAt: mockTimestamp,
-    completedAt: null,
-  },
-  mod2: {
-    completedStepIds: ["1", "2"],
-    lastViewedAt: mockTimestamp,
-    quizScores: {},
-    startedAt: mockTimestamp,
-    completedAt: null,
-  },
-  mod3: {
-    completedStepIds: ["1", "2", "3", "4"],
-    lastViewedAt: mockTimestamp,
-    quizScores: {},
-    startedAt: mockTimestamp,
-    completedAt: mockTimestamp,
-  },
-};
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../lib/firebase/firebaseConfig";
+import {
+  getPublicModules,
+  getUserProgress,
+} from "../../lib/firebase/db-operations";
+import {
+  SectionHeader,
+  OverallProgressBar,
+  ModuleProgressList,
+  type ModuleItem,
+} from "../../components/progress";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [modules, setModules] = useState<
-    { id: string; title: string; stepCount: number }[]
-  >([]);
+  const [modules, setModules] = useState<ModuleItem[]>([]);
   const [progressData, setProgressData] = useState<
     Record<string, UserProgress>
   >({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ======================================
-    // 🔹 Simulate data fetching (Mock Phase)
-    // ======================================
-    // In production, replace this with Firebase Auth listener
-    // and Firestore helper calls from lib/firebase/db-operations.
-    const timeout = setTimeout(() => {
-      setUser(mockUser);
-      setModules(mockModules);
-      setProgressData(mockProgress);
-      setLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timeout);
-  }, []);
-
-  /* 
-===============================================================
-💡 FUTURE IMPLEMENTATION (when Firebase is live)
-===============================================================
-useEffect(() => {
-  // 1️⃣ Watch for Auth state (get current user)
-  const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-    if (!currentUser) {
-      router.push("/signin");
-      return;
-    }
-
-    // Set the authenticated user
-    setUser(currentUser as User);
-
-    // 2️⃣ Fetch available modules
-    const fetchedModules = await getPublicModules();
-
-    // 3️⃣ Fetch progress for each module
-    //    Uses helper: getUserProgress(userId, moduleId)
-    const progressMap: Record<string, UserProgress> = {};
-    for (const mod of fetchedModules) {
-      const progress = await getUserProgress(currentUser.uid, mod.id);
-      if (progress) {
-        progressMap[mod.id] = progress;
+    // 1️⃣ Watch for Auth state (get current user)
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        router.push("/login");
+        return;
       }
-    }
 
-    // 4️⃣ Store data in state
-    setModules(fetchedModules);
-    setProgressData(progressMap);
-    setLoading(false);
-  });
+      // Set the authenticated user
+      setUser({
+        id: currentUser.uid,
+        email: currentUser.email || "",
+        displayname: currentUser.displayName || "",
+        photoURL: currentUser.photoURL || "",
+        createdAt: currentUser.metadata.creationTime
+          ? new Date(currentUser.metadata.creationTime)
+          : new Date(),
+        lastLoginAt: currentUser.metadata.lastSignInTime
+          ? new Date(currentUser.metadata.lastSignInTime)
+          : new Date(),
+      });
 
-  return () => unsubscribe();
-}, [router]);
-*/
+      // 2️⃣ Fetch available modules
+      const fetchedModules = await getPublicModules();
+
+      // 3️⃣ Fetch progress for each module
+      const progressMap: Record<string, UserProgress> = {};
+      for (const mod of fetchedModules) {
+        const progress = await getUserProgress(currentUser.uid, mod.id);
+        if (progress) {
+          progressMap[mod.id] = progress;
+        }
+      }
+      console.log(progressMap);
+      setModules(fetchedModules);
+      setProgressData(progressMap);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   if (loading) {
     return (
@@ -133,18 +85,31 @@ useEffect(() => {
     );
   }
 
+  // ===== Overall progress calculation (weighted by step counts) =====
+  const totalCompleted = modules.reduce((sum, mod) => {
+    const progress = progressData[mod.id];
+    return sum + (progress?.completedStepIds.length || 0);
+  }, 0);
+  const totalSteps = modules.reduce(
+    (sum, mod) => sum + (mod.stepCount || 0),
+    0
+  );
+  const overallPercent =
+    totalSteps > 0 ? Math.round((totalCompleted / totalSteps) * 100) : 0;
+
+  const completedModulesCount = modules.filter((m) => {
+    const p = progressData[m.id];
+    return (p?.completedStepIds.length || 0) >= (m.stepCount || 0);
+  }).length;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
       <div className="bg-white shadow-lg rounded-2xl p-10 max-w-2xl w-full">
         {/* HEADER */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Your Profile
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Your learning journey across Parr Center modules
-          </p>
-        </div>
+        <SectionHeader
+          title="Your Profile"
+          subtitle="Your learning journey across Parr Center modules"
+        />
 
         {/* USER INFO */}
         {user && (
@@ -170,65 +135,44 @@ useEffect(() => {
               </p>
               <p>
                 <span className="font-medium text-gray-700">Joined:</span>{" "}
-                {user.createdAt.toDate().toLocaleDateString()}
+                {user.createdAt.toLocaleDateString()}
               </p>
               <p>
                 <span className="font-medium text-gray-700">Last Active:</span>{" "}
-                {user.lastLoginAt.toDate().toLocaleString()}
+                {user.lastLoginAt.toLocaleDateString()}
               </p>
             </div>
           </div>
         )}
 
         {/* MODULE PROGRESS */}
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        <Box>
+          <Box
+            component="h2"
+            sx={{ fontSize: "1.5rem", fontWeight: 600, mb: 2 }}
+          >
             Module Progress
-          </h2>
+          </Box>
 
-          {modules.length === 0 ? (
-            <p className="text-gray-500 text-center">No modules started yet.</p>
-          ) : (
-            <div className="space-y-6">
-              {modules.map((mod) => {
-                const progress = progressData[mod.id];
-                const completedSteps = progress?.completedStepIds.length || 0;
-                const totalSteps = mod.stepCount || 1;
-                const percent = Math.round((completedSteps / totalSteps) * 100);
-
-                return (
-                  <div key={mod.id} className="text-left">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-gray-800 font-medium">
-                        {mod.title}
-                      </span>
-                      <span className="text-sm text-gray-500">{percent}%</span>
-                    </div>
-                    <LinearProgress
-                      variant="determinate"
-                      value={percent}
-                      sx={{
-                        height: 10,
-                        borderRadius: 5,
-                        backgroundColor: "#e5e7eb",
-                        "& .MuiLinearProgress-bar": {
-                          backgroundColor:
-                            percent === 100 ? "#2563eb" : "#60a5fa",
-                        },
-                      }}
-                    />
-                    {progress?.completedAt && (
-                      <p className="text-xs text-green-600 mt-1">
-                        Completed on{" "}
-                        {progress.completedAt.toDate().toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          {modules.length > 0 && (
+            <OverallProgressBar
+              value={overallPercent}
+              label="Overall Progress"
+              totalCompleted={totalCompleted}
+              totalSteps={totalSteps}
+              completedModulesCount={completedModulesCount}
+              totalModulesCount={modules.length}
+            />
           )}
-        </div>
+
+          <ModuleProgressList
+            modules={modules}
+            progressData={progressData}
+            quizzesLeftCalculator={(moduleId, completedSteps, totalSteps) =>
+              Math.max(0, totalSteps - completedSteps)
+            }
+          />
+        </Box>
 
         {/* FOOTER BUTTONS */}
         <div className="text-center mt-10">
@@ -240,16 +184,16 @@ useEffect(() => {
           </button>
 
           <button
-            // onClick={() =>
-            //   signOut(auth)
-            //     .then(() => {
-            //       console.log("✅ User signed out");
-            //       router.push("/signin");
-            //     })
-            //     .catch((error) => {
-            //       console.error("❌ Error signing out:", error);
-            //     })
-            // }
+            onClick={() =>
+              signOut(auth)
+                .then(() => {
+                  console.log("✅ User signed out");
+                  router.push("/login");
+                })
+                .catch((error) => {
+                  console.error("❌ Error signing out:", error);
+                })
+            }
             className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
           >
             Sign Out
