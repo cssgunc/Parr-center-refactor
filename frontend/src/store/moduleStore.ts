@@ -105,20 +105,32 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
   fetchModules: async () => {
     set({ isLoading: true, error: null });
     try {
+      console.log('Fetching public modules...');
       const modules = await getPublicModules();
+      console.log(`Found ${modules.length} modules:`, modules);
 
-      // Fetch steps for each module
+      // Fetch steps for each module, handling permission errors gracefully
       const modulesWithSteps = await Promise.all(
         modules.map(async (module) => {
-          const steps = await getStepsByModuleId(module.id);
-          return { ...module, steps };
+          try {
+            const steps = await getStepsByModuleId(module.id);
+            console.log(`Fetched ${steps.length} steps for module ${module.id}`);
+            return { ...module, steps };
+          } catch (error: any) {
+            // If we can't read steps due to permissions, return module with empty steps
+            console.warn(`Could not fetch steps for module ${module.id}:`, error.message);
+            return { ...module, steps: [] };
+          }
         })
       );
 
       set({ modules: modulesWithSteps, isLoading: false });
+      console.log('Successfully loaded modules with steps');
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       console.error('Error fetching modules:', error);
+      console.error('Error code:', error.code);
+      console.error('Full error:', error);
     }
   },
 
@@ -176,6 +188,7 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
   updateModuleData: async (moduleId: string, updates: { title?: string; description?: string }) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('Updating module:', moduleId, 'with:', updates);
       await updateModule(moduleId, updates);
 
       // Update local state
@@ -189,9 +202,11 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
             : state.selectedModule,
         isLoading: false,
       }));
+      console.log('Successfully updated module');
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       console.error('Error updating module:', error);
+      console.error('Error code:', error.code);
     }
   },
 
@@ -201,8 +216,17 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
    * Deletes a module and all its steps from Firebase.
    */
   deleteModuleData: async (moduleId: string) => {
+    const state = get();
+    const module = state.modules.find((m) => m.id === moduleId);
+
     set({ isLoading: true, error: null });
     try {
+      console.log('Attempting to delete module:', moduleId);
+      console.log('Module createdBy:', module?.createdBy);
+      console.log('Current userId:', state.userId);
+      console.log('Is owner?', module?.createdBy === state.userId);
+      console.log('Module collaborators:', module?.collaborators);
+
       await deleteModule(moduleId, true); // Delete with steps
 
       // Remove from local state
@@ -211,9 +235,12 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
         selectedModule: state.selectedModule?.id === moduleId ? null : state.selectedModule,
         isLoading: false,
       }));
+      console.log('Successfully deleted module');
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       console.error('Error deleting module:', error);
+      console.error('Error code:', error.code);
+      console.error('Full error details:', error);
     }
   },
 

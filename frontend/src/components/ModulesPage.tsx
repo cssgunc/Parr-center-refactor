@@ -169,8 +169,11 @@ export default function ModulesPage() {
                     </svg>
                     <span>{module.stepCount} steps</span>
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-400 mb-1">
                     {module.isPublic ? 'Public' : 'Private'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Owner: {module.createdBy === user?.uid ? 'You' : module.createdBy.slice(0, 8) + '...'}
                   </div>
                 </div>
 
