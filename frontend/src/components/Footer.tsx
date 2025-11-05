@@ -1,7 +1,9 @@
+"use client";
+
 import Image from 'next/image';
 import { Box, Typography } from '@mui/material';
 
-export default function FooterMUI() {
+export default function Footer() {
   return (
     <Box
       component="footer"
