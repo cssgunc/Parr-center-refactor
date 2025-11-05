@@ -7,3 +7,13 @@
   --foreground: #171717;
 }
 
+/* Font fallbacks and CSS variables for consistent usage across the app.
+   The Next.js `next/font/google` loader will set the corresponding
+   variables on <body> (e.g. --font-primary) when available. These
+   :root values act as durable fallbacks for non-JS or when fonts
+   aren't loaded yet. */
+:root {
+  --font-primary: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-secondary: 'Work Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+

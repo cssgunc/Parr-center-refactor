@@ -39,7 +39,15 @@ const theme = createTheme({
 		divider: '#e5e7eb',
 	},
 	typography: {
-		fontFamily: ['var(--font-primary)', 'Georgia', 'serif'].join(','),
+		// Use Work Sans as the overall body/default font (secondary),
+		// while headings use Inter (primary) via explicit overrides.
+		fontFamily: ['var(--font-secondary)', 'system-ui', 'Arial', 'sans-serif'].join(',') ,
+		h1: { fontFamily: ['var(--font-primary)', 'Inter', 'system-ui', 'sans-serif'].join(',') },
+		h2: { fontFamily: ['var(--font-primary)', 'Inter', 'system-ui', 'sans-serif'].join(',') },
+		h3: { fontFamily: ['var(--font-primary)', 'Inter', 'system-ui', 'sans-serif'].join(',') },
+		h4: { fontFamily: ['var(--font-primary)', 'Inter', 'system-ui', 'sans-serif'].join(',') },
+		h5: { fontFamily: ['var(--font-primary)', 'Inter', 'system-ui', 'sans-serif'].join(',') },
+		h6: { fontFamily: ['var(--font-primary)', 'Inter', 'system-ui', 'sans-serif'].join(',') },
 	},
 	components: {
 		MuiButton: {
