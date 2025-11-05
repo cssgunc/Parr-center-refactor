@@ -1,155 +1,69 @@
 /**
- * MODULES PAGE COMPONENT
- * 
+ * MODULES PAGE COMPONENT WITH FIREBASE INTEGRATION
+ *
  * This is the main admin interface for managing learning modules.
- * It displays a grid of modules with their features and provides
- * functionality to create, edit, and delete modules.
- * 
- * The component uses the Zustand store for state management and
- * includes modal dialogs for editing modules and their features.
+ * It fetches modules from Firestore and provides CRUD operations.
  */
 
-'use client'; // This directive tells Next.js this component should run on the client side
+'use client';
 
 import { useEffect, useState } from 'react';
-import { useModuleStore } from '@/store/moduleStore';
-import { Module } from '@/types/module';
+import { useModuleStore, ModuleWithSteps } from '@/store/moduleStore';
 import ModuleEditor from './ModuleEditor';
 
-/**
- * MODULES PAGE COMPONENT
- * 
- * The main admin dashboard component that displays all modules and provides
- * CRUD operations for managing them. This is where admins spend most of their time
- * when managing the learning content.
- */
 export default function ModulesPage() {
-  // ===== ZUSTAND STORE INTEGRATION =====
-  
-  /**
-   * STORE STATE AND ACTIONS
-   * 
-   * We destructure the needed state and actions from the Zustand store.
-   * This gives us direct access to the global state and the functions
-   * to modify it without prop drilling.
-   */
-  const { 
-    modules, // Array of all modules in the system
-    initializeStore, // Function to load mock data into the store
-    deleteModule, // Function to remove a module by ID
-    setSelectedModule, // Function to set which module is currently selected
-    setIsEditing // Function to toggle editing mode
+  // ===== ZUSTAND STORE =====
+  const {
+    modules,
+    isLoading,
+    error,
+    fetchModules,
+    deleteModuleData,
+    setSelectedModule,
+    setIsEditing,
+    setUserId,
   } = useModuleStore();
 
-  // ===== LOCAL COMPONENT STATE =====
-  
-  /**
-   * MODULE EDITOR MODAL STATE
-   * 
-   * Controls whether the module editor modal is currently visible.
-   * When true, the ModuleEditor component is rendered as an overlay.
-   */
+  // ===== LOCAL STATE =====
   const [showModuleEditor, setShowModuleEditor] = useState(false);
-  
-  /**
-   * EDITING MODULE STATE
-   * 
-   * Stores the module that is currently being edited, or null if creating a new module.
-   * This is passed to the ModuleEditor component to determine if we're editing
-   * an existing module or creating a new one.
-   */
-  const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [editingModule, setEditingModule] = useState<ModuleWithSteps | null>(null);
 
   // ===== EFFECTS =====
-  
+
   /**
-   * INITIALIZE STORE ON COMPONENT MOUNT
-   * 
-   * When the component first loads, we need to populate the store with mock data.
-   * This effect runs once when the component mounts and loads the sample modules
-   * into the global state.
+   * Set a placeholder user ID and fetch modules on mount
    */
   useEffect(() => {
-    initializeStore(); // Load mock data into the Zustand store
-  }, [initializeStore]); // Dependency array ensures this only runs when initializeStore changes
+    // TODO: Replace with actual Firebase Auth user ID
+    setUserId('placeholder-user-id');
+    fetchModules();
+  }, [fetchModules, setUserId]);
 
   // ===== EVENT HANDLERS =====
-  
-  /**
-   * HANDLE CREATE MODULE
-   * 
-   * Opens the module editor in "create mode" for adding a new module.
-   * Sets editingModule to null to indicate we're creating, not editing.
-   */
+
   const handleCreateModule = () => {
-    setEditingModule(null); // No existing module to edit
-    setShowModuleEditor(true); // Show the module editor modal
+    setEditingModule(null);
+    setShowModuleEditor(true);
   };
 
-  /**
-   * HANDLE EDIT MODULE
-   * 
-   * Opens the module editor in "edit mode" for modifying an existing module.
-   * Sets up the editing state and passes the module to be edited.
-   * 
-   * @param module - The module object to edit
-   */
-  const handleEditModule = (module: Module) => {
-    setEditingModule(module); // Set the module to be edited
-    setSelectedModule(module); // Update global state to track selected module
-    setIsEditing(true); // Enable editing mode in global state
-    setShowModuleEditor(true); // Show the module editor modal
+  const handleEditModule = (module: ModuleWithSteps) => {
+    setEditingModule(module);
+    setSelectedModule(module);
+    setIsEditing(true);
+    setShowModuleEditor(true);
   };
 
-  /**
-   * HANDLE DELETE MODULE
-   * 
-   * Deletes a module after confirming with the user.
-   * Shows a confirmation dialog to prevent accidental deletions.
-   * 
-   * @param moduleId - The ID of the module to delete
-   */
-  const handleDeleteModule = (moduleId: string) => {
-    // Show confirmation dialog to prevent accidental deletions
-    if (confirm('Are you sure you want to delete this module? This action cannot be undone.')) {
-      deleteModule(moduleId); // Remove the module from the store
+  const handleDeleteModule = async (moduleId: string) => {
+    if (confirm('Are you sure you want to delete this module? This will also delete all its steps.')) {
+      await deleteModuleData(moduleId);
     }
   };
 
-  /**
-   * HANDLE CLOSE EDITOR
-   * 
-   * Closes the module editor modal and resets all related state.
-   * This is called when the user cancels editing or saves changes.
-   */
   const handleCloseEditor = () => {
-    setShowModuleEditor(false); // Hide the module editor modal
-    setEditingModule(null); // Clear the module being edited
-    setSelectedModule(null); // Clear the selected module in global state
-    setIsEditing(false); // Disable editing mode in global state
-  };
-
-  /**
-   * GET FEATURE TYPE COUNT
-   * 
-   * Creates a human-readable summary of feature types and counts for a module.
-   * This is displayed on each module card to give admins a quick overview
-   * of what types of content are in each module.
-   * 
-   * @param features - Array of features to analyze
-   * @returns String like "2 videos, 1 quiz, 3 flashcards"
-   */
-  const getFeatureTypeCount = (features: Module['features']) => {
-    // Count each feature type using reduce
-    const counts = features.reduce((acc, feature) => {
-      acc[feature.type] = (acc[feature.type] || 0) + 1; // Increment count for this feature type
-      return acc;
-    }, {} as Record<string, number>); // Start with empty object, typed as string keys with number values
-    
-    // Convert counts object to readable string
-    return Object.entries(counts)
-      .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`) // Add 's' for plural
-      .join(', '); // Join with commas
+    setShowModuleEditor(false);
+    setEditingModule(null);
+    setSelectedModule(null);
+    setIsEditing(false);
   };
 
   return (
@@ -158,14 +72,22 @@ export default function ModulesPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Module Management</h1>
-          <p className="text-gray-600">Manage your learning modules and their features</p>
+          <p className="text-gray-600">Manage your learning modules from Firestore</p>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            Error: {error}
+          </div>
+        )}
 
         {/* Create Module Button */}
         <div className="mb-6">
           <button
             onClick={handleCreateModule}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -174,8 +96,13 @@ export default function ModulesPage() {
           </button>
         </div>
 
-        {/* Modules Grid */}
-        {modules.length === 0 ? (
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">Loading modules...</p>
+          </div>
+        ) : modules.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,10 +135,10 @@ export default function ModulesPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    <span>{module.features.length} features</span>
+                    <span>{module.stepCount} steps</span>
                   </div>
                   <div className="text-xs text-gray-400">
-                    {module.features.length > 0 ? getFeatureTypeCount(module.features) : 'No features yet'}
+                    {module.isPublic ? 'Public' : 'Private'}
                   </div>
                 </div>
 
