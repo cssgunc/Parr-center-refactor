@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Container, Typography, Box } from "@mui/material";
 import LinearProgress from "@mui/material/LinearProgress";
-import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Timestamp } from "firebase/firestore";
 import { User, UserProgress } from "../../lib/firebase/types";
