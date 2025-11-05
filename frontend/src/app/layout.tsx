@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono, Playfair_Display, Source_Sans_3, Cormorant_Garamond } from "next/font/google";
+import { Inter, Roboto_Mono, Playfair_Display, Work_Sans, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
@@ -9,8 +9,9 @@ import Navbar from "../components/Navbar";
 import { Toaster } from "sonner";
 
 const inter = Inter({
-  variable: "--font-sans",
+  variable: "--font-primary",
   subsets: ["latin"],
+  weight: ["300", "400", "600", "700"],
 });
 
 const robotoMono = Roboto_Mono({
@@ -19,15 +20,15 @@ const robotoMono = Roboto_Mono({
 });
 
 const playfairDisplay = Playfair_Display({
-  variable: "--font-primary",
+  variable: "--font-playfair",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
 });
 
-const workSans = Source_Sans_3({
+const workSans = Work_Sans({
   variable: "--font-secondary",
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["300", "400", "600", "700"],
 });
 
 const cormorantGaramond = Cormorant_Garamond({

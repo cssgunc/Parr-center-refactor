@@ -17,7 +17,6 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           variant="h4" 
           component="h1"
           sx={{
-            fontFamily: 'var(--font-secondary)',
             fontWeight: 'bold',
             color: (t) => t.palette.grey[800],
           }}
@@ -28,7 +27,6 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           sx={{
             mt: 2,
             color: (t) => t.palette.grey[700],
-            fontFamily: 'var(--font-secondary)',
           }}
         >
           No content available for this module yet.
@@ -49,9 +47,9 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         variant="h3"
         component="h1"
         sx={{
-          fontFamily: 'var(--font-primary)',
-          fontSize: '2.25rem',
+          fontSize: '3rem',
           fontWeight: 'bold',
+          fontFamily: 'var(--font-secondary)',
           color: (t) => t.palette.error.main,
           mb: 0.5,
         }}
@@ -63,9 +61,9 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         variant="h3"
         component="h2"
         sx={{
-          fontFamily: 'var(--font-secondary)',
-          fontSize: '2.25rem',
+          fontSize: '3rem',
           fontWeight: 'bold',
+          fontFamily: 'var(--font-secondary)',
           color: (t) => t.palette.error.main,
           mb: 1,
         }}
@@ -75,7 +73,6 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
 
       <Typography
         sx={{
-          fontFamily: 'var(--font-secondary)',
           color: (t) => t.palette.warning.main,
           fontSize: '1.25rem',
           mb: 1,
@@ -96,9 +93,8 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           sx={{
             py: 1.5,
             px: 2,
-            borderRadius: 4,
+            borderRadius: '16px',
             bgcolor: (t) => t.palette.common.black,
-            fontFamily: 'var(--font-secondary)',
             fontWeight: 'bold',
             color: 'white',
             fontSize: '1.25rem',
@@ -114,11 +110,10 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           sx={{
             py: 1.5,
             px: 2,
-            borderRadius: 4,
+            borderRadius: '16px',
             bgcolor: (t) => t.palette.common.black,
-            fontFamily: 'var(--font-secondary)',
             color: 'white',
-            fontSize: '1rem',
+            fontSize: '1.25rem',
             '&:hover': {
               bgcolor: (t) => t.palette.common.black,
             },
@@ -131,7 +126,6 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
       <Box
         sx={{
           mb: 8,
-          fontFamily: 'var(--font-secondary)',
         }}
       >
         <Typography
@@ -189,7 +183,6 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
 
       <Box
         sx={{
-          fontFamily: 'var(--font-secondary)',
         }}
       >
         <Typography
