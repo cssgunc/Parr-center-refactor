@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/firebase/Authentication/VerifySession/index";
-import { getUserRole } from "@/lib/firebase/Authentication/GetUserRole/index";
+"use client";
+import AuthGate from "@/components/AuthGate";
 
 /**
  * HOME COMPONENT
@@ -9,18 +8,25 @@ import { getUserRole } from "@/lib/firebase/Authentication/GetUserRole/index";
  * based on the currentView state. This provides a simple way to navigate
  * between different sections of the application without complex routing.
  */
-export default async function Home() {
+export default function Home() {
   // ===== STATE MANAGEMENT =====
 
   /**
-   * Redirect based on if session is active and whether session is admin or student
+   * Redirect based on if user is logged in and whether user is admin or student
    */
-  const decoded = await verifySession();
+  /* The commented out code block you provided is attempting to perform the following actions: */
 
-  if (!decoded) {
-    redirect("/login");
-  }
-  const isAdmin = await getUserRole(decoded.uid);
+  // try{
+  // const auth = getAuth(app);
 
-  redirect(isAdmin ? "/admin" : "/student");
+  // const isAdmin = await getUserRole(auth.currentUser.uid);
+  // router.replace(isAdmin ? "/admin" : "/student");
+  // return;
+  // } catch
+
+  return (
+    <AuthGate>
+      <></>
+    </AuthGate>
+  );
 }

@@ -9,7 +9,6 @@ import { generateFirebaseAuthErrorMessage } from "@/lib/firebase/Authentication/
 
 import { toast } from "sonner";
 import { FcGoogle } from "react-icons/fc";
-import { auth } from "@/lib/firebase/firebaseConfig";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -38,14 +37,6 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await loginUserWithEmailAndPassword(email, password);
-
-      //Create cookie user's loggedin session
-      const idToken = await auth.currentUser?.getIdToken(true);
-      const resp = await fetch("/api/authSession", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
 
       //navigate to home page on sucess
       toast.success("Sucessful Login");
@@ -81,15 +72,6 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await signInUserWithGoogleAuth();
-
-      //Create cookie user's loggedin session
-      const idToken = await auth.currentUser?.getIdToken(true);
-      const resp = await fetch("/api/authSession", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-
       router.replace("/");
     } catch (error) {
       if (error instanceof FirebaseError) {
@@ -122,15 +104,6 @@ export default function LoginForm() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="mb-8 w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white hover:bg-slate-700 transition-colors"
-          aria-label="Go back"
-        >
-          <ChevronLeft size={24} />
-        </button>
-
         <div className="bg-white rounded-lg shadow-sm p-8">
           <h1 className="text-4xl font-serif font-bold text-center mb-12 text-gray-900">
             Log In

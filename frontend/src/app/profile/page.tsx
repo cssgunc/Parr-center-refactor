@@ -203,7 +203,6 @@ export default function ProfilePage() {
               signOut(auth)
                 .then(() => {
                   router.push("/login");
-                  router.refresh(); //Ensures session cookies are cleared
                 })
                 .catch((error) => {
                   console.error("❌ Error signing out:", error);
