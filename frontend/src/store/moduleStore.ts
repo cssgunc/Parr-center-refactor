@@ -1,309 +1,398 @@
 /**
- * ZUSTAND STORE FOR MODULE MANAGEMENT
- * 
- * This file contains the global state management for the entire module management system.
- * It uses Zustand, a lightweight state management library that provides a simple
- * and type-safe way to manage application state without the complexity of Redux.
- * 
+ * ZUSTAND STORE FOR MODULE MANAGEMENT WITH FIREBASE INTEGRATION
+ *
+ * This file contains the global state management for the module management system.
+ * It uses Zustand for state management and integrates with Firebase Firestore
+ * for persistent data storage.
+ *
  * The store manages:
- * - All modules and their features
+ * - All modules and their steps
  * - Currently selected module for editing
- * - UI state for editing mode
- * - All CRUD operations for modules and features
+ * - Loading states for async operations
+ * - All CRUD operations with Firebase integration
  */
 
 import { create } from 'zustand';
-import { Module, Feature, FeatureType } from '@/types/module';
-import { mockModules } from '@/data/mockModules';
-import { v4 as uuidv4 } from 'uuid'; // UUID generator for creating unique IDs
+import { Module, Step } from '@/lib/firebase/types';
+import {
+  getPublicModules,
+  getModuleById,
+  createModule,
+  updateModule,
+  deleteModule,
+  getStepsByModuleId,
+  createStep,
+  updateStep,
+  deleteStep,
+} from '@/lib/firebase/db-operations';
 
 /**
- * MODULE STORE INTERFACE
- * 
- * Defines the shape of our global state and all available actions.
- * This interface ensures type safety throughout the application and serves
- * as documentation for what state and actions are available.
+ * MODULE WITH STEPS
+ *
+ * Combined type for modules with their steps loaded.
+ * Used in the admin UI to display and edit modules.
  */
-interface ModuleStore {
-  // ===== STATE PROPERTIES =====
-  
-  modules: Module[]; // Array of all modules in the system
-  selectedModule: Module | null; // Currently selected module for editing (null when none selected)
-  isEditing: boolean; // Boolean flag indicating if we're currently in editing mode
-  
-  // ===== MODULE ACTIONS =====
-  // These functions handle CRUD operations for modules
-  
-  setModules: (modules: Module[]) => void; // Replace the entire modules array (used for initialization)
-  addModule: (module: Omit<Module, 'id'>) => void; // Add a new module (ID will be auto-generated)
-  updateModule: (id: string, updates: Partial<Omit<Module, 'id'>>) => void; // Update an existing module by ID
-  deleteModule: (id: string) => void; // Remove a module by ID
-  setSelectedModule: (module: Module | null) => void; // Set which module is currently selected for editing
-  setIsEditing: (editing: boolean) => void; // Toggle editing mode on/off
-  
-  // ===== FEATURE ACTIONS =====
-  // These functions handle CRUD operations for features within modules
-  
-  addFeature: (moduleId: string, feature: Omit<Feature, 'id'>) => void; // Add a feature to a specific module
-  updateFeature: (moduleId: string, featureId: string, updates: Partial<Omit<Feature, 'id'>>) => void; // Update a feature within a module
-  deleteFeature: (moduleId: string, featureId: string) => void; // Remove a feature from a module
-  reorderFeatures: (moduleId: string, featureIds: string[]) => void; // Reorder features within a module (for drag & drop)
-  
-  // ===== INITIALIZATION =====
-  initializeStore: () => void; // Load mock data into the store (called on app startup)
+export interface ModuleWithSteps extends Module {
+  steps: Step[];
 }
 
 /**
- * ZUSTAND STORE IMPLEMENTATION
- * 
- * This is where we actually implement all the state management logic.
- * The `create` function from Zustand takes a function that receives `set` and `get`
- * parameters and returns an object containing our state and actions.
+ * MODULE STORE INTERFACE
+ *
+ * Defines the shape of our global state and all available actions.
+ * All operations are async and integrate with Firebase.
+ */
+interface ModuleStore {
+  // ===== STATE PROPERTIES =====
+
+  modules: ModuleWithSteps[]; // Array of all modules with their steps
+  selectedModule: ModuleWithSteps | null; // Currently selected module for editing
+  isEditing: boolean; // Boolean flag indicating if we're in editing mode
+  isLoading: boolean; // Loading state for async operations
+  error: string | null; // Error message if an operation fails
+  userId: string | null; // Current user ID for createdBy field
+
+  // ===== USER MANAGEMENT =====
+  setUserId: (userId: string | null) => void; // Set current user ID
+
+  // ===== MODULE ACTIONS =====
+  // These functions handle CRUD operations for modules with Firebase
+
+  fetchModules: () => Promise<void>; // Fetch all public modules from Firebase
+  fetchModuleWithSteps: (moduleId: string) => Promise<ModuleWithSteps>; // Fetch a single module with its steps
+  createNewModule: (title: string, description: string) => Promise<void>; // Create a new module in Firebase
+  updateModuleData: (moduleId: string, updates: { title?: string; description?: string }) => Promise<void>; // Update module metadata
+  deleteModuleData: (moduleId: string) => Promise<void>; // Delete module and all its steps
+  setSelectedModule: (module: ModuleWithSteps | null) => void; // Set selected module for editing
+  setIsEditing: (editing: boolean) => void; // Toggle editing mode
+
+  // ===== STEP ACTIONS =====
+  // These functions handle CRUD operations for steps within modules
+
+  createNewStep: (moduleId: string, stepData: Omit<Step, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>; // Add a step to a module
+  updateStepData: (moduleId: string, stepId: string, updates: Partial<Step>) => Promise<void>; // Update a step
+  deleteStepData: (moduleId: string, stepId: string) => Promise<void>; // Delete a step
+  reorderSteps: (moduleId: string, stepIds: string[]) => Promise<void>; // Reorder steps (updates order field)
+}
+
+/**
+ * ZUSTAND STORE IMPLEMENTATION WITH FIREBASE
+ *
+ * This implementation integrates with Firebase Firestore for all CRUD operations.
+ * All module and step operations are persisted to the database.
  */
 export const useModuleStore = create<ModuleStore>((set, get) => ({
   // ===== INITIAL STATE =====
-  // These are the default values when the store is first created
-  
-  modules: [], // Start with empty array - will be populated by initializeStore()
-  selectedModule: null, // No module selected initially
-  isEditing: false, // Not in editing mode initially
-  
-  // ===== MODULE ACTIONS IMPLEMENTATION =====
-  
+
+  modules: [],
+  selectedModule: null,
+  isEditing: false,
+  isLoading: false,
+  error: null,
+  userId: null,
+
+  // ===== USER MANAGEMENT =====
+
+  setUserId: (userId) => set({ userId }),
+
+  // ===== MODULE ACTIONS =====
+
   /**
-   * SET MODULES
-   * 
-   * Replaces the entire modules array with a new one.
-   * Used primarily for initialization with mock data.
+   * FETCH MODULES
+   *
+   * Fetches all public modules from Firebase and loads their steps.
    */
-  setModules: (modules) => set({ modules }),
-  
-  /**
-   * ADD MODULE
-   * 
-   * Creates a new module and adds it to the modules array.
-   * Automatically generates a unique ID using UUID v4.
-   * 
-   * @param moduleData - Module data without ID (ID will be auto-generated)
-   */
-  addModule: (moduleData) => {
-    // Create a new module object with auto-generated ID
-    const newModule: Module = {
-      ...moduleData, // Spread all provided module data
-      id: uuidv4(), // Generate unique ID using UUID v4
-    };
-    
-    // Update state by adding the new module to the existing array
-    set((state) => ({
-      modules: [...state.modules, newModule], // Spread existing modules and add new one
-    }));
-  },
-  
-  /**
-   * UPDATE MODULE
-   * 
-   * Updates an existing module by ID with partial data.
-   * Also updates the selectedModule if it's the one being edited.
-   * 
-   * @param id - ID of the module to update
-   * @param updates - Partial module data to merge with existing module
-   */
-  updateModule: (id, updates) => {
-    set((state) => ({
-      // Update the modules array by mapping over it
-      modules: state.modules.map((module) =>
-        module.id === id ? { ...module, ...updates } : module // If ID matches, merge updates; otherwise keep as-is
-      ),
-      // If the selected module is the one being updated, update it too
-      selectedModule: state.selectedModule?.id === id 
-        ? { ...state.selectedModule, ...updates } // Update selected module with same changes
-        : state.selectedModule, // Keep selected module unchanged if it's not the one being updated
-    }));
-  },
-  
-  /**
-   * DELETE MODULE
-   * 
-   * Removes a module from the modules array by ID.
-   * Also clears selectedModule if it was the deleted module.
-   * 
-   * @param id - ID of the module to delete
-   */
-  deleteModule: (id) => {
-    set((state) => ({
-      // Filter out the module with the matching ID
-      modules: state.modules.filter((module) => module.id !== id),
-      // Clear selected module if it was the one being deleted
-      selectedModule: state.selectedModule?.id === id ? null : state.selectedModule,
-    }));
-  },
-  
-  /**
-   * SET SELECTED MODULE
-   * 
-   * Sets which module is currently selected for editing.
-   * Used when opening the module editor.
-   * 
-   * @param module - Module to select, or null to clear selection
-   */
-  setSelectedModule: (module) => set({ selectedModule: module }),
-  
-  /**
-   * SET EDITING MODE
-   * 
-   * Toggles the editing mode flag.
-   * Used to track whether we're currently editing a module.
-   * 
-   * @param editing - Boolean indicating if we're in editing mode
-   */
-  setIsEditing: (editing) => set({ isEditing: editing }),
-  
-  // ===== FEATURE ACTIONS IMPLEMENTATION =====
-  
-  /**
-   * ADD FEATURE
-   * 
-   * Adds a new feature to a specific module.
-   * Automatically generates a unique ID for the feature.
-   * Updates both the modules array and selectedModule if it matches.
-   * 
-   * @param moduleId - ID of the module to add the feature to
-   * @param featureData - Feature data without ID (ID will be auto-generated)
-   */
-  addFeature: (moduleId, featureData) => {
-    // Create a new feature object with auto-generated ID
-    const newFeature: Feature = {
-      ...featureData, // Spread all provided feature data
-      id: uuidv4(), // Generate unique ID using UUID v4
-    } as Feature; // Type assertion to satisfy TypeScript's discriminated union
-    
-    set((state) => ({
-      // Update the modules array by mapping over it
-      modules: state.modules.map((module) =>
-        module.id === moduleId
-          ? { ...module, features: [...module.features, newFeature] } // Add feature to matching module
-          : module // Keep other modules unchanged
-      ),
-      // If the selected module is the one being updated, update it too
-      selectedModule: state.selectedModule?.id === moduleId
-        ? { ...state.selectedModule, features: [...state.selectedModule.features, newFeature] } // Add feature to selected module
-        : state.selectedModule, // Keep selected module unchanged if it's not the one being updated
-    }));
-  },
-  
-  /**
-   * UPDATE FEATURE
-   * 
-   * Updates an existing feature within a specific module.
-   * Updates both the modules array and selectedModule if it matches.
-   * 
-   * @param moduleId - ID of the module containing the feature
-   * @param featureId - ID of the feature to update
-   * @param updates - Partial feature data to merge with existing feature
-   */
-  updateFeature: (moduleId, featureId, updates) => {
-    set((state) => ({
-      // Update the modules array by mapping over it
-      modules: state.modules.map((module) =>
-        module.id === moduleId
-          ? {
-              ...module, // Keep all module properties
-              // Update the features array within the matching module
-              features: module.features.map((feature) =>
-                feature.id === featureId ? { ...feature, ...updates } as Feature : feature // Merge updates if ID matches
-              ),
-            }
-          : module // Keep other modules unchanged
-      ),
-      // If the selected module is the one being updated, update it too
-      selectedModule: state.selectedModule?.id === moduleId
-        ? {
-            ...state.selectedModule, // Keep all selected module properties
-            // Update the features array within the selected module
-            features: state.selectedModule.features.map((feature) =>
-              feature.id === featureId ? { ...feature, ...updates } as Feature : feature // Merge updates if ID matches
-            ),
+  fetchModules: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      console.log('Fetching public modules...');
+      const modules = await getPublicModules();
+      console.log(`Found ${modules.length} modules:`, modules);
+
+      // Fetch steps for each module, handling permission errors gracefully
+      const modulesWithSteps = await Promise.all(
+        modules.map(async (module) => {
+          try {
+            const steps = await getStepsByModuleId(module.id);
+            console.log(`Fetched ${steps.length} steps for module ${module.id}`);
+            return { ...module, steps };
+          } catch (error: any) {
+            // If we can't read steps due to permissions, return module with empty steps
+            console.warn(`Could not fetch steps for module ${module.id}:`, error.message);
+            return { ...module, steps: [] };
           }
-        : state.selectedModule, // Keep selected module unchanged if it's not the one being updated
-    }));
+        })
+      );
+
+      set({ modules: modulesWithSteps, isLoading: false });
+      console.log('Successfully loaded modules with steps');
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error fetching modules:', error);
+      console.error('Error code:', error.code);
+      console.error('Full error:', error);
+    }
   },
-  
+
   /**
-   * DELETE FEATURE
-   * 
-   * Removes a feature from a specific module.
-   * Updates both the modules array and selectedModule if it matches.
-   * 
-   * @param moduleId - ID of the module containing the feature
-   * @param featureId - ID of the feature to delete
+   * FETCH MODULE WITH STEPS
+   *
+   * Fetches a single module with its steps from Firebase.
    */
-  deleteFeature: (moduleId, featureId) => {
-    set((state) => ({
-      // Update the modules array by mapping over it
-      modules: state.modules.map((module) =>
-        module.id === moduleId
-          ? {
-              ...module, // Keep all module properties
-              // Filter out the feature with the matching ID
-              features: module.features.filter((feature) => feature.id !== featureId),
-            }
-          : module // Keep other modules unchanged
-      ),
-      // If the selected module is the one being updated, update it too
-      selectedModule: state.selectedModule?.id === moduleId
-        ? {
-            ...state.selectedModule, // Keep all selected module properties
-            // Filter out the feature with the matching ID from selected module
-            features: state.selectedModule.features.filter((feature) => feature.id !== featureId),
-          }
-        : state.selectedModule, // Keep selected module unchanged if it's not the one being updated
-    }));
+  fetchModuleWithSteps: async (moduleId: string) => {
+    const module = await getModuleById(moduleId);
+    const steps = await getStepsByModuleId(moduleId);
+    return { ...module, steps };
   },
-  
+
   /**
-   * REORDER FEATURES
-   * 
-   * Reorders features within a module based on the provided array of feature IDs.
-   * Used for drag-and-drop functionality to change the order of features.
-   * 
-   * @param moduleId - ID of the module containing the features
-   * @param featureIds - Array of feature IDs in the new desired order
+   * CREATE NEW MODULE
+   *
+   * Creates a new module in Firebase and adds it to the store.
    */
-  reorderFeatures: (moduleId, featureIds) => {
-    set((state) => {
-      // Find the module we're reordering features for
-      const module = state.modules.find((m) => m.id === moduleId);
-      if (!module) return state; // If module not found, return current state unchanged
-      
-      // Create a new array of features in the specified order
-      // Map over the provided feature IDs and find the corresponding feature objects
-      const reorderedFeatures = featureIds.map((id) =>
-        module.features.find((f) => f.id === id) // Find feature with matching ID
-      ).filter(Boolean) as Feature[]; // Remove any undefined values and cast to Feature array
-      
-      return {
-        // Update the modules array with the reordered features
+  createNewModule: async (title: string, description: string) => {
+    const { userId } = get();
+    if (!userId) {
+      set({ error: 'User ID is required to create a module' });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      const newModule = await createModule({
+        title,
+        description,
+        createdBy: userId,
+        collaborators: [userId],
+        isPublic: true,
+        tags: [],
+        stepCount: 0,
+      });
+
+      // Add to local state with empty steps array
+      set((state) => ({
+        modules: [...state.modules, { ...newModule, steps: [] }],
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error creating module:', error);
+    }
+  },
+
+  /**
+   * UPDATE MODULE DATA
+   *
+   * Updates module metadata in Firebase and local state.
+   */
+  updateModuleData: async (moduleId: string, updates: { title?: string; description?: string }) => {
+    set({ isLoading: true, error: null });
+    try {
+      console.log('Updating module:', moduleId, 'with:', updates);
+      await updateModule(moduleId, updates);
+
+      // Update local state
+      set((state) => ({
         modules: state.modules.map((m) =>
-          m.id === moduleId ? { ...m, features: reorderedFeatures } : m // Update matching module with reordered features
+          m.id === moduleId ? { ...m, ...updates } : m
         ),
-        // If the selected module is the one being updated, update it too
-        selectedModule: state.selectedModule?.id === moduleId
-          ? { ...state.selectedModule, features: reorderedFeatures } // Update selected module with reordered features
-          : state.selectedModule, // Keep selected module unchanged if it's not the one being updated
-      };
-    });
+        selectedModule:
+          state.selectedModule?.id === moduleId
+            ? { ...state.selectedModule, ...updates }
+            : state.selectedModule,
+        isLoading: false,
+      }));
+      console.log('Successfully updated module');
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error updating module:', error);
+      console.error('Error code:', error.code);
+    }
   },
-  
-  // ===== INITIALIZATION =====
-  
+
   /**
-   * INITIALIZE STORE
-   * 
-   * Loads mock data into the store.
-   * Called when the application first starts to populate the store with sample data.
-   * In a real application, this would typically make an API call to fetch data from a server.
+   * DELETE MODULE DATA
+   *
+   * Deletes a module and all its steps from Firebase.
    */
-  initializeStore: () => {
-    set({ modules: mockModules }); // Replace empty modules array with mock data
+  deleteModuleData: async (moduleId: string) => {
+    const state = get();
+    const module = state.modules.find((m) => m.id === moduleId);
+
+    set({ isLoading: true, error: null });
+    try {
+      console.log('Attempting to delete module:', moduleId);
+      console.log('Module createdBy:', module?.createdBy);
+      console.log('Current userId:', state.userId);
+      console.log('Is owner?', module?.createdBy === state.userId);
+      console.log('Module collaborators:', module?.collaborators);
+
+      await deleteModule(moduleId, true); // Delete with steps
+
+      // Remove from local state
+      set((state) => ({
+        modules: state.modules.filter((m) => m.id !== moduleId),
+        selectedModule: state.selectedModule?.id === moduleId ? null : state.selectedModule,
+        isLoading: false,
+      }));
+      console.log('Successfully deleted module');
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error deleting module:', error);
+      console.error('Error code:', error.code);
+      console.error('Full error details:', error);
+    }
+  },
+
+  setSelectedModule: (module) => set({ selectedModule: module }),
+
+  setIsEditing: (editing) => set({ isEditing: editing }),
+
+  // ===== STEP ACTIONS =====
+
+  /**
+   * CREATE NEW STEP
+   *
+   * Creates a new step in Firebase and adds it to the module.
+   */
+  createNewStep: async (moduleId: string, stepData: Omit<Step, 'id' | 'createdAt' | 'updatedAt'>) => {
+    set({ isLoading: true, error: null });
+    try {
+      const newStep = await createStep(moduleId, stepData);
+
+      // Update local state
+      set((state) => ({
+        modules: state.modules.map((m) =>
+          m.id === moduleId
+            ? { ...m, steps: [...m.steps, newStep], stepCount: m.stepCount + 1 }
+            : m
+        ),
+        selectedModule:
+          state.selectedModule?.id === moduleId
+            ? { ...state.selectedModule, steps: [...state.selectedModule.steps, newStep], stepCount: state.selectedModule.stepCount + 1 }
+            : state.selectedModule,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error creating step:', error);
+    }
+  },
+
+  /**
+   * UPDATE STEP DATA
+   *
+   * Updates a step in Firebase and local state.
+   */
+  updateStepData: async (moduleId: string, stepId: string, updates: Partial<Step>) => {
+    set({ isLoading: true, error: null });
+    try {
+      await updateStep(moduleId, stepId, updates);
+
+      // Update local state
+      set((state) => ({
+        modules: state.modules.map((m) =>
+          m.id === moduleId
+            ? {
+                ...m,
+                steps: m.steps.map((s) =>
+                  s.id === stepId ? { ...s, ...updates } as Step : s
+                ),
+              }
+            : m
+        ),
+        selectedModule:
+          state.selectedModule?.id === moduleId
+            ? {
+                ...state.selectedModule,
+                steps: state.selectedModule.steps.map((s) =>
+                  s.id === stepId ? { ...s, ...updates } as Step : s
+                ),
+              }
+            : state.selectedModule,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error updating step:', error);
+    }
+  },
+
+  /**
+   * DELETE STEP DATA
+   *
+   * Deletes a step from Firebase and local state.
+   */
+  deleteStepData: async (moduleId: string, stepId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await deleteStep(moduleId, stepId);
+
+      // Update local state
+      set((state) => ({
+        modules: state.modules.map((m) =>
+          m.id === moduleId
+            ? {
+                ...m,
+                steps: m.steps.filter((s) => s.id !== stepId),
+                stepCount: Math.max(0, m.stepCount - 1),
+              }
+            : m
+        ),
+        selectedModule:
+          state.selectedModule?.id === moduleId
+            ? {
+                ...state.selectedModule,
+                steps: state.selectedModule.steps.filter((s) => s.id !== stepId),
+                stepCount: Math.max(0, state.selectedModule.stepCount - 1),
+              }
+            : state.selectedModule,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error deleting step:', error);
+    }
+  },
+
+  /**
+   * REORDER STEPS
+   *
+   * Updates the order field of steps in Firebase and local state.
+   */
+  reorderSteps: async (moduleId: string, stepIds: string[]) => {
+    set({ isLoading: true, error: null });
+    try {
+      const state = get();
+      const module = state.modules.find((m) => m.id === moduleId);
+      if (!module) return;
+
+      // Update order for each step
+      await Promise.all(
+        stepIds.map((stepId, index) =>
+          updateStep(moduleId, stepId, { order: index })
+        )
+      );
+
+      // Update local state
+      const reorderedSteps = stepIds
+        .map((id) => module.steps.find((s) => s.id === id))
+        .filter(Boolean)
+        .map((step, index) => ({ ...step!, order: index }));
+
+      set((state) => ({
+        modules: state.modules.map((m) =>
+          m.id === moduleId ? { ...m, steps: reorderedSteps } : m
+        ),
+        selectedModule:
+          state.selectedModule?.id === moduleId
+            ? { ...state.selectedModule, steps: reorderedSteps }
+            : state.selectedModule,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error reordering steps:', error);
+    }
   },
 }));

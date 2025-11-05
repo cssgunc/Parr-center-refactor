@@ -7,7 +7,10 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { User, UserProgress } from "../../lib/firebase/types";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../lib/firebase/firebaseConfig";
-import { getPublicModules, getUserProgress } from "../../lib/firebase/db-operations";
+import {
+  getPublicModules,
+  getUserProgress,
+} from "../../lib/firebase/db-operations";
 import {
   SectionHeader,
   OverallProgressBar,
@@ -19,9 +22,9 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [modules, setModules] = useState<ModuleItem[]>([]);
-  const [progressData, setProgressData] = useState<Record<string, UserProgress>>(
-    {}
-  );
+  const [progressData, setProgressData] = useState<
+    Record<string, UserProgress>
+  >({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,8 +41,12 @@ export default function ProfilePage() {
         email: currentUser.email || "",
         displayname: currentUser.displayName || "",
         photoURL: currentUser.photoURL || "",
-        createdAt: currentUser.metadata.creationTime ? new Date(currentUser.metadata.creationTime) : new Date(),
-        lastLoginAt: currentUser.metadata.lastSignInTime ? new Date(currentUser.metadata.lastSignInTime) : new Date(),
+        createdAt: currentUser.metadata.creationTime
+          ? new Date(currentUser.metadata.creationTime)
+          : new Date(),
+        lastLoginAt: currentUser.metadata.lastSignInTime
+          ? new Date(currentUser.metadata.lastSignInTime)
+          : new Date(),
       });
 
       // 2️⃣ Fetch available modules
@@ -140,7 +147,10 @@ export default function ProfilePage() {
 
         {/* MODULE PROGRESS */}
         <Box>
-          <Box component="h2" sx={{ fontSize: "1.5rem", fontWeight: 600, mb: 2 }}>
+          <Box
+            component="h2"
+            sx={{ fontSize: "1.5rem", fontWeight: 600, mb: 2 }}
+          >
             Module Progress
           </Box>
 
