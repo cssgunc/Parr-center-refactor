@@ -9,9 +9,14 @@
 
 import { useEffect, useState } from 'react';
 import { useModuleStore, ModuleWithSteps } from '@/store/moduleStore';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase/firebaseConfig';
 import ModuleEditor from './ModuleEditor';
 
 export default function ModulesPage() {
+  // ===== FIREBASE AUTH =====
+  const [user, authLoading] = useAuthState(auth);
+
   // ===== ZUSTAND STORE =====
   const {
     modules,
@@ -31,13 +36,15 @@ export default function ModulesPage() {
   // ===== EFFECTS =====
 
   /**
-   * Set a placeholder user ID and fetch modules on mount
+   * Set authenticated user ID and fetch modules when user is available
    */
   useEffect(() => {
-    // TODO: Replace with actual Firebase Auth user ID
-    setUserId('placeholder-user-id');
-    fetchModules();
-  }, [fetchModules, setUserId]);
+    if (user) {
+      console.log('Setting user ID:', user.uid);
+      setUserId(user.uid);
+      fetchModules();
+    }
+  }, [user, fetchModules, setUserId]);
 
   // ===== EVENT HANDLERS =====
 
@@ -66,6 +73,30 @@ export default function ModulesPage() {
     setIsEditing(false);
   };
 
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if not logged in
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Not Authenticated</h2>
+          <p className="text-gray-600 mb-4">Please log in to access the admin dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -73,6 +104,7 @@ export default function ModulesPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Module Management</h1>
           <p className="text-gray-600">Manage your learning modules from Firestore</p>
+          <p className="text-xs text-gray-400 mt-1">Logged in as: {user.email || user.uid}</p>
         </div>
 
         {/* Error Display */}
