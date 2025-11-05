@@ -12,19 +12,14 @@ export async function POST(req: Request) {
     }
 
     //Verification
-    await authAdmin.verifyIdToken(idToken, true);
-
+    const resp = await authAdmin.verifyIdToken(idToken, true);
+    console.log(resp);
     /**
      * Create Session cookie using Firebase admin
      */
     //Expries in 1 day
     const expiresIn = 1 * 24 * 60 * 60 * 1000;
     const session = await authAdmin.createSessionCookie(idToken, { expiresIn });
-    if (!session) {
-      console.log("session not created");
-    } else {
-      console.log(session);
-    }
 
     cookies().set("session", session, {
       httpOnly: true,

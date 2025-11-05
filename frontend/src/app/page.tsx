@@ -1,14 +1,3 @@
-import { useState, useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import ModuleContentMUI from "@/components/ModuleContentMUI";
-import modulesContent from "@/data/modulesContent";
-import ModulesPage from "@/components/ModulesPage";
-import ProtectedRoute from "@/components/ProtectedRoute";
-
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
-import { useRouter } from "next/navigation";
-
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/firebase/Authentication/VerifySession/index";
 import { getUserRole } from "@/lib/firebase/Authentication/GetUserRole/index";
@@ -23,6 +12,9 @@ import { getUserRole } from "@/lib/firebase/Authentication/GetUserRole/index";
 export default async function Home() {
   // ===== STATE MANAGEMENT =====
 
+  /**
+   * Redirect based on if session is active and whether session is admin or student
+   */
   const decoded = await verifySession();
 
   if (!decoded) {
@@ -31,22 +23,4 @@ export default async function Home() {
   const isAdmin = await getUserRole(decoded.uid);
 
   redirect(isAdmin ? "/admin" : "/student");
-
-  // ===== RENDER LOGIC =====
-  // //Displays loading while AuthContext is fetching role, and userProfile
-  // if (loading || isRedirecting) {
-  //   return (
-  //     <Box
-  //       sx={{
-  //         display: "flex",
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //         minHeight: "100vh",
-  //         backgroundColor: "#f9fafb",
-  //       }}
-  //     >
-  //       <CircularProgress />
-  //     </Box>
-  //   );
-  // }
 }
