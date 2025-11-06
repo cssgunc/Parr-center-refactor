@@ -173,6 +173,7 @@ export const createUser = async (userData: Partial<User>) => {
     ...userData,
     createdAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
+    isAdmin: false
   });
   return { id: userData.id, ...userData } as User;
 }
