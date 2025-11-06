@@ -16,7 +16,7 @@ export default function Navbar() {
 		<AppBar
 			position="static"
 			sx={{
-				backgroundColor: 'secondary.main',
+				backgroundColor: 'info.main',
 				boxShadow: 'none',
 			}}
 		>
@@ -33,7 +33,7 @@ export default function Navbar() {
 						}}
 					>
 						<Image
-							src="/image.png"
+							src="/philosophy_logo_white_horizontal.png"
 							alt="UNC Parr Center for Ethics"
 							width={400}
 							height={60}
