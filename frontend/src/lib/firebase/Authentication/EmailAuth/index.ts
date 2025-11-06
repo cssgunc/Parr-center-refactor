@@ -10,6 +10,7 @@ import { EmailAuthProvider } from "firebase/auth";
 import { generateFirebaseAuthErrorMessage } from "../ErrorHandler";
 import { FirebaseError } from "firebase/app";
 import { toast } from "sonner";
+import { createUser, userSignupCheck } from "../../db-operations";
 
 /**
  *Register's user accounts in firebase auth
@@ -33,7 +34,14 @@ export const registerUser = async (
       password
     );
     const user = userCredential.user;
-
+    if (user.uid && await userSignupCheck(user.uid) == false) {
+      await createUser({
+        id: user.uid,
+        email: user.email || "",
+        displayname: name || "",
+        photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${name[0]}`,
+      });
+    }
     //Send verifcation email to the user
     await sendEmailVerification(user);
     toast.success(
