@@ -9,7 +9,6 @@ interface ModuleContentProps {
 }
 
 export default function ModuleContentMUI({ moduleId, content }: ModuleContentProps) {
-  const theme = useTheme();
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
 
   if (!content) {
