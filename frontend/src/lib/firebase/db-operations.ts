@@ -178,6 +178,16 @@ export const createUser = async (userData: Partial<User>) => {
   return { id: userData.id, ...userData } as User;
 }
 
+export const isAdminUser = async (userId: string) => {
+  const userDocRef = doc(db, "users", userId);
+  const userDoc = await getDoc(userDocRef);
+  if (userDoc.exists()) {
+    const userData = userDoc.data();
+    return userData.isAdmin === true;
+  }
+  return false;
+}
+
 export const startUserProgress = async (userId: string, moduleId: string) => {
   const progressRef = doc(db, "users", userId, "progress", moduleId);
 

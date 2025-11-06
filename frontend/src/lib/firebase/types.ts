@@ -10,6 +10,7 @@ export interface User {
   photoURL?: string;
   createdAt: Date;
   lastLoginAt: Date;
+  isAdmin: boolean;
 }
 
 export interface UserProgress {

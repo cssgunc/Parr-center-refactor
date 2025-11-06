@@ -10,6 +10,7 @@ import { auth } from "../../lib/firebase/firebaseConfig";
 import {
   getPublicModules,
   getUserProgress,
+  isAdminUser
 } from "../../lib/firebase/db-operations";
 import {
   SectionHeader,
@@ -47,6 +48,7 @@ export default function ProfilePage() {
         lastLoginAt: currentUser.metadata.lastSignInTime
           ? new Date(currentUser.metadata.lastSignInTime)
           : new Date(),
+        isAdmin: await isAdminUser(currentUser.uid).then((isAdmin) => { return isAdmin})
       });
       // 2️⃣ Fetch available modules
       const fetchedModules = await getPublicModules();
@@ -120,7 +122,7 @@ export default function ProfilePage() {
               />
               <div className="text-left">
                 <h2 className="text-2xl font-semibold text-gray-800">
-                  {user.displayname}
+                  {user.displayname} {user.isAdmin && <span className="text-sm font-medium text-white bg-blue-600 px-2 py-1 rounded-lg ml-2">Admin</span>}
                 </h2>
                 <p className="text-gray-600">{user.email}</p>
               </div>
