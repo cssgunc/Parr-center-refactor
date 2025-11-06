@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import FlashcardModal from "./FlashcardModal";
 
 interface ModuleContentProps {
   moduleId: number;
@@ -9,6 +10,7 @@ interface ModuleContentProps {
 
 export default function ModuleContentMUI({ moduleId, content }: ModuleContentProps) {
   const theme = useTheme();
+  const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
 
   if (!content) {
     return (
@@ -121,6 +123,24 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         >
           View Journal
         </Button>
+
+        <Button
+          onClick={() => setFlashcardModalOpen(true)}
+          variant="contained"
+          sx={{
+            py: 1.5,
+            px: 2,
+            borderRadius: '16px',
+            bgcolor: (t) => t.palette.common.black,
+            color: 'white',
+            fontSize: '1.25rem',
+            '&:hover': {
+              bgcolor: (t) => t.palette.common.black,
+            },
+          }}
+        >
+          View Flashcards
+        </Button>
       </Box>
 
       <Box
@@ -204,6 +224,12 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           {content.overview}
         </Typography>
       </Box>
+
+      <FlashcardModal
+        open={flashcardModalOpen}
+        onClose={() => setFlashcardModalOpen(false)}
+        moduleId={moduleId}
+      />
     </Box>
   );
 }
