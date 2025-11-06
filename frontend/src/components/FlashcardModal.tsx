@@ -183,7 +183,7 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
               color: theme.palette.common.black,
             }}
           >
-            {mode === 'test' ? 'Test: Key Ethical Concepts' : 'Flashcard Deck: Key Ethical Concepts'}
+            {mode === 'test' ? 'Test: ' + moduleTitle : 'Flashcard Deck: ' + moduleTitle}
           </Typography>
         </Box>
 

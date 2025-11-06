@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import FlashcardModal from "./FlashcardModal";
 
 interface ModuleContentProps {
