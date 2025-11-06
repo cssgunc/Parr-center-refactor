@@ -48,7 +48,6 @@ export default function ProfilePage() {
           ? new Date(currentUser.metadata.lastSignInTime)
           : new Date(),
       });
-
       // 2️⃣ Fetch available modules
       const fetchedModules = await getPublicModules();
 
@@ -60,7 +59,6 @@ export default function ProfilePage() {
           progressMap[mod.id] = progress;
         }
       }
-      console.log(progressMap);
       setModules(fetchedModules);
       setProgressData(progressMap);
       setLoading(false);
@@ -187,7 +185,6 @@ export default function ProfilePage() {
             onClick={() =>
               signOut(auth)
                 .then(() => {
-                  console.log("✅ User signed out");
                   router.push("/login");
                 })
                 .catch((error) => {

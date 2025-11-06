@@ -161,6 +161,22 @@ export const deleteStep = async (moduleId: string, stepId: string) => {
 
 // User progress operations
 
+export const userSignupCheck = async (userId: string) => {
+  const userDocRef = doc(db, "users", userId);
+  const userDoc = await getDoc(userDocRef);
+  return userDoc.exists();
+}
+
+export const createUser = async (userData: Partial<User>) => {
+  const userDocRef = doc(db, "users", userData.id!);
+  await setDoc(userDocRef, {
+    ...userData,
+    createdAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp(),
+  });
+  return { id: userData.id, ...userData } as User;
+}
+
 export const startUserProgress = async (userId: string, moduleId: string) => {
   const progressRef = doc(db, "users", userId, "progress", moduleId);
 
