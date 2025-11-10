@@ -1,3 +1,14 @@
+// Mock firebaseConfig BEFORE any imports that use it
+jest.mock("../firebaseConfig", () => ({
+  db: {},
+  auth: {},
+  app: {},
+  googleAuthProvider: {},
+}));
+
+// Mock Firebase modules
+jest.mock("firebase/firestore");
+
 import {
   collection,
   doc,
@@ -12,10 +23,6 @@ import {
   serverTimestamp,
   writeBatch,
 } from "firebase/firestore";
-
-// Mock Firebase modules
-jest.mock("firebase/firestore");
-jest.mock("../firebaseConfig");
 
 import {
   createModule,
