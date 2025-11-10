@@ -120,12 +120,18 @@ describe("Module CRUD Operations", () => {
   });
 
   describe("deleteModule", () => {
-    it("should delete module and all its steps", async () => {
-      const mockSteps = [{ ref: "stepRef1" }, { ref: "stepRef2" }];
+    it("should delete module and all its steps from all subcollections", async () => {
+      const mockVideoSteps = [{ ref: "videoRef1" }];
+      const mockQuizSteps = [{ ref: "quizRef1" }];
+      const mockFlashcardsSteps = [{ ref: "flashcardsRef1" }];
+      const mockFreeResponseSteps = [{ ref: "freeResponseRef1" }];
 
-      (getDocs as jest.Mock).mockResolvedValue({
-        docs: mockSteps,
-      });
+      // Mock getDocs to return different results for different subcollections
+      (getDocs as jest.Mock)
+        .mockResolvedValueOnce({ docs: mockVideoSteps })
+        .mockResolvedValueOnce({ docs: mockQuizSteps })
+        .mockResolvedValueOnce({ docs: mockFlashcardsSteps })
+        .mockResolvedValueOnce({ docs: mockFreeResponseSteps });
 
       const mockBatch = {
         delete: jest.fn(),
@@ -136,8 +142,10 @@ describe("Module CRUD Operations", () => {
 
       await deleteModule("module123", true);
 
-      expect(getDocs).toHaveBeenCalled();
-      expect(mockBatch.delete).toHaveBeenCalledTimes(2);
+      // Should query all 4 subcollections
+      expect(getDocs).toHaveBeenCalledTimes(4);
+      // Should delete 4 steps total (1 from each subcollection)
+      expect(mockBatch.delete).toHaveBeenCalledTimes(4);
       expect(mockBatch.commit).toHaveBeenCalled();
       expect(deleteDoc).toHaveBeenCalled();
     });
@@ -188,27 +196,45 @@ describe("Step CRUD Operations", () => {
   });
 
   describe("getStepsByModuleId", () => {
-    it("should return steps ordered by order field", async () => {
-      const mockSteps = [
-        { id: "step1", data: () => ({ title: "Step 1", order: 10 }) },
-        { id: "step2", data: () => ({ title: "Step 2", order: 20 }) },
+    it("should return steps from all subcollections ordered by order field", async () => {
+      const mockVideoSteps = [
+        { id: "video1", data: () => ({ title: "Video 1", type: "video", order: 10 }) },
+      ];
+      const mockQuizSteps = [
+        { id: "quiz1", data: () => ({ title: "Quiz 1", type: "quiz", order: 5 }) },
+      ];
+      const mockFlashcardsSteps = [
+        { id: "flashcards1", data: () => ({ title: "Flashcards 1", type: "flashcards", order: 15 }) },
+      ];
+      const mockFreeResponseSteps = [
+        { id: "freeResponse1", data: () => ({ title: "Free Response 1", type: "freeResponse", order: 20 }) },
       ];
 
-      (getDocs as jest.Mock).mockResolvedValue({
-        docs: mockSteps,
-      });
+      // Mock getDocs to return different results for different subcollections
+      (getDocs as jest.Mock)
+        .mockResolvedValueOnce({ docs: mockVideoSteps })
+        .mockResolvedValueOnce({ docs: mockQuizSteps })
+        .mockResolvedValueOnce({ docs: mockFlashcardsSteps })
+        .mockResolvedValueOnce({ docs: mockFreeResponseSteps });
 
       const result = await getStepsByModuleId("module123");
 
+      // Should query all 4 subcollections
+      expect(getDocs).toHaveBeenCalledTimes(4);
       expect(query).toHaveBeenCalled();
       expect(orderBy).toHaveBeenCalledWith("order", "asc");
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe("step1");
+
+      // Should return all 4 steps sorted by order
+      expect(result).toHaveLength(4);
+      expect(result[0].id).toBe("quiz1"); // order: 5
+      expect(result[1].id).toBe("video1"); // order: 10
+      expect(result[2].id).toBe("flashcards1"); // order: 15
+      expect(result[3].id).toBe("freeResponse1"); // order: 20
     });
   });
 
   describe("deleteStep", () => {
-    it("should delete step and decrement stepCount", async () => {
+    it("should delete step from correct subcollection and decrement stepCount", async () => {
       (deleteDoc as jest.Mock).mockResolvedValue(undefined);
       (getDoc as jest.Mock).mockResolvedValue({
         exists: () => true,
@@ -217,7 +243,7 @@ describe("Step CRUD Operations", () => {
       (updateDoc as jest.Mock).mockResolvedValue(undefined);
       (serverTimestamp as jest.Mock).mockReturnValue("TIMESTAMP");
 
-      await deleteStep("module123", "step123");
+      await deleteStep("module123", "step123", "video");
 
       expect(deleteDoc).toHaveBeenCalled();
       expect(updateDoc).toHaveBeenCalledWith(

@@ -285,9 +285,18 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
    * Updates a step in Firebase and local state.
    */
   updateStepData: async (moduleId: string, stepId: string, updates: Partial<Step>) => {
+    const state = get();
+    const module = state.modules.find((m) => m.id === moduleId);
+    const step = module?.steps.find((s) => s.id === stepId);
+
+    if (!step) {
+      set({ error: 'Step not found' });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
-      await updateStep(moduleId, stepId, updates);
+      await updateStep(moduleId, stepId, step.type, updates);
 
       // Update local state
       set((state) => ({
@@ -324,9 +333,18 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
    * Deletes a step from Firebase and local state.
    */
   deleteStepData: async (moduleId: string, stepId: string) => {
+    const state = get();
+    const module = state.modules.find((m) => m.id === moduleId);
+    const step = module?.steps.find((s) => s.id === stepId);
+
+    if (!step) {
+      set({ error: 'Step not found' });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
-      await deleteStep(moduleId, stepId);
+      await deleteStep(moduleId, stepId, step.type);
 
       // Update local state
       set((state) => ({
@@ -369,9 +387,11 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
 
       // Update order for each step
       await Promise.all(
-        stepIds.map((stepId, index) =>
-          updateStep(moduleId, stepId, { order: index })
-        )
+        stepIds.map((stepId, index) => {
+          const step = module.steps.find((s) => s.id === stepId);
+          if (!step) return Promise.resolve();
+          return updateStep(moduleId, stepId, step.type, { order: index });
+        })
       );
 
       // Update local state

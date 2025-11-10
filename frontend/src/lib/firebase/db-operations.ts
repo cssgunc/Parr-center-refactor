@@ -17,7 +17,7 @@ import {
   writeBatch,
   orderBy,
 } from "firebase/firestore";
-import { User, Module, Step, UserProgress } from "./types";
+import { User, Module, Step, UserProgress, StepType, STEP_COLLECTIONS } from "./types";
 
 // Module CRUD operations
 
@@ -61,14 +61,22 @@ export const deleteModule = async (
 ) => {
   const moduleDocRef = doc(db, "modules", moduleId);
   if (deleteSteps) {
-    const stepsRef = collection(db, "modules", moduleId, "steps");
-    const stepsSnapshot = await getDocs(stepsRef);
-
-    // Use batch write to delete all steps efficiently
+    // Delete from all step subcollections
     const batch = writeBatch(db);
-    stepsSnapshot.docs.forEach((stepDoc) => {
-      batch.delete(stepDoc.ref);
-    });
+    const collectionNames: StepType[] = ["video", "quiz", "flashcards", "freeResponse"];
+
+    await Promise.all(
+      collectionNames.map(async (type) => {
+        const collectionName = STEP_COLLECTIONS[type];
+        const stepsRef = collection(db, "modules", moduleId, collectionName);
+        const stepsSnapshot = await getDocs(stepsRef);
+
+        stepsSnapshot.docs.forEach((stepDoc) => {
+          batch.delete(stepDoc.ref);
+        });
+      })
+    );
+
     await batch.commit();
   }
   await deleteDoc(moduleDocRef);
@@ -77,9 +85,11 @@ export const deleteModule = async (
 // Step CRUD operations
 export const getStepById = async (
   moduleId: string,
-  stepId: string
+  stepId: string,
+  type: StepType
 ): Promise<Step> => {
-  const stepDocRef = doc(db, "modules", moduleId, "steps", stepId);
+  const collectionName = STEP_COLLECTIONS[type];
+  const stepDocRef = doc(db, "modules", moduleId, collectionName, stepId);
   const stepDoc = await getDoc(stepDocRef);
   if (stepDoc.exists()) {
     return { id: stepDoc.id, ...stepDoc.data() } as Step;
@@ -88,30 +98,50 @@ export const getStepById = async (
   }
 };
 
-// Get steps by module ID
+// Get steps by module ID (queries all step subcollections)
 export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
-  const stepsRef = collection(db, "modules", moduleId, "steps");
-  const stepsQuery = query(stepsRef, orderBy("order", "asc"));
-  const stepsSnapshot = await getDocs(stepsQuery);
-  // stepsSnapshot.forEach((doc) => {
-  //   console.log({ id: doc.id, ...doc.data() });
-  // });
-  return stepsSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Step[];
+  const allSteps: Step[] = [];
+
+  // Query each subcollection type
+  const collectionNames: StepType[] = ["video", "quiz", "flashcards", "freeResponse"];
+
+  await Promise.all(
+    collectionNames.map(async (type) => {
+      const collectionName = STEP_COLLECTIONS[type];
+      const stepsRef = collection(db, "modules", moduleId, collectionName);
+      const stepsQuery = query(stepsRef, orderBy("order", "asc"));
+      const stepsSnapshot = await getDocs(stepsQuery);
+
+      const steps = stepsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Step[];
+
+      allSteps.push(...steps);
+    })
+  );
+
+  // Sort all steps by order
+  return allSteps.sort((a, b) => a.order - b.order);
 };
 
 export const createStep = async (
   moduleId: string,
   stepData: Partial<Step>
 ): Promise<Step> => {
+  if (!stepData.type) {
+    throw new Error("Step type is required");
+  }
+
   const newStep = {
     ...stepData,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
-  const stepsRef = collection(db, "modules", moduleId, "steps");
+
+  // Route to correct subcollection based on type
+  const collectionName = STEP_COLLECTIONS[stepData.type];
+  const stepsRef = collection(db, "modules", moduleId, collectionName);
   const stepDocRef = await addDoc(stepsRef, newStep);
 
   // Update Parent Module's step count
@@ -130,9 +160,11 @@ export const createStep = async (
 export const updateStep = async (
   moduleId: string,
   stepId: string,
+  type: StepType,
   stepData: Partial<Step>
 ) => {
-  const stepDocRef = doc(db, "modules", moduleId, "steps", stepId);
+  const collectionName = STEP_COLLECTIONS[type];
+  const stepDocRef = doc(db, "modules", moduleId, collectionName, stepId);
   await updateDoc(stepDocRef, {
     ...stepData,
     updatedAt: serverTimestamp(),
@@ -143,8 +175,13 @@ export const updateStep = async (
   await updateDoc(moduleDocRef, { updatedAt: serverTimestamp() });
 };
 
-export const deleteStep = async (moduleId: string, stepId: string) => {
-  const stepDocRef = doc(db, "modules", moduleId, "steps", stepId);
+export const deleteStep = async (
+  moduleId: string,
+  stepId: string,
+  type: StepType
+) => {
+  const collectionName = STEP_COLLECTIONS[type];
+  const stepDocRef = doc(db, "modules", moduleId, collectionName, stepId);
   await deleteDoc(stepDocRef);
 
   // Update parent module's stepCount (decrement)

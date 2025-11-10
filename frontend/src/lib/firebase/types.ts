@@ -89,6 +89,16 @@ export interface StepBase {
 
 export type StepType = "video" | "quiz" | "flashcards" | "freeResponse";
 
+// Subcollection name mapping
+export const STEP_COLLECTIONS = {
+  video: "videos",
+  quiz: "quizzes",
+  flashcards: "flashcards",
+  freeResponse: "freeResponses",
+} as const;
+
+export type StepCollectionName = typeof STEP_COLLECTIONS[StepType];
+
 // Specific Step Interfaces
 
 export interface VideoStep extends StepBase {
