@@ -112,6 +112,8 @@ service cloud.firestore {
       'type',
       'order',
       'updatedAt',
+      'createdBy',
+      'createdAt',
       'video',
       'quiz',
       'flashcards',
@@ -149,7 +151,9 @@ service cloud.firestore {
       'stepCount',
       'publishedVersion',
       'thumbnailUrl',
-      'collaborators'
+      'collaborators',
+      'createdBy',
+      'createdAt'
     ];
     return request.resource.data.keys().hasOnly(allowedFields)
       && request.resource.data.diff(resource.data).affectedKeys().size() > 0
@@ -190,9 +194,33 @@ service cloud.firestore {
       allow update: if (isOwner() || isCollaborator()) && validateModuleUpdate();
       allow delete: if isOwner() || isCollaborator();
 
-      // STEPS
-      match /steps/{stepId} {
-        allow read: if parent().data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+      // VIDEO STEPS
+      match /videos/{videoId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // QUIZ STEPS
+      match /quizzes/{quizId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // FLASHCARD STEPS
+      match /flashcards/{flashcardId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // FREE RESPONSE STEPS
+      match /freeResponses/{freeResponseId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
         allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
         allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
         allow delete: if isOwner() || isCollaborator() || isAdmin();
