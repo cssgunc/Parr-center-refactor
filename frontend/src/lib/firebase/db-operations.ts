@@ -174,7 +174,7 @@ export const createUser = async (userData: Partial<User>) => {
     createdAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
     isAdmin: false
-  });
+  }, {merge: true});
   return { id: userData.id, ...userData } as User;
 }
 

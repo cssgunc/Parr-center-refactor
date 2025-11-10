@@ -7,6 +7,13 @@ service cloud.firestore {
     return request.auth != null;
   }
 
+  function isAdmin() {
+    let userDocPath = /databases/$(database)/documents/users/$(request.auth.uid);
+    return request.auth != null
+        && exists(userDocPath)
+        && get(userDocPath).data.isAdmin == true;
+  }
+
   function isOwner() {
     return isSignedIn() && (
       (resource != null && resource.data.createdBy == request.auth.uid) ||
@@ -185,10 +192,10 @@ service cloud.firestore {
 
       // STEPS
       match /steps/{stepId} {
-        allow read: if parent().data.isPublic == true || isOwner() || isCollaborator();
-        allow create: if (isOwner() || isCollaborator()) && validateStep();
-        allow update: if (isOwner() || isCollaborator()) && validateStepUpdate();
-        allow delete: if isOwner() || isCollaborator();
+        allow read: if parent().data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
     }
 

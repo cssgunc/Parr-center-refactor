@@ -18,7 +18,7 @@ export const signInUserWithGoogleAuth = async () => {
       await createUser({
         id: result.user.uid,
         email: result.user.email || "",
-        displayname: result.user.displayName || "",
+        displayName: result.user.displayName || "",
         photoURL: result.user.photoURL || "",
       });
     }

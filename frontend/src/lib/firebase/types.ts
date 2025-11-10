@@ -6,10 +6,10 @@ import { Timestamp } from "firebase/firestore";
 export interface User {
   id: string;
   email: string;
-  displayname: string;
+  displayName: string;
   photoURL?: string;
-  createdAt: Date;
-  lastLoginAt: Date;
+  createdAt: Timestamp | Date;
+  lastLoginAt: Timestamp | Date;
   isAdmin: boolean;
 }
 
@@ -17,8 +17,8 @@ export interface UserProgress {
   completedStepIds: string[];
   lastViewedAt: Timestamp;
   quizScores: { [stepId: string]: number };
-  startedAt: Timestamp;
-  completedAt: Timestamp | null;
+  startedAt: Timestamp | Date;
+  completedAt: Timestamp | Date | null;
 }
 
 // Module
