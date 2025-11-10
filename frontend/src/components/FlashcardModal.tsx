@@ -73,8 +73,8 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
         paper: {
           sx: {
             borderRadius: '16px',
-            maxWidth: '1200px',
-            maxHeight: '90vh',
+            maxWidth: '1000px',
+            height: '90vh',
             m: 2,
           },
         },
@@ -181,10 +181,12 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                   sx={{
                     borderRadius: '16px',
                     p: 0,
-                    minHeight: '240px',
+                    flex: 1,
+                    display: 'flex',
                     cursor: 'pointer',
                     userSelect: 'none',
                     perspective: '1000px',
+                    minHeight: 0,
                     '&:hover': {
                       boxShadow: `0 2px 8px rgba(0, 0, 0, 0.1)`,
                     },
@@ -195,7 +197,6 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                       position: 'relative',
                       width: '100%',
                       height: '100%',
-                      minHeight: '240px',
                       transformStyle: 'preserve-3d',
                       transition: suppressFlipAnimation ? 'none' : 'transform 0.6s ease',
                       transform: isFlipped ? 'rotateX(180deg)' : 'none',
@@ -225,9 +226,9 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                     >
                       <Typography
                         sx={{
-                          fontSize: '1.125rem',
+                          fontSize: '2rem',
                           color: theme.palette.common.black,
-                          lineHeight: 1.7,
+                          lineHeight: 1.6,
                           textAlign: 'center',
                           whiteSpace: 'pre-wrap',
                         }}
@@ -257,9 +258,9 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                     >
                       <Typography
                         sx={{
-                          fontSize: '1.125rem',
+                          fontSize: '2rem',
                           color: theme.palette.common.black,
-                          lineHeight: 1.7,
+                          lineHeight: 1.6,
                           textAlign: 'center',
                           whiteSpace: 'pre-wrap',
                         }}
@@ -279,17 +280,16 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                 >
                   <Button
                     variant="outlined"
-                      onClick={() => {
-                        if (flashcardsArray.length === 0) return;
-                        setSuppressFlipAnimation(true);
-                        setIsFlipped(false);
-                        setCurrentFlashcardIndex((i) =>
-                          (i - 1 + flashcardsArray.length) % flashcardsArray.length
-                        );
-                        setTimeout(() => {
-                          setSuppressFlipAnimation(false);
-                        }, 0);
-                      }}
+                    disabled={currentFlashcardIndex === 0}
+                    onClick={() => {
+                      if (flashcardsArray.length === 0 || currentFlashcardIndex === 0) return;
+                      setSuppressFlipAnimation(true);
+                      setIsFlipped(false);
+                      setCurrentFlashcardIndex((i) => i - 1);
+                      setTimeout(() => {
+                        setSuppressFlipAnimation(false);
+                      }, 0);
+                    }}
                     sx={{
                       borderRadius: '16px',
                       color: theme.palette.common.black,
@@ -299,6 +299,10 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                       fontWeight: 'bold',
                       '&:hover': {
                         borderColor: theme.palette.common.black,
+                      },
+                      '&:disabled': {
+                        color: theme.palette.grey[400],
+                        borderColor: theme.palette.grey[300],
                       },
                     }}
                   >
@@ -315,15 +319,16 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                   </Typography>
                   <Button
                     variant="contained"
-                      onClick={() => {
-                        if (flashcardsArray.length === 0) return;
-                        setSuppressFlipAnimation(true);
-                        setIsFlipped(false);
-                        setCurrentFlashcardIndex((i) => (i + 1) % flashcardsArray.length);
-                        setTimeout(() => {
-                          setSuppressFlipAnimation(false);
-                        }, 0);
-                      }}
+                    disabled={currentFlashcardIndex === flashcardsArray.length - 1}
+                    onClick={() => {
+                      if (flashcardsArray.length === 0 || currentFlashcardIndex === flashcardsArray.length - 1) return;
+                      setSuppressFlipAnimation(true);
+                      setIsFlipped(false);
+                      setCurrentFlashcardIndex((i) => i + 1);
+                      setTimeout(() => {
+                        setSuppressFlipAnimation(false);
+                      }, 0);
+                    }}
                     sx={{
                       borderRadius: '16px',
                       bgcolor: theme.palette.common.black,
@@ -333,6 +338,10 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
                       fontWeight: 'bold',
                       '&:hover': {
                         bgcolor: theme.palette.common.black,
+                      },
+                      '&:disabled': {
+                        bgcolor: theme.palette.grey[300],
+                        color: theme.palette.grey[500],
                       },
                     }}
                   >
