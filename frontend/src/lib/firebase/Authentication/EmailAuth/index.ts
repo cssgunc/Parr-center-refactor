@@ -6,10 +6,11 @@ import {
   updatePassword,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebaseConfig";
-import { EmailAuthProvider } from "firebase/auth";
+import { EmailAuthProvider, updateProfile } from "firebase/auth";
 import { generateFirebaseAuthErrorMessage } from "../ErrorHandler";
 import { FirebaseError } from "firebase/app";
 import { toast } from "sonner";
+import { createUser, userSignupCheck } from "../../db-operations";
 
 /**
  *Register's user accounts in firebase auth
@@ -33,7 +34,16 @@ export const registerUser = async (
       password
     );
     const user = userCredential.user;
-
+    if (user.uid && await userSignupCheck(user.uid) == false) {
+      const diceBear = `https://api.dicebear.com/7.x/initials/png?seed=${name[0]}`
+      await createUser({  // create user in firestore
+        id: user.uid,
+        email: user.email || "",
+        displayName: name || "",
+        photoURL: diceBear,
+      });
+      await updateProfile(user, { displayName: name, photoURL: diceBear});  // update display name and pfp in firebase auth
+    }
     //Send verifcation email to the user
     await sendEmailVerification(user);
     toast.success(

@@ -10,6 +10,7 @@ import { auth } from "../../lib/firebase/firebaseConfig";
 import {
   getPublicModules,
   getUserProgress,
+  isAdminUser
 } from "../../lib/firebase/db-operations";
 import {
   SectionHeader,
@@ -17,6 +18,7 @@ import {
   ModuleProgressList,
   type ModuleItem,
 } from "../../components/progress";
+import Image from "next/image";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -34,12 +36,11 @@ export default function ProfilePage() {
         router.push("/login");
         return;
       }
-
       // Set the authenticated user
       setUser({
         id: currentUser.uid,
         email: currentUser.email || "",
-        displayname: currentUser.displayName || "",
+        displayName: currentUser.displayName || "",
         photoURL: currentUser.photoURL || "",
         createdAt: currentUser.metadata.creationTime
           ? new Date(currentUser.metadata.creationTime)
@@ -47,8 +48,8 @@ export default function ProfilePage() {
         lastLoginAt: currentUser.metadata.lastSignInTime
           ? new Date(currentUser.metadata.lastSignInTime)
           : new Date(),
+        isAdmin: await isAdminUser(currentUser.uid).then((isAdmin) => { return isAdmin})
       });
-
       // 2️⃣ Fetch available modules
       const fetchedModules = await getPublicModules();
 
@@ -60,7 +61,6 @@ export default function ProfilePage() {
           progressMap[mod.id] = progress;
         }
       }
-      console.log(progressMap);
       setModules(fetchedModules);
       setProgressData(progressMap);
       setLoading(false);
@@ -115,14 +115,16 @@ export default function ProfilePage() {
         {user && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
             <div className="flex items-center mb-4">
-              <img
-                src={user.photoURL}
-                alt={user.displayname}
+              <Image
+                src={user.photoURL ? user.photoURL : ""}
+                alt={user.displayName}
+                width={64}
+                height={64}
                 className="w-16 h-16 rounded-full mr-4 border border-gray-300"
               />
               <div className="text-left">
                 <h2 className="text-2xl font-semibold text-gray-800">
-                  {user.displayname}
+                  {user.displayName} {user.isAdmin && <span className="text-sm font-medium text-white bg-blue-600 px-2 py-1 rounded-lg ml-2">Admin</span>}
                 </h2>
                 <p className="text-gray-600">{user.email}</p>
               </div>
@@ -135,11 +137,11 @@ export default function ProfilePage() {
               </p>
               <p>
                 <span className="font-medium text-gray-700">Joined:</span>{" "}
-                {user.createdAt.toLocaleDateString()}
+                {(user.createdAt instanceof Date ? user.createdAt : user.createdAt.toDate()).toLocaleDateString()}
               </p>
               <p>
                 <span className="font-medium text-gray-700">Last Active:</span>{" "}
-                {user.lastLoginAt.toLocaleDateString()}
+                {(user.lastLoginAt instanceof Date ? user.lastLoginAt : user.lastLoginAt.toDate()).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -187,7 +189,6 @@ export default function ProfilePage() {
             onClick={() =>
               signOut(auth)
                 .then(() => {
-                  console.log("✅ User signed out");
                   router.push("/login");
                 })
                 .catch((error) => {
