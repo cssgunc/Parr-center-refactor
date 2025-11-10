@@ -42,12 +42,17 @@ export default function AuthGate({
           return;
         }
 
-        //Makes sure that admin screen doesn't flash on direct route to /admin
+        //Makes sure that admin screen doesn't flash on direct route to /admin and
         if (requireAdmin) {
           const isAdmin = await getUserRole(user.uid);
-          navigating.current = true;
-          router.replace(isAdmin ? adminPath : studentPath);
-          return;
+          if (isAdmin) {
+            setReady(true);
+            return;
+          } else {
+            navigating.current = true;
+            router.replace(studentPath);
+            return;
+          }
         }
 
         const isAdmin = await getUserRole(user.uid);
