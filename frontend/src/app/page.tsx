@@ -14,15 +14,6 @@ export default function Home() {
   /**
    * Redirect based on if user is logged in and whether user is admin or student
    */
-  /* The commented out code block you provided is attempting to perform the following actions: */
-
-  // try{
-  // const auth = getAuth(app);
-
-  // const isAdmin = await getUserRole(auth.currentUser.uid);
-  // router.replace(isAdmin ? "/admin" : "/student");
-  // return;
-  // } catch
 
   return (
     <AuthGate>

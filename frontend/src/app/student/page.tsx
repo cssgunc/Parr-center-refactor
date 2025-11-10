@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import FooterMUI from "@/components/FooterMUI";
 import ModuleContentMUI from "@/components/ModuleContentMUI";
 import modulesContent from "@/data/modulesContent";
 import AuthGate from "@/components/AuthGate";
@@ -46,7 +45,6 @@ export default function StudentPage() {
                 </div>
               </main>
             </div>
-            <FooterMUI />
           </div>
         }
       </AuthGate>
