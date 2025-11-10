@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import FooterMUI from "@/components/FooterMUI";
 import ModuleContentMUI from "@/components/ModuleContentMUI";
 import modulesContent from "@/data/modulesContent";
 import ModulesPage from "@/components/ModulesPage";
@@ -96,7 +95,6 @@ export default function Home() {
               </div>
             </main>
           </div>
-          <FooterMUI />
         </div>
       ) : (
         // ===== ADMIN VIEW =====
