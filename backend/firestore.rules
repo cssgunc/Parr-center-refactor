@@ -60,7 +60,7 @@ service cloud.firestore {
 
   function hasMatchingPayloadType() {
     let t = request.resource.data.type;
-    return (t == 'video' && 'video' in request.resource.data) || (t == 'quiz' && 'quiz' in request.resource.data) || (t == 'flashcards' && 'flashcards' in request.resource.data) || (t == 'freeResponse' && 'freeResponse' in request.resource.data);
+    return (t == 'video' && 'youtubeUrl' in request.resource.data) || (t == 'quiz' && 'questions' in request.resource.data) || (t == 'flashcards' && 'cards' in request.resource.data) || (t == 'freeResponse' && 'prompt' in request.resource.data);
   }
 
   function validatePayload() {
@@ -69,41 +69,40 @@ service cloud.firestore {
   }
 
   function validateVideoPayload() {
-    let v = request.resource.data.video;
-    return v.youtubeUrl is string
-      && (!('thumbnailUrl' in v) || v.thumbnailUrl is string)
-      && (!('durationSec' in v) || v.durationSec is int);
+    let d = request.resource.data;
+    return d.youtubeUrl is string
+      && (!('thumbnailUrl' in d) || d.thumbnailUrl is string)
+      && (!('durationSec' in d) || d.durationSec is int);
   }
 
   function validateQuizPayload() {
-    let q = request.resource.data.quiz;
-    return q.shuffle is bool
-      && q.questions is list
-      && q.questions.size() > 0
-      && q.questions[0].prompt is string
-      && q.questions[0].choices is list
-      && q.questions[0].correctIndex is int
-      && (!('explanation' in q.questions[0]) || q.questions[0].explanation is string)
-      && q.passingScore is int
-      && q.passingScore >= 0
-      && q.passingScore <= 100;
+    let d = request.resource.data;
+    return d.shuffle is bool
+      && d.questions is list
+      && d.questions.size() > 0
+      && d.questions[0].prompt is string
+      && d.questions[0].choices is list
+      && d.questions[0].correctIndex is int
+      && (!('explanation' in d.questions[0]) || d.questions[0].explanation is string)
+      && d.passingScore is int
+      && d.passingScore >= 0
+      && d.passingScore <= 100;
   }
 
   function validateFlashcardsPayload() {
-    let f = request.resource.data.flashcards;
-    return (!('title' in f) || f.title is string)
-      && f.cards is list
-      && f.cards.size() > 0
-      && f.cards[0].front is string
-      && f.cards[0].back is string
-      && (!('studyMode' in f) || f.studyMode in ['spaced', 'random']);
+    let d = request.resource.data;
+    return d.cards is list
+      && d.cards.size() > 0
+      && d.cards[0].front is string
+      && d.cards[0].back is string
+      && (!('studyMode' in d) || d.studyMode in ['spaced', 'random']);
   }
 
   function validateFreeResponsePayload() {
-    let f = request.resource.data.freeResponse;
-    return f.prompt is string
-      && (!('sampleAnswer' in f) || f.sampleAnswer is string)
-      && (!('maxLength' in f) || (f.maxLength is int && f.maxLength > 0 && f.maxLength <= 10000));
+    let d = request.resource.data;
+    return d.prompt is string
+      && (!('sampleAnswer' in d) || d.sampleAnswer is string)
+      && (!('maxLength' in d) || (d.maxLength is int && d.maxLength > 0 && d.maxLength <= 10000));
   }
 
   function validateStepUpdate() {
@@ -114,10 +113,23 @@ service cloud.firestore {
       'updatedAt',
       'createdBy',
       'createdAt',
-      'video',
-      'quiz',
-      'flashcards',
-      'freeResponse'
+      'estimatedMinutes',
+      'isOptional',
+      // Video fields
+      'youtubeUrl',
+      'thumbnailUrl',
+      'durationSec',
+      // Quiz fields
+      'shuffle',
+      'questions',
+      'passingScore',
+      // Flashcards fields
+      'cards',
+      'studyMode',
+      // FreeResponse fields
+      'prompt',
+      'sampleAnswer',
+      'maxLength'
     ];
     return request.resource.data.keys().hasOnly(allowedFields)
       && request.resource.data.diff(resource.data).affectedKeys().size() > 0

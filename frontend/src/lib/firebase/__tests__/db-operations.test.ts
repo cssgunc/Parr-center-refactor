@@ -186,6 +186,9 @@ describe("Step CRUD Operations", () => {
         order: 10,
         isOptional: false,
         createdBy: "user123",
+        youtubeUrl: "https://youtube.com/watch?v=test",
+        thumbnailUrl: "https://example.com/thumb.jpg",
+        durationSec: 300,
       };
 
       const result = await createStep("module123", stepData);
@@ -205,16 +208,16 @@ describe("Step CRUD Operations", () => {
   describe("getStepsByModuleId", () => {
     it("should return steps from all subcollections ordered by order field", async () => {
       const mockVideoSteps = [
-        { id: "video1", data: () => ({ title: "Video 1", type: "video", order: 10 }) },
+        { id: "video1", data: () => ({ title: "Video 1", type: "video", order: 10, youtubeUrl: "https://youtube.com/test" }) },
       ];
       const mockQuizSteps = [
-        { id: "quiz1", data: () => ({ title: "Quiz 1", type: "quiz", order: 5 }) },
+        { id: "quiz1", data: () => ({ title: "Quiz 1", type: "quiz", order: 5, questions: [], shuffle: false, passingScore: 70 }) },
       ];
       const mockFlashcardsSteps = [
-        { id: "flashcards1", data: () => ({ title: "Flashcards 1", type: "flashcards", order: 15 }) },
+        { id: "flashcards1", data: () => ({ title: "Flashcards 1", type: "flashcards", order: 15, cards: [] }) },
       ];
       const mockFreeResponseSteps = [
-        { id: "freeResponse1", data: () => ({ title: "Free Response 1", type: "freeResponse", order: 20 }) },
+        { id: "freeResponse1", data: () => ({ title: "Free Response 1", type: "freeResponse", order: 20, prompt: "Test prompt" }) },
       ];
 
       // Mock getDocs to return different results for different subcollections
