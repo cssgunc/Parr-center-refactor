@@ -40,7 +40,7 @@ export default function LoginForm() {
 
       //navigate to home page on sucess
       toast.success("Sucessful Login");
-      router.push("/");
+      router.replace("/");
     } catch (error) {
       if (error instanceof Error) {
         const message = error.message.toLowerCase();
@@ -72,7 +72,7 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await signInUserWithGoogleAuth();
-      router.push("/");
+      router.replace("/");
     } catch (error) {
       if (error instanceof FirebaseError) {
         const { message, field } = generateFirebaseAuthErrorMessage(error);
@@ -104,15 +104,6 @@ export default function LoginForm() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="mb-8 w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white hover:bg-slate-700 transition-colors"
-          aria-label="Go back"
-        >
-          <ChevronLeft size={24} />
-        </button>
-
         <div className="bg-white rounded-lg shadow-sm p-8">
           <h1 className="text-4xl font-serif font-bold text-center mb-12 text-gray-900">
             Log In

@@ -188,5 +188,5 @@ export const generateFirebaseAuthErrorMessage = (error: FirebaseError) => {
     default:
       message = "An unexpected authentication error occurred.";
   }
-  return { message, field };
+  throw new Error(message);
 };

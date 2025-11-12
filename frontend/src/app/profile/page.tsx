@@ -10,7 +10,7 @@ import { auth } from "../../lib/firebase/firebaseConfig";
 import {
   getPublicModules,
   getUserProgress,
-  isAdminUser
+  isAdminUser,
 } from "../../lib/firebase/db-operations";
 import {
   SectionHeader,
@@ -48,7 +48,9 @@ export default function ProfilePage() {
         lastLoginAt: currentUser.metadata.lastSignInTime
           ? new Date(currentUser.metadata.lastSignInTime)
           : new Date(),
-        isAdmin: await isAdminUser(currentUser.uid).then((isAdmin) => { return isAdmin})
+        isAdmin: await isAdminUser(currentUser.uid).then((isAdmin) => {
+          return isAdmin;
+        }),
       });
       // 2️⃣ Fetch available modules
       const fetchedModules = await getPublicModules();
@@ -124,7 +126,12 @@ export default function ProfilePage() {
               />
               <div className="text-left">
                 <h2 className="text-2xl font-semibold text-gray-800">
-                  {user.displayName} {user.isAdmin && <span className="text-sm font-medium text-white bg-blue-600 px-2 py-1 rounded-lg ml-2">Admin</span>}
+                  {user.displayName}{" "}
+                  {user.isAdmin && (
+                    <span className="text-sm font-medium text-white bg-blue-600 px-2 py-1 rounded-lg ml-2">
+                      Admin
+                    </span>
+                  )}
                 </h2>
                 <p className="text-gray-600">{user.email}</p>
               </div>
@@ -137,11 +144,17 @@ export default function ProfilePage() {
               </p>
               <p>
                 <span className="font-medium text-gray-700">Joined:</span>{" "}
-                {(user.createdAt instanceof Date ? user.createdAt : user.createdAt.toDate()).toLocaleDateString()}
+                {(user.createdAt instanceof Date
+                  ? user.createdAt
+                  : user.createdAt.toDate()
+                ).toLocaleDateString()}
               </p>
               <p>
                 <span className="font-medium text-gray-700">Last Active:</span>{" "}
-                {(user.lastLoginAt instanceof Date ? user.lastLoginAt : user.lastLoginAt.toDate()).toLocaleDateString()}
+                {(user.lastLoginAt instanceof Date
+                  ? user.lastLoginAt
+                  : user.lastLoginAt.toDate()
+                ).toLocaleDateString()}
               </p>
             </div>
           </div>
