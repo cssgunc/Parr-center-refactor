@@ -2,28 +2,39 @@
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 
 export default function ProtectedRoute({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, loading, error] = useAuthState(auth);
-
+  const [user, loading] = useAuthState(auth);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/login");
+      setIsRedirecting(true);
+      router.replace("/login");
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  if (loading || isRedirecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#f9fafb",
+        }}
+      >
+        <CircularProgress />
+      </Box>
     );
   }
   if (!user) return null;

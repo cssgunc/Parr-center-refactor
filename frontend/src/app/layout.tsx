@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono, Playfair_Display, Work_Sans, Cormorant_Garamond } from "next/font/google";
+import {
+  Inter,
+  Roboto_Mono,
+  Playfair_Display,
+  Work_Sans,
+  Cormorant_Garamond,
+} from "next/font/google";
 import "./globals.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
@@ -50,7 +56,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable}`}>
+      <body
+        className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable}`}
+      >
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
