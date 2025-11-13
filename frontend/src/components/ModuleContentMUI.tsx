@@ -5,19 +5,46 @@ import FlashcardModal from "./FlashcardModal";
 import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
 import Link from 'next/link';
 import { Video } from "./Video";
+import { getModuleById, getUserProgress, startUserProgress } from "@/lib/firebase/db-operations";
+import { Module } from "@/lib/firebase/types";
 
 interface ModuleContentProps {
-  moduleId: number;
-  content?: { title: string; subtitle?: string; overview: string; };
+  moduleId: string;
+  index: number;
+  userId: string;
 }
 
-export default function ModuleContentMUI({ moduleId, content }: ModuleContentProps) {
+export default function ModuleContentMUI({ moduleId, index, userId }: ModuleContentProps) {
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
   const [showVideoView, setShowVideoView] = useState(false);
   
   // Reset video view when module changes
   useEffect(() => {
     setShowVideoView(false);
+  }, [moduleId]);
+
+  const [content, setContent] = useState<Module | null>(null);
+
+  const handleStartModule = async () => {
+    const currProgress = await getUserProgress(userId, moduleId.toString());
+    if (!currProgress) {
+      startUserProgress(userId, moduleId.toString());
+    } else {
+      // Module already started; maybe navigate to last viewed step
+      // Navigate to page for last viewed step referencing currProgress
+    }
+  }
+
+  useEffect(() => {
+    if (!moduleId) return;
+  
+    const fetchContent = async () => {
+      const content = await getModuleById(moduleId);
+      setContent(content);
+    };
+  
+    fetchContent();
+
   }, [moduleId]);
 
   if (!content) {
@@ -54,11 +81,11 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
   };
 
   // Video View
-  if (showVideoView) {
-    return (
-      <Video moduleId={moduleId} />
-    );
-  }
+  // if (showVideoView) {
+  //   return (
+  //     <Video moduleId={moduleId} />
+  //   );
+  // }
 
   // Overview View
   return (
@@ -80,7 +107,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           mb: 0.5,
         }}
       >
-        Welcome to Module {moduleId}
+        Welcome to Module {index + 1}
       </Typography>
       
       <Typography
@@ -94,17 +121,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
           mb: 1,
         }}
       >
-        {content.title}
-      </Typography>
-
-      <Typography
-        sx={{
-          color: (t) => t.palette.warning.main,
-          fontSize: '1.25rem',
-          mb: 1,
-        }}
-      >
-        {content.subtitle}
+        {content?.title}
       </Typography>
 
       <Box
@@ -115,7 +132,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         }}
       >
         <Button
-          onClick={() => setShowVideoView(true)}
+          onClick = {() => handleStartModule()}
           variant="contained"
           sx={{
             py: 1.5,
@@ -185,6 +202,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         >
           Current Progress
         </Typography>
+        {/* TODO USE getUserProgress Step Indicators */}
         <Box
           sx={{
             display: 'flex',
@@ -249,14 +267,14 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
             ml: '5vw',
           }}
         >
-          {content.overview}
+          {content?.description}
         </Typography>
       </Box>
 
       <FlashcardModal
         open={flashcardModalOpen}
         onClose={() => setFlashcardModalOpen(false)}
-        moduleId={moduleId}
+        moduleId={index + 1}
       />
     </Box>
   );

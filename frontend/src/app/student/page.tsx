@@ -2,8 +2,8 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import ModuleContentMUI from "@/components/ModuleContentMUI";
-import modulesContent from "@/data/modulesContent";
 import AuthGate from "@/components/AuthGate";
+import { auth } from "../../lib/firebase/firebaseConfig";
 
 export default function StudentPage() {
   /**
@@ -11,7 +11,9 @@ export default function StudentPage() {
    *
    * Tracks which module is currently selected in the student portal
    */
-  const [selectedModule, setSelectedModule] = useState<number>(1);
+  const [selectedModule, setSelectedModule] = useState<string>("");
+  const [index, setIndex] = useState<number>(0);
+  const userId = auth.currentUser ? auth.currentUser.uid : "";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,12 +37,14 @@ export default function StudentPage() {
               <Sidebar
                 selectedModule={selectedModule}
                 onSelect={setSelectedModule}
+                onSelectIndex={setIndex}
               />
               <main className="flex-1 overflow-auto">
                 <div className="p-6">
                   <ModuleContentMUI
                     moduleId={selectedModule}
-                    content={modulesContent[selectedModule]}
+                    index={index}
+                    userId={userId}
                   />
                 </div>
               </main>

@@ -285,9 +285,45 @@ export const markStepCompleted = async (
   }
 };
 
-// export const updateQuizScore = async (userId: string, moduleId: string, stepId: string, score: number) => {};
+export const updateQuizScore = async (
+  userId: string, moduleId: string, stepId: string, score: number
+) => {
+  const progressRef = doc(db, "users", userId, "progress", moduleId);
+  const progressDoc = await getDoc(progressRef);
 
-// export const completeModule = async (userId: string, moduleId: string) => {};
+  if (progressDoc.exists()) {
+    const progressData = progressDoc.data();
+    const currentScores = progressData.quizScores || {};
+    currentScores[stepId] = score;
+
+    await updateDoc(progressRef, {
+      quizScores: currentScores,
+      lastViewedAt: serverTimestamp(),
+    });
+  } else {
+    // Create new progress if none exists
+    const quizScores: { [stepId: string]: number } = {};
+    quizScores[stepId] = score;
+
+    await setDoc(progressRef, {
+      completedStepIds: [],
+      lastViewedAt: serverTimestamp(),
+      quizScores: quizScores,
+      startedAt: serverTimestamp(),
+      completedAt: null,
+    });
+  }
+};
+
+export const completeModule = async (
+  userId: string, moduleId: string
+) => {
+  const progressRef = doc(db, "users", userId, "progress", moduleId);
+  await updateDoc(progressRef, {
+    completedAt: serverTimestamp(),
+    lastViewedAt: serverTimestamp(),
+  });
+};
 
 // Query helpers (getPublicModules, getUserModules, etc.)
 
