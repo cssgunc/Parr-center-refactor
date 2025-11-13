@@ -3,6 +3,7 @@ import { Box, Typography, Button, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import FlashcardModal from "./FlashcardModal";
 import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
+import Link from 'next/link';
 
 interface ModuleContentProps {
   moduleId: number;
@@ -309,22 +310,25 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         >
           Start Module
         </Button>
-        <Button
-          variant="contained"
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: '16px',
-            bgcolor: (t) => t.palette.common.black,
-            color: 'white',
-            fontSize: '1.25rem',
-            '&:hover': {
+        <Link href={`/modules/${moduleId}/journal`} passHref>
+          <Button
+            variant="contained"
+            component="a"
+            sx={{
+              py: 1.5,
+              px: 2,
+              borderRadius: '16px',
               bgcolor: (t) => t.palette.common.black,
-            },
-          }}
-        >
-          View Journal
-        </Button>
+              color: 'white',
+              fontSize: '1.25rem',
+              '&:hover': {
+                bgcolor: (t) => t.palette.common.black,
+              },
+            }}
+          >
+            View Journal
+          </Button>
+        </Link>
 
         <Button
           onClick={() => setFlashcardModalOpen(true)}
@@ -435,4 +439,3 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
     </Box>
   );
 }
-
