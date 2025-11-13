@@ -10,8 +10,45 @@ import Button from '@mui/material/Button';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { getUserRole } from '@/lib/firebase/Authentication/GetUserRole';
 
 export default function Navbar() {
+	const [user] = useAuthState(auth);
+	const [isAdmin, setIsAdmin] = useState(false);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const checkAdminStatus = async () => {
+			if (!user) {
+				if (isMounted) {
+					setIsAdmin(false);
+				}
+				return;
+			}
+
+			try {
+				const adminStatus = await getUserRole(user.uid);
+				if (isMounted) {
+					setIsAdmin(Boolean(adminStatus));
+				}
+			} catch (error) {
+				if (isMounted) {
+					setIsAdmin(false);
+				}
+			}
+		};
+
+		checkAdminStatus();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [user]);
+
 	return (
 		<AppBar
 			position="static"
@@ -43,22 +80,24 @@ export default function Navbar() {
 					</Box>
 
 					<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-						<Button
-							component={Link}
-							href="/modules"
-							variant="contained"
-							sx={{
-								backgroundColor: 'primary.main',
-								color: 'white',
-								textTransform: 'none',
-								fontSize: '16px',
-                				borderRadius: '16px',
-								px: 3,
-								py: 1,
-							}}
-						>
-							Modules
-						</Button>
+						{isAdmin && (
+							<Button
+								component={Link}
+								href="/student"
+								variant="contained"
+								sx={{
+									backgroundColor: 'primary.main',
+									color: 'white',
+									textTransform: 'none',
+									fontSize: '16px',
+									borderRadius: '16px',
+									px: 3,
+									py: 1,
+								}}
+							>
+								Modules
+							</Button>
+						)}
 
 						<IconButton
 							component={Link}
