@@ -105,12 +105,17 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
     }
 
     // Clean up questions - remove empty choices and ensure correct index is valid
-    const cleanedQuestions = validQuestions.map(q => ({
-      prompt: q.prompt.trim(),
-      choices: q.choices.filter(opt => opt.trim()),
-      correctIndex: Math.min(q.correctIndex, q.choices.filter(opt => opt.trim()).length - 1),
-      explanation: q.explanation,
-    }));
+    const cleanedQuestions = validQuestions.map(q => {
+      const question: any = {
+        prompt: q.prompt.trim(),
+        choices: q.choices.filter(opt => opt.trim()),
+        correctIndex: Math.min(q.correctIndex, q.choices.filter(opt => opt.trim()).length - 1),
+      };
+      if (q.explanation) {
+        question.explanation = q.explanation;
+      }
+      return question;
+    });
 
     const passingScore = parseInt(formData.passingScore);
     if (isNaN(passingScore) || passingScore < 0 || passingScore > 100) {
@@ -127,28 +132,34 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
     try {
       if (step) {
         // Update existing step
-        await updateStepData(moduleId, step.id, {
+        const updates: any = {
           title: formData.title.trim(),
           questions: cleanedQuestions,
           shuffle: formData.shuffle,
           passingScore,
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
-        });
+        };
+        if (formData.estimatedMinutes) {
+          updates.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await updateStepData(moduleId, step.id, updates);
       } else {
         // Create new step
         const order = module?.steps.length || 0;
-        await createNewStep(moduleId, {
+        const stepData: any = {
           type: 'quiz',
           title: formData.title.trim(),
           questions: cleanedQuestions,
           shuffle: formData.shuffle,
           passingScore,
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
           order,
           createdBy: userId,
-        });
+        };
+        if (formData.estimatedMinutes) {
+          stepData.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await createNewStep(moduleId, stepData);
       }
       onClose();
     } catch (error: any) {

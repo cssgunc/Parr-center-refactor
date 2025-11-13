@@ -68,20 +68,23 @@ export default function FlashcardsEditorModal({ moduleId, onClose, onBack, step 
     try {
       if (step) {
         // Update existing step
-        await updateStepData(moduleId, step.id, {
+        const updates: any = {
           title: formData.title.trim(),
           cards: validCards.map(card => ({
             front: card.front.trim(),
             back: card.back.trim(),
           })),
           studyMode: formData.studyMode as 'spaced' | 'random',
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
-        });
+        };
+        if (formData.estimatedMinutes) {
+          updates.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await updateStepData(moduleId, step.id, updates);
       } else {
         // Create new step
         const order = module?.steps.length || 0;
-        await createNewStep(moduleId, {
+        const stepData: any = {
           type: 'flashcards',
           title: formData.title.trim(),
           cards: validCards.map(card => ({
@@ -89,11 +92,14 @@ export default function FlashcardsEditorModal({ moduleId, onClose, onBack, step 
             back: card.back.trim(),
           })),
           studyMode: formData.studyMode as 'spaced' | 'random',
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
           order,
           createdBy: userId,
-        });
+        };
+        if (formData.estimatedMinutes) {
+          stepData.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await createNewStep(moduleId, stepData);
       }
       onClose();
     } catch (error: any) {

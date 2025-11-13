@@ -52,24 +52,30 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step }: Vi
     try {
       if (step) {
         // Update existing step
-        await updateStepData(moduleId, step.id, {
+        const updates: any = {
           title: formData.title.trim(),
           youtubeUrl: formData.youtubeUrl.trim(),
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
-        });
+        };
+        if (formData.estimatedMinutes) {
+          updates.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await updateStepData(moduleId, step.id, updates);
       } else {
         // Create new step
         const order = module?.steps.length || 0;
-        await createNewStep(moduleId, {
+        const stepData: any = {
           type: 'video',
           title: formData.title.trim(),
           youtubeUrl: formData.youtubeUrl.trim(),
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
           order,
           createdBy: userId,
-        });
+        };
+        if (formData.estimatedMinutes) {
+          stepData.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await createNewStep(moduleId, stepData);
       }
       onClose();
     } catch (error: any) {

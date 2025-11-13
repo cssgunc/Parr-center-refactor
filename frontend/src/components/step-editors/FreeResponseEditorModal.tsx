@@ -46,28 +46,42 @@ export default function FreeResponseEditorModal({ moduleId, onClose, onBack, ste
     try {
       if (step) {
         // Update existing step
-        await updateStepData(moduleId, step.id, {
+        const updates: any = {
           title: formData.title.trim(),
           prompt: formData.prompt.trim(),
-          sampleAnswer: formData.sampleAnswer.trim() || undefined,
-          maxLength: formData.maxLength ? parseInt(formData.maxLength) : undefined,
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
-        });
+        };
+        if (formData.sampleAnswer.trim()) {
+          updates.sampleAnswer = formData.sampleAnswer.trim();
+        }
+        if (formData.maxLength) {
+          updates.maxLength = parseInt(formData.maxLength);
+        }
+        if (formData.estimatedMinutes) {
+          updates.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await updateStepData(moduleId, step.id, updates);
       } else {
         // Create new step
         const order = module?.steps.length || 0;
-        await createNewStep(moduleId, {
+        const stepData: any = {
           type: 'freeResponse',
           title: formData.title.trim(),
           prompt: formData.prompt.trim(),
-          sampleAnswer: formData.sampleAnswer.trim() || undefined,
-          maxLength: formData.maxLength ? parseInt(formData.maxLength) : undefined,
-          estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
           isOptional: formData.isOptional,
           order,
           createdBy: userId,
-        });
+        };
+        if (formData.sampleAnswer.trim()) {
+          stepData.sampleAnswer = formData.sampleAnswer.trim();
+        }
+        if (formData.maxLength) {
+          stepData.maxLength = parseInt(formData.maxLength);
+        }
+        if (formData.estimatedMinutes) {
+          stepData.estimatedMinutes = parseInt(formData.estimatedMinutes);
+        }
+        await createNewStep(moduleId, stepData);
       }
       onClose();
     } catch (error: any) {
