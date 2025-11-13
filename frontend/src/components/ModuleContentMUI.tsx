@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { Video } from "./Video";
 import { getModuleById, getUserProgress, startUserProgress } from "@/lib/firebase/db-operations";
 import { Module } from "@/lib/firebase/types";
+import JournalEntry from "./JournalEntry";
+import { getFirstMockFreeResponseStep } from "@/data/mockFreeResponseSteps";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -17,6 +19,7 @@ interface ModuleContentProps {
 export default function ModuleContentMUI({ moduleId, index, userId }: ModuleContentProps) {
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
   const [showVideoView, setShowVideoView] = useState(false);
+  // const [showJournalEntry, setShowJournalEntry] = useState(false);
   
   // Reset video view when module changes
   useEffect(() => {
@@ -79,6 +82,19 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
+
+  // Journal Entry View
+  // if (showJournalEntry) {
+  //   const mockStep = getFirstMockFreeResponseStep();
+  //   if (mockStep) {
+  //     return (
+  //       <JournalEntry
+  //         freeResponseStep={mockStep}
+  //         onBack={() => setShowJournalEntry(false)}
+  //       />
+  //     );
+  //   }
+  // }
 
   // Video View
   // if (showVideoView) {
