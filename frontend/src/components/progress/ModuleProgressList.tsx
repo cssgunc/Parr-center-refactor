@@ -43,13 +43,23 @@ export default function ModuleProgressList({
             ? quizzesLeftCalculator(mod.id, completedSteps, totalSteps)
             : Math.max(0, totalSteps - completedSteps);
 
+        // Convert Date to Timestamp if needed
+        let completedAt: Timestamp | null = null;
+        if (progress?.completedAt) {
+          if (progress.completedAt instanceof Date) {
+            completedAt = Timestamp.fromDate(progress.completedAt);
+          } else {
+            completedAt = progress.completedAt;
+          }
+        }
+
         return (
           <ModuleProgress
             key={mod.id}
             title={mod.title}
             completedSteps={completedSteps}
             totalSteps={totalSteps}
-            completedAt={progress?.completedAt || null}
+            completedAt={completedAt}
             quizzesLeft={quizzesLeft}
           />
         );

@@ -1,6 +1,10 @@
-import { useState, useEffect } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, Button, IconButton } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import FlashcardModal from "./FlashcardModal";
+import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
+import Link from 'next/link';
+import { Video } from "./Video";
 import { getModuleById, getUserProgress, startUserProgress } from "@/lib/firebase/db-operations";
 import { Module } from "@/lib/firebase/types";
 
@@ -12,6 +16,13 @@ interface ModuleContentProps {
 
 export default function ModuleContentMUI({ moduleId, index, userId }: ModuleContentProps) {
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
+  const [showVideoView, setShowVideoView] = useState(false);
+  
+  // Reset video view when module changes
+  useEffect(() => {
+    setShowVideoView(false);
+  }, [moduleId]);
+
   const [content, setContent] = useState<Module | null>(null);
 
   const handleStartModule = async () => {
@@ -33,8 +44,50 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
     };
   
     fetchContent();
+
   }, [moduleId]);
 
+  if (!content) {
+    return (
+      <Box>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{
+            fontWeight: 'bold',
+            color: (t) => t.palette.grey[800],
+          }}
+        >
+          Module {moduleId}
+        </Typography>
+        <Typography 
+          sx={{
+            mt: 2,
+            color: (t) => t.palette.grey[700],
+          }}
+        >
+          No content available for this module yet.
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Format duration from seconds to MM:SS
+  const formatDuration = (seconds?: number): string => {
+    if (!seconds) return "";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  // Video View
+  // if (showVideoView) {
+  //   return (
+  //     <Video moduleId={moduleId} />
+  //   );
+  // }
+
+  // Overview View
   return (
     <Box
       sx={{
@@ -96,22 +149,25 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         >
           Start Module
         </Button>
-        <Button
-          variant="contained"
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: '16px',
-            bgcolor: (t) => t.palette.common.black,
-            color: 'white',
-            fontSize: '1.25rem',
-            '&:hover': {
+        <Link href={`/modules/${moduleId}/journal`} passHref>
+          <Button
+            variant="contained"
+            component="a"
+            sx={{
+              py: 1.5,
+              px: 2,
+              borderRadius: '16px',
               bgcolor: (t) => t.palette.common.black,
-            },
-          }}
-        >
-          View Journal
-        </Button>
+              color: 'white',
+              fontSize: '1.25rem',
+              '&:hover': {
+                bgcolor: (t) => t.palette.common.black,
+              },
+            }}
+          >
+            View Journal
+          </Button>
+        </Link>
 
         <Button
           onClick={() => setFlashcardModalOpen(true)}
@@ -223,4 +279,3 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
     </Box>
   );
 }
-
