@@ -180,13 +180,15 @@ export default function ProfilePage() {
             />
           )}
 
-          <ModuleProgressList
-            modules={modules}
-            progressData={progressData}
-            quizzesLeftCalculator={(moduleId, completedSteps, totalSteps) =>
-              Math.max(0, totalSteps - completedSteps)
-            }
-          />
+          <div className="max-h-[60vh] overflow-y-auto mt-4">
+            <ModuleProgressList
+              modules={modules}
+              progressData={progressData}
+              quizzesLeftCalculator={(moduleId, completedSteps, totalSteps) =>
+                Math.max(0, totalSteps - completedSteps)
+              }
+            />
+          </div>
         </Box>
 
         {/* FOOTER BUTTONS */}
