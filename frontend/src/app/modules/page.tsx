@@ -8,18 +8,12 @@ import {
 import { Module } from "@/lib/firebase/types";
 import { Container, Typography, Box, Input } from "@mui/material";
 import { useEffect, useState } from "react";
+import ModuleTestPage from "@/components/ModuleTestPage";
 
 export default function ModulesPage() {
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          Modules
-        </Typography>
-        <Typography variant="body1">
-          This is the modules page. Add your modules content here.
-        </Typography>
-      </Box>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <ModuleTestPage />
     </Container>
   );
 }
