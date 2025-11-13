@@ -37,13 +37,7 @@ export interface Module {
   thumbnailUrl?: string;
 }
 
-// Step type payloads
-export interface VideoPayload {
-  youtubeUrl: string;
-  thumbnailUrl?: string;
-  durationSec?: number;
-}
-
+// Quiz Question (still needed by QuizStep)
 export interface QuizQuestion {
   prompt: string;
   choices: string[];
@@ -51,27 +45,10 @@ export interface QuizQuestion {
   explanation?: string;
 }
 
-export interface QuizPayload {
-  shuffle: boolean;
-  questions: QuizQuestion[];
-  passingScore: number; // 0-100
-}
-
+// Flashcard (still needed by FlashcardsStep)
 export interface Flashcard {
   front: string;
   back: string;
-}
-
-export interface FlashcardsPayload {
-  title?: string;
-  cards: Flashcard[];
-  studyMode?: "spaced" | "random";
-}
-
-export interface FreeResponsePayload {
-  prompt: string;
-  sampleAnswer?: string;
-  maxLength?: number;
 }
 
 // Base Step Interface
@@ -89,26 +66,43 @@ export interface StepBase {
 
 export type StepType = "video" | "quiz" | "flashcards" | "freeResponse";
 
+// Subcollection name mapping
+export const STEP_COLLECTIONS = {
+  video: "videos",
+  quiz: "quizzes",
+  flashcards: "flashcards",
+  freeResponse: "freeResponses",
+} as const;
+
+export type StepCollectionName = typeof STEP_COLLECTIONS[StepType];
+
 // Specific Step Interfaces
 
 export interface VideoStep extends StepBase {
   type: "video";
-  video: VideoPayload;
+  youtubeUrl: string;
+  thumbnailUrl?: string;
+  durationSec?: number;
 }
 
 export interface QuizStep extends StepBase {
   type: "quiz";
-  quiz: QuizPayload;
+  shuffle: boolean;
+  questions: QuizQuestion[];
+  passingScore: number; // 0-100
 }
 
 export interface FlashcardsStep extends StepBase {
   type: "flashcards";
-  flashcards: FlashcardsPayload;
+  cards: Flashcard[];
+  studyMode?: "spaced" | "random";
 }
 
 export interface FreeResponseStep extends StepBase {
   type: "freeResponse";
-  freeResponse: FreeResponsePayload;
+  prompt: string;
+  sampleAnswer?: string;
+  maxLength?: number;
 }
 
 // Step type used throughout the app
