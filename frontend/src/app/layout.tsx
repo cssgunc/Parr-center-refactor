@@ -57,7 +57,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable}`}
+        className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable} bg-gradient-to-b from-gray-50 to-white`}
       >
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>

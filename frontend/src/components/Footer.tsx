@@ -97,11 +97,10 @@ export default function Footer() {
                   fontSize: '0.875rem',
                 }}
               >
-                <Box>XXXXXXXXXXXXXXXXXXX</Box>
-                <Box>XXXXXXXX</Box>
-                <Box>XXXXXXXXXXXXXXXXXX</Box>
-                <Box>XXXXXX</Box>
-                <Box>XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</Box>
+                <Box component="a" href="https://parrcenter.unc.edu/events/">Parr Center Events</Box>
+                <Box component="a" href="https://parrcenter.unc.edu/ted-ed/">Ethics Studio (TED-Ed)</Box>
+                <Box component="a" href="https://parrcenter.unc.edu/">Parr Center Homepage</Box>
+                <Box component="a" href="https://parrcenter.unc.edu/mission/">Mission & Vision</Box>
               </Box>
             </Box>
           </Box>
@@ -111,4 +110,3 @@ export default function Footer() {
     </Box>
   );
 }
-
