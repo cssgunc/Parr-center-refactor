@@ -17,6 +17,8 @@ interface ModuleContentProps {
 export default function ModuleContentMUI({ moduleId, index, userId }: ModuleContentProps) {
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
   const [showVideoView, setShowVideoView] = useState(false);
+  const [numSteps, setNumSteps] = useState<number>(0);
+
   
   // Reset video view when module changes
   useEffect(() => {
@@ -40,9 +42,11 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
   
     const fetchContent = async () => {
       const content = await getModuleById(moduleId);
+      const stepCount = content ? content.stepCount : 0;
       setContent(content);
+      setNumSteps(stepCount)
     };
-  
+
     fetchContent();
 
   }, [moduleId]);
@@ -118,7 +122,7 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
           fontWeight: 'bold',
           fontFamily: 'var(--font-secondary)',
           color: (t) => t.palette.error.main,
-          mb: 1,
+          mb: 4,
         }}
       >
         {content?.title}
@@ -128,7 +132,7 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         sx={{
           display: 'flex',
           gap: 1,
-          mb: 8,
+          mb: 4,
         }}
       >
         <Button
@@ -190,7 +194,7 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
 
       <Box
         sx={{
-          mb: 8,
+          mb: 4,
         }}
       >
         <Typography
@@ -202,21 +206,13 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         >
           Current Progress
         </Typography>
-        {/* TODO USE getUserProgress Step Indicators */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            mt: 1,
-            ml: '10vw',
-          }}
-        >
-          {[1, 2, 3, 4].map((step) => (
-            <Box key={step} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box className="flex flex-row gap-5 mt-5">
+          {Array.from({ length: numSteps }, (_, i) => i + 1).map((step) => (
+            <Box key={step}>
               <Button
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: 50,
+                  height: 50,
                   borderRadius: '50%',
                   border: (t) => `1px solid ${t.palette.grey[300]}`,
                   display: 'flex',
@@ -233,15 +229,6 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
               >
                 {step}
               </Button>
-              {step < 4 && (
-                <Box
-                  sx={{
-                    width: 64,
-                    height: 1,
-                    bgcolor: (t) => t.palette.grey[200],
-                  }}
-                />
-              )}
             </Box>
           ))}
         </Box>
@@ -264,7 +251,6 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
           sx={{
             color: (t) => t.palette.common.black,
             lineHeight: '1.6',
-            ml: '5vw',
           }}
         >
           {content?.description}
