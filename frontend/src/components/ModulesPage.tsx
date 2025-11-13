@@ -31,7 +31,7 @@ export default function ModulesPage() {
 
   // ===== LOCAL STATE =====
   const [showModuleEditor, setShowModuleEditor] = useState(false);
-  const [editingModule, setEditingModule] = useState<ModuleWithSteps | null>(null);
+  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
 
   // ===== EFFECTS =====
 
@@ -49,12 +49,12 @@ export default function ModulesPage() {
   // ===== EVENT HANDLERS =====
 
   const handleCreateModule = () => {
-    setEditingModule(null);
+    setEditingModuleId(null);
     setShowModuleEditor(true);
   };
 
   const handleEditModule = (module: ModuleWithSteps) => {
-    setEditingModule(module);
+    setEditingModuleId(module.id);
     setSelectedModule(module);
     setIsEditing(true);
     setShowModuleEditor(true);
@@ -68,7 +68,7 @@ export default function ModulesPage() {
 
   const handleCloseEditor = () => {
     setShowModuleEditor(false);
-    setEditingModule(null);
+    setEditingModuleId(null);
     setSelectedModule(null);
     setIsEditing(false);
   };
@@ -199,7 +199,7 @@ export default function ModulesPage() {
         {/* Module Editor Modal */}
         {showModuleEditor && (
           <ModuleEditor
-            module={editingModule}
+            moduleId={editingModuleId}
             onClose={handleCloseEditor}
           />
         )}

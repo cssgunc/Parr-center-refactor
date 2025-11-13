@@ -8,23 +8,18 @@ service cloud.firestore {
   }
 
   function isAdmin() {
-    let userDocPath = /databases/$(database)/documents/users/$(request.auth.uid);
-    return request.auth != null
-        && exists(userDocPath)
-        && get(userDocPath).data.isAdmin == true;
+    return request.auth != null &&
+      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
   }
 
   function isOwner() {
-    return isSignedIn() && (
-      (resource != null && resource.data.createdBy == request.auth.uid) ||
-      (request.resource != null && request.resource.data.createdBy == request.auth.uid)
-    );
+    return isSignedIn() && resource != null && resource.data.createdBy == request.auth.uid;
   }
 
   function isCollaborator() {
-    return isSignedIn() &&
-      ((resource != null && resource.data.collaborators != null && request.auth.uid in resource.data.collaborators) ||
-      (request.resource != null && request.resource.data.collaborators != null && request.auth.uid in request.resource.data.collaborators));
+    return isSignedIn() && resource != null &&
+      resource.data.collaborators != null &&
+      request.auth.uid in resource.data.collaborators;
   }
 
   function validateModule() {
@@ -201,15 +196,18 @@ service cloud.firestore {
 
     // MODULES
     match /modules/{moduleId} {
-      allow read: if (resource.data.isPublic != null && resource.data.isPublic == true) || isOwner() || isCollaborator();
+      allow read: if (resource != null && resource.data.isPublic == true) || isOwner() || isCollaborator() || isAdmin();
       allow create: if isSignedIn() && validateModule() && request.resource.data.createdBy == request.auth.uid;
-      allow update: if (isOwner() || isCollaborator()) && validateModuleUpdate();
-      allow delete: if isOwner() || isCollaborator();
+      allow update: if isAdmin() || ((isOwner() || isCollaborator()) && validateModuleUpdate());
+      allow delete: if isAdmin() || isOwner() || isCollaborator();
 
       // VIDEO STEPS
       match /videos/{videoId} {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
-        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow create: if isSignedIn() &&
+          (get(/databases/$(database)/documents/modules/$(moduleId)).data.createdBy == request.auth.uid ||
+           request.auth.uid in get(/databases/$(database)/documents/modules/$(moduleId)).data.collaborators) &&
+          validateStep();
         allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
         allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
@@ -217,7 +215,10 @@ service cloud.firestore {
       // QUIZ STEPS
       match /quizzes/{quizId} {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
-        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow create: if isSignedIn() &&
+          (get(/databases/$(database)/documents/modules/$(moduleId)).data.createdBy == request.auth.uid ||
+           request.auth.uid in get(/databases/$(database)/documents/modules/$(moduleId)).data.collaborators) &&
+          validateStep();
         allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
         allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
@@ -225,7 +226,10 @@ service cloud.firestore {
       // FLASHCARD STEPS
       match /flashcards/{flashcardId} {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
-        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow create: if isSignedIn() &&
+          (get(/databases/$(database)/documents/modules/$(moduleId)).data.createdBy == request.auth.uid ||
+           request.auth.uid in get(/databases/$(database)/documents/modules/$(moduleId)).data.collaborators) &&
+          validateStep();
         allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
         allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
@@ -233,7 +237,10 @@ service cloud.firestore {
       // FREE RESPONSE STEPS
       match /freeResponses/{freeResponseId} {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
-        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow create: if isSignedIn() &&
+          (get(/databases/$(database)/documents/modules/$(moduleId)).data.createdBy == request.auth.uid ||
+           request.auth.uid in get(/databases/$(database)/documents/modules/$(moduleId)).data.collaborators) &&
+          validateStep();
         allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
         allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
