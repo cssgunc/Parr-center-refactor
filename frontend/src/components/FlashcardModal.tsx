@@ -30,6 +30,7 @@ export default function FlashcardModal({ open, onClose, moduleId }: FlashcardMod
   const [suppressFlipAnimation, setSuppressFlipAnimation] = useState(false);
   
   // Get flashcards for the current module
+
   const moduleFlashcards = flashcardsByModule[moduleId] || {};
   
   // Convert the object structure to an array for easier rendering

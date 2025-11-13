@@ -5,11 +5,12 @@ import { getModuleById, getUserProgress, startUserProgress } from "@/lib/firebas
 import { Module } from "@/lib/firebase/types";
 
 interface ModuleContentProps {
-  moduleId: number;
+  moduleId: string;
+  index: number;
   userId: string;
 }
 
-export default function ModuleContentMUI({ moduleId, userId }: ModuleContentProps) {
+export default function ModuleContentMUI({ moduleId, index, userId }: ModuleContentProps) {
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
   const [content, setContent] = useState<Module | null>(null);
 
@@ -31,31 +32,6 @@ export default function ModuleContentMUI({ moduleId, userId }: ModuleContentProp
     fetchContent();
   }, [moduleId]);
 
-  if (!content) {
-    return (
-      <Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{
-            fontWeight: 'bold',
-            color: (t) => t.palette.grey[800],
-          }}
-        >
-          Module {moduleId}
-        </Typography>
-        <Typography 
-          sx={{
-            mt: 2,
-            color: (t) => t.palette.grey[700],
-          }}
-        >
-          No content available for this module yet.
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
     <Box
       sx={{
@@ -75,7 +51,7 @@ export default function ModuleContentMUI({ moduleId, userId }: ModuleContentProp
           mb: 0.5,
         }}
       >
-        Welcome to Module {moduleId}
+        Welcome to Module {index + 1}
       </Typography>
       
       <Typography
@@ -89,7 +65,7 @@ export default function ModuleContentMUI({ moduleId, userId }: ModuleContentProp
           mb: 1,
         }}
       >
-        {content.title}
+        {content?.title}
       </Typography>
 
       <Box
@@ -231,14 +207,14 @@ export default function ModuleContentMUI({ moduleId, userId }: ModuleContentProp
             ml: '5vw',
           }}
         >
-          {content.description}
+          {content?.description}
         </Typography>
       </Box>
 
       <FlashcardModal
         open={flashcardModalOpen}
         onClose={() => setFlashcardModalOpen(false)}
-        moduleId={moduleId}
+        moduleId={index + 1}
       />
     </Box>
   );
