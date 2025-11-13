@@ -14,8 +14,8 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
   const [content, setContent] = useState<Module | null>(null);
 
-  const handleStartModule = () => {
-    const currProgress = getUserProgress(userId, moduleId.toString());
+  const handleStartModule = async () => {
+    const currProgress = await getUserProgress(userId, moduleId.toString());
     if (!currProgress) {
       startUserProgress(userId, moduleId.toString());
     } else {
@@ -25,10 +25,13 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
   }
 
   useEffect(() => {
+    if (!moduleId) return;
+  
     const fetchContent = async () => {
-      const content = await getModuleById(moduleId.toString());
+      const content = await getModuleById(moduleId);
       setContent(content);
-    }
+    };
+  
     fetchContent();
   }, [moduleId]);
 
@@ -143,6 +146,7 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         >
           Current Progress
         </Typography>
+        {/* TODO USE getUserProgress Step Indicators */}
         <Box
           sx={{
             display: 'flex',

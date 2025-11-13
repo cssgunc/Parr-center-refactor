@@ -35,11 +35,11 @@ export default function Sidebar({ selectedModule, onSelect, onSelectIndex }: Sid
   }, []);
 
   useEffect(() => {
-    if (modules.length > 0 && selectedModule === "") {
+    if (modules.length > 0 && !selectedModule) {
       onSelect(modules[0].id);
       onSelectIndex(0);
     }
-  }, [modules, selectedModule, onSelect, onSelectIndex]);
+  }, [modules]);
 
   return (
     <div className="hidden md:block w-60 bg-white border-r border-gray-300 h-full overflow-y-auto font-secondary">
