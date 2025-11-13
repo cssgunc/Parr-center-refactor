@@ -1,46 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getPublicModules } from "@/lib/firebase/db-operations";
 
 interface Module {
   id: number;
   title: string;
 }
-
-const mockModules: Module[] = [
-  {
-    id: 1,
-    title: "Interstellar Rescue Ethical Dilemma",
-  },
-  {
-    id: 2,
-    title: "nlasnlno jxzciojoq nuvo dovij mdkljfen",
-  },
-  {
-    id: 3,
-    title: "nlasnlno jxzciojoq nuvo dovij mdkljfen",
-  },
-  {
-    id: 4,
-    title: "nlasnlno jxzciojoq nuvo dovij mdkljfen",
-  },
-  {
-    id: 5,
-    title: "nlasnlno jxzciojoq nuvo dovij mdkljfen",
-  },
-  {
-    id: 6,
-    title: "nlasnlno jxzciojoq nuvo dovij mdkljfen",
-  },
-  {
-    id: 7,
-    title: "nlasnlno jxzciojoq nuvo dovij mdkljfen",
-  },
-  {
-    id: 8,
-    title: "nlasnlno jxzciojoq nuvo dovij mdkljfen",
-  }
-];
 
 interface SidebarProps {
   selectedModule: number;
@@ -48,16 +14,31 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ selectedModule, onSelect }: SidebarProps) {
+  const [modules, setModules] = useState<Module[]>([]);
   const handleModuleClick = (moduleId: number) => {
     onSelect(moduleId);
   };
+
+  useEffect(() => {
+    // Fetch modules from the database
+    const fetchModules = async () => {
+      const modulesData = await getPublicModules();
+      // Map to local Module type
+      const mappedModules = modulesData.map((mod) => ({
+        id: parseInt(mod.id),
+        title: mod.title,
+      }));
+      setModules(mappedModules);
+    }
+    fetchModules();
+  }, []);
 
   return (
     <div className="hidden md:block w-60 bg-white border-r border-gray-300 h-full overflow-y-auto font-secondary">
       <div className="py-4">
         <nav>
-          {mockModules.map((module, index) => (
-            <div key={module.id} className={`${index < mockModules.length - 1 ? 'border-b border-gray-300' : ''}`}>
+          {modules.map((module, index) => (
+            <div key={module.id} className={`${index < modules.length - 1 ? 'border-b border-gray-300' : ''}`}>
               <button
                   onClick={() => handleModuleClick(module.id)}
                   className={`w-full text-left pr-4 px-6 py-5 transition-colors duration-200 ${

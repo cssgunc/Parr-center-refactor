@@ -1,14 +1,35 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import FlashcardModal from "./FlashcardModal";
+import { getModuleById, getUserProgress, startUserProgress } from "@/lib/firebase/db-operations";
+import { Module } from "@/lib/firebase/types";
 
 interface ModuleContentProps {
   moduleId: number;
-  content?: { title: string; subtitle?: string; overview: string; };
+  userId: string;
 }
 
-export default function ModuleContentMUI({ moduleId, content }: ModuleContentProps) {
+export default function ModuleContentMUI({ moduleId, userId }: ModuleContentProps) {
   const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
+  const [content, setContent] = useState<Module | null>(null);
+
+  const handleStartModule = () => {
+    const currProgress = getUserProgress(userId, moduleId.toString());
+    if (!currProgress) {
+      startUserProgress(userId, moduleId.toString());
+    } else {
+      // Module already started; maybe navigate to last viewed step
+      // Navigate to page for last viewed step referencing currProgress
+    }
+  }
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      const content = await getModuleById(moduleId.toString());
+      setContent(content);
+    }
+    fetchContent();
+  }, [moduleId]);
 
   if (!content) {
     return (
@@ -71,16 +92,6 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         {content.title}
       </Typography>
 
-      <Typography
-        sx={{
-          color: (t) => t.palette.warning.main,
-          fontSize: '1.25rem',
-          mb: 1,
-        }}
-      >
-        {content.subtitle}
-      </Typography>
-
       <Box
         sx={{
           display: 'flex',
@@ -89,6 +100,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
         }}
       >
         <Button
+          onClick = {() => handleStartModule()}
           variant="contained"
           sx={{
             py: 1.5,
@@ -219,7 +231,7 @@ export default function ModuleContentMUI({ moduleId, content }: ModuleContentPro
             ml: '5vw',
           }}
         >
-          {content.overview}
+          {content.description}
         </Typography>
       </Box>
 

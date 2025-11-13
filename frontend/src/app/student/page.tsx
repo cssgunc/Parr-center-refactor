@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import ModuleContentMUI from "@/components/ModuleContentMUI";
 import modulesContent from "@/data/modulesContent";
 import AuthGate from "@/components/AuthGate";
+import { auth } from "../../lib/firebase/firebaseConfig";
 
 export default function StudentPage() {
   /**
@@ -12,6 +13,7 @@ export default function StudentPage() {
    * Tracks which module is currently selected in the student portal
    */
   const [selectedModule, setSelectedModule] = useState<number>(1);
+  const userId = auth.currentUser ? auth.currentUser.uid : "";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -40,7 +42,7 @@ export default function StudentPage() {
                 <div className="p-6">
                   <ModuleContentMUI
                     moduleId={selectedModule}
-                    content={modulesContent[selectedModule]}
+                    userId={userId}
                   />
                 </div>
               </main>
