@@ -11,7 +11,12 @@ import { useEffect, useState } from "react";
 
 export default function ModulesPage() {
   return (
-    <Container maxWidth="lg">
+    <Container
+      maxWidth="lg"
+      style={{
+        background: "linear-gradient(to bottom, white 0%, white 6%, #abd8ff 100%)",
+      }}
+    >
       <Box sx={{ my: 4 }}>
         <Typography variant="h3" component="h1" gutterBottom>
           Modules
