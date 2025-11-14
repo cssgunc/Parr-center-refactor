@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
-import Link from "next/link";
 import {
   getModuleById,
   getUserProgress,
@@ -14,7 +11,6 @@ import FreeResponseStepView from "./FreeResponseStepView";
 import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
-import { getFirstMockFreeResponseStep } from "@/data/mockFreeResponseSteps";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface ModuleContentProps {
@@ -115,10 +111,22 @@ export default function ModuleContentMUI({
             bgcolor: "white",
           }}
         >
+          {currentStepIndex === 0 ? (
+            <Button
+              variant="outlined"
+              onClick={() => setShowSteps(false)}
+              sx={{
+                borderRadius: "16px",
+                px: 3,
+                py: 1,
+              }}
+            >
+              Back
+            </Button>
+          ) : (
           <Button
             variant="outlined"
             onClick={handlePrevious}
-            disabled={currentStepIndex === 0}
             sx={{
               borderRadius: "16px",
               px: 3,
@@ -127,6 +135,7 @@ export default function ModuleContentMUI({
           >
             Previous
           </Button>
+          )}
 
           <Typography sx={{ fontWeight: "bold" }}>
             Step {currentStepIndex + 1} of {steps.length}
@@ -173,7 +182,7 @@ export default function ModuleContentMUI({
             }}
           >
             {currentStep.type === "video" && (
-              <VideoStepView step={currentStep as VideoStep} />
+              <VideoStepView step={currentStep as VideoStep}/>
             )}
             {currentStep.type === "quiz" && (
               <QuizStepView step={currentStep as QuizStep} />
