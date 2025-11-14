@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -9,18 +9,20 @@ import {
   RadioGroup,
   Typography,
   Alert,
-} from '@mui/material';
-import { QuizQuestion } from '@/lib/firebase/types';
+} from "@mui/material";
+import { QuizStep } from "@/lib/firebase/types";
 
-interface QuizStepProps {
-  passingScore: number;
-  questions: QuizQuestion[];
+interface QuizStepViewProps {
+  step: QuizStep;
   onClose?: () => void;
 }
 
-export default function QuizStep({ passingScore, questions, onClose }: QuizStepProps) {
-  const [answers, setAnswers] = useState<number[]>(() => questions.map(() => -1));
+export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
+  const [answers, setAnswers] = useState<number[]>(() =>
+    step.questions.map(() => -1)
+  );
   const [graded, setGraded] = useState(false);
+  const questions = step.questions;
 
   const allAnswered = useMemo(() => answers.every((a) => a >= 0), [answers]);
 
@@ -42,14 +44,20 @@ export default function QuizStep({ passingScore, questions, onClose }: QuizStepP
   };
 
   const results = useMemo(() => {
-    const correctCount = questions.reduce((acc, q, i) => (answers[i] === q.correctIndex ? acc + 1 : acc), 0);
-    const percent = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
-    const passed = percent >= passingScore;
+    const correctCount = questions.reduce(
+      (acc, q, i) => (answers[i] === q.correctIndex ? acc + 1 : acc),
+      0
+    );
+    const percent =
+      questions.length > 0
+        ? Math.round((correctCount / questions.length) * 100)
+        : 0;
+    const passed = percent >= step.passingScore;
     return { correctCount, percent, passed };
-  }, [answers, questions, passingScore]);
+  }, [answers, questions, step.passingScore]);
 
   return (
-    <Box sx={{ mt: 4, bgcolor: 'background.paper', p: 3, borderRadius: 2 }}>
+    <Box sx={{ mt: 4, bgcolor: "background.paper", p: 3, borderRadius: 2 }}>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
         Quiz
       </Typography>
@@ -60,10 +68,17 @@ export default function QuizStep({ passingScore, questions, onClose }: QuizStepP
         const isIncorrect = graded && userAnswer !== q.correctIndex;
 
         return (
-          <Box key={qi} component="section" sx={{ mb: 2 }} aria-labelledby={`q-${qi}-label`}>
+          <Box
+            key={qi}
+            component="section"
+            sx={{ mb: 2 }}
+            aria-labelledby={`q-${qi}-label`}
+          >
             <FormControl component="fieldset" fullWidth>
               <FormLabel id={`q-${qi}-label`}>
-                <Typography sx={{ fontWeight: 600 }}>{`${qi + 1}. ${q.prompt}`}</Typography>
+                <Typography sx={{ fontWeight: 600 }}>{`${qi + 1}. ${
+                  q.prompt
+                }`}</Typography>
               </FormLabel>
 
               <RadioGroup
@@ -84,8 +99,14 @@ export default function QuizStep({ passingScore, questions, onClose }: QuizStepP
                         p: 1,
                         borderRadius: 1,
                         border: (t) =>
-                          showCorrect ? `1px solid ${t.palette.success.main}` : userPicked && isIncorrect ? `1px solid ${t.palette.error.main}` : '1px solid transparent',
-                        bgcolor: showCorrect ? (t) => t.palette.action.hover : 'transparent',
+                          showCorrect
+                            ? `1px solid ${t.palette.success.main}`
+                            : userPicked && isIncorrect
+                            ? `1px solid ${t.palette.error.main}`
+                            : "1px solid transparent",
+                        bgcolor: showCorrect
+                          ? (t) => t.palette.action.hover
+                          : "transparent",
                       }}
                     >
                       <FormControlLabel
@@ -102,7 +123,9 @@ export default function QuizStep({ passingScore, questions, onClose }: QuizStepP
                 <Box sx={{ mt: 1 }}>
                   <Alert severity="info">
                     <strong>Correct:</strong> {q.choices[q.correctIndex]}
-                    {q.explanation ? <div style={{ marginTop: 8 }}>{q.explanation}</div> : null}
+                    {q.explanation ? (
+                      <div style={{ marginTop: 8 }}>{q.explanation}</div>
+                    ) : null}
                   </Alert>
                 </Box>
               )}
@@ -117,33 +140,40 @@ export default function QuizStep({ passingScore, questions, onClose }: QuizStepP
         );
       })}
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 2, alignItems: 'center' }}>
+      <Box sx={{ display: "flex", gap: 2, mt: 2, alignItems: "center" }}>
         {!graded ? (
           <>
-            <Button variant="contained" color="primary" onClick={grade} disabled={!allAnswered}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={grade}
+              disabled={!allAnswered}
+            >
               Check Answers
             </Button>
             <Button variant="outlined" onClick={reset}>
               Reset
             </Button>
             <Typography sx={{ color: (t) => t.palette.text.secondary }}>
-              {questions.length} question{questions.length !== 1 ? 's' : ''}
+              {questions.length} question{questions.length !== 1 ? "s" : ""}
             </Typography>
-            <Button variant="contained" sx={{ ml: 'auto' }}>
+            <Button variant="contained" sx={{ ml: "auto" }}>
               Continue
             </Button>
           </>
         ) : (
           <>
             <Box sx={{ flex: 1 }}>
-              <Alert severity={results.passed ? 'success' : 'error'}>
+              <Alert severity={results.passed ? "success" : "error"}>
                 {results.passed ? (
                   <div>
-                    <strong>Passed</strong> — You scored {results.percent}% ({results.correctCount}/{questions.length})
+                    <strong>Passed</strong> — You scored {results.percent}% (
+                    {results.correctCount}/{questions.length})
                   </div>
                 ) : (
                   <div>
-                    <strong>Not passing</strong> — You scored {results.percent}% ({results.correctCount}/{questions.length})
+                    <strong>Not passing</strong> — You scored {results.percent}%
+                    ({results.correctCount}/{questions.length})
                   </div>
                 )}
               </Alert>
@@ -152,9 +182,7 @@ export default function QuizStep({ passingScore, questions, onClose }: QuizStepP
             <Button variant="contained" onClick={reset}>
               Retake
             </Button>
-            <Button variant="contained">
-              Continue
-            </Button>
+            <Button variant="contained">Continue</Button>
           </>
         )}
       </Box>

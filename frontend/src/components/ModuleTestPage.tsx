@@ -13,10 +13,12 @@ import {
   FlashcardsStep,
   VideoStep,
   FreeResponseStep,
+  QuizStep,
 } from "@/lib/firebase/types";
 import FlashcardStep from "./FlashcardsStepView";
 import VideoStepView from "./VideoStepView";
 import FreeResponseStepView from "./FreeResponseStepView";
+import QuizStepView from "./QuizStepView";
 
 export default function ModuleTestPage() {
   const [user, authLoading] = useAuthState(auth);
@@ -193,17 +195,7 @@ export default function ModuleTestPage() {
                   <VideoStepView step={currentStep as VideoStep} />
                 )}
                 {currentStep.type === "quiz" && (
-                  <div className="bg-white rounded-lg p-8 shadow-sm">
-                    <h2 className="text-2xl font-bold mb-4">
-                      {currentStep.title}
-                    </h2>
-                    <p className="text-gray-600">
-                      Quiz step (not implemented in test page)
-                    </p>
-                    <pre className="mt-4 p-4 bg-gray-100 rounded text-sm overflow-auto">
-                      {JSON.stringify(currentStep, null, 2)}
-                    </pre>
-                  </div>
+                  <QuizStepView step={currentStep as QuizStep} />
                 )}
                 {currentStep.type === "freeResponse" && (
                   <FreeResponseStepView
