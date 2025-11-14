@@ -34,13 +34,14 @@ export default function ModuleContentMUI({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const handleStartModule = async () => {
-    const currProgress = await getUserProgress(userId, moduleId.toString());
-    if (!currProgress) {
-      startUserProgress(userId, moduleId.toString());
-    } else {
-      // Module already started; maybe navigate to last viewed step
-      // Navigate to page for last viewed step referencing currProgress
+    if (!userProgress) {
+      await startUserProgress(userId, moduleId);
+      const newProgress = await getUserProgress(userId, moduleId);
+      setUserProgress(newProgress);
     }
+    // Show steps view
+    setShowSteps(true);
+    setCurrentStepIndex(0);
   };
 
   useEffect(() => {
@@ -49,10 +50,22 @@ export default function ModuleContentMUI({
     const fetchContent = async () => {
       const content = await getModuleById(moduleId);
       setContent(content);
+
+      // Fetch steps
+      const moduleSteps = await getStepsByModuleId(moduleId);
+      setSteps(moduleSteps);
+
+      // Fetch user progress
+      const progress = await getUserProgress(userId, moduleId);
+      setUserProgress(progress);
     };
 
     fetchContent();
-  }, [moduleId]);
+
+    // Reset step view when module changes
+    setShowSteps(false);
+    setCurrentStepIndex(0);
+  }, [moduleId, userId]);
 
   if (!content) {
     return (
@@ -87,25 +100,104 @@ export default function ModuleContentMUI({
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  // Journal Entry View
-  // if (showJournalEntry) {
-  //   const mockStep = getFirstMockFreeResponseStep();
-  //   if (mockStep) {
-  //     return (
-  //       <JournalEntry
-  //         freeResponseStep={mockStep}
-  //         onBack={() => setShowJournalEntry(false)}
-  //       />
-  //     );
-  //   }
-  // }
+  // Step View with Navigation
+  if (showSteps && steps.length > 0) {
+    const currentStep = steps[currentStepIndex];
 
-  // Video View
-  // if (showVideoView) {
-  //   return (
-  //     <Video moduleId={moduleId} />
-  //   );
-  // }
+    const handlePrevious = () => {
+      if (currentStepIndex > 0) {
+        setCurrentStepIndex(currentStepIndex - 1);
+      }
+    };
+
+    const handleNext = () => {
+      if (currentStepIndex < steps.length - 1) {
+        setCurrentStepIndex(currentStepIndex + 1);
+      }
+    };
+
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
+        {/* Step Content */}
+        <Box
+          sx={{
+            flex: 1,
+            overflow: "auto",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            p: 3,
+          }}
+        >
+          {currentStep.type === "video" && (
+            <VideoStepView step={currentStep as VideoStep} />
+          )}
+          {currentStep.type === "quiz" && (
+            <QuizStepView step={currentStep as QuizStep} />
+          )}
+          {currentStep.type === "flashcards" && (
+            <FlashcardsStepView step={currentStep as FlashcardsStep} />
+          )}
+          {currentStep.type === "freeResponse" && (
+            <FreeResponseStepView step={currentStep as FreeResponseStep} />
+          )}
+        </Box>
+
+        {/* Navigation Controls */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            p: 3,
+            borderTop: (t) => `1px solid ${t.palette.grey[200]}`,
+            bgcolor: "white",
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handlePrevious}
+            disabled={currentStepIndex === 0}
+            sx={{
+              borderRadius: "16px",
+              px: 3,
+              py: 1,
+            }}
+          >
+            Previous
+          </Button>
+
+          <Typography sx={{ fontWeight: "bold" }}>
+            Step {currentStepIndex + 1} of {steps.length}
+          </Typography>
+
+          <Button
+            variant="contained"
+            onClick={handleNext}
+            disabled={currentStepIndex === steps.length - 1}
+            sx={{
+              borderRadius: "16px",
+              px: 3,
+              py: 1,
+              bgcolor: (t) => t.palette.common.black,
+              "&:hover": {
+                bgcolor: (t) => t.palette.grey[800],
+              },
+            }}
+          >
+            Next
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
 
   // Overview View
   return (
@@ -167,7 +259,7 @@ export default function ModuleContentMUI({
             },
           }}
         >
-          Start Module
+          {userProgress ? "Continue Module" : "Start Module"}
         </Button>
         <Link href={`/modules/${moduleId}/journal`} passHref>
           <Button
