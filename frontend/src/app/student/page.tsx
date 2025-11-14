@@ -16,25 +16,13 @@ export default function StudentPage() {
   const userId = auth.currentUser ? auth.currentUser.uid : "";
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: "linear-gradient(to bottom, #bcd7ff 0%, #e3efff 100%)" }}
-    >
+    <div className="min-h-screen">
       <AuthGate>
         {
           // ===== STUDENT PORTAL VIEW =====
           // This is the student-facing learning portal with module content
           //ProtectedRoute route will redirect to /login if user is not authenticated
-          <div
-            className="min-h-screen flex flex-col"
-            style={{
-              backgroundImage:
-                "url('https://grainy-gradients.vercel.app/dots.png'), url('https://grainy-gradients.vercel.app/dots.png'), url('https://grainy-gradients.vercel.app/dots.png'), linear-gradient(to bottom, white 0%, white 1%, #abd8ff 100%)",
-              backgroundRepeat: "repeat, repeat, repeat, no-repeat",
-              backgroundSize: "64px 64px, 64px 64px, 64px 64px, cover",
-              backgroundPosition: "0 0, 32px 32px, 16px 16px, center",
-            }}
-          >
+          <div className="min-h-screen flex flex-col">
             {/* Back to Home Button */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
               {/* <button

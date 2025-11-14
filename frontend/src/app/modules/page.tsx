@@ -11,16 +11,7 @@ import { useEffect, useState } from "react";
 
 export default function ModulesPage() {
   return (
-    <Container
-      maxWidth="lg"
-      style={{
-        backgroundImage:
-          "url('https://grainy-gradients.vercel.app/dots.png'), url('https://grainy-gradients.vercel.app/dots.png'), linear-gradient(to bottom, white 0%, white 6%, #aecdff 100%)",
-        backgroundRepeat: "repeat, repeat, no-repeat",
-        backgroundSize: "128px 128px, 128px 128px, cover",
-        backgroundPosition: "0 0, 64px 64px, center",
-      }}
-    >
+    <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <Typography variant="h3" component="h1" gutterBottom>
           Modules
