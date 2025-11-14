@@ -312,6 +312,36 @@ export default function FlashcardsStepView({ step }: FlashcardStepProps) {
           </>
         )}
       </Box>
+
+      {/* Action Buttons - Bottom Right
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 2,
+          mt: "auto",
+        }}
+      >
+        <Button
+          variant="contained"
+          sx={{
+            py: 1.5,
+            px: 3,
+            borderRadius: "16px",
+            bgcolor: (t) => t.palette.common.black,
+            fontWeight: "bold",
+            color: "white",
+            fontSize: "1.25rem",
+            minWidth: "150px",
+            "&:hover": {
+              bgcolor: (t) => t.palette.common.black,
+            },
+          }}
+        >
+          Continue
+        </Button>
+      </Box> */}
     </Box>
   );
 }

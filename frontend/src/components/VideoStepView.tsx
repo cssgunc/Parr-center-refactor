@@ -140,7 +140,7 @@ export default function VideoStepView({ step }: VideoStepProps) {
           />
         </Box>
 
-        {/* Action Buttons - Bottom Right */}
+        {/* Action Buttons - Bottom Right
         <Box
           sx={{
             display: "flex",
@@ -168,7 +168,7 @@ export default function VideoStepView({ step }: VideoStepProps) {
           >
             Continue
           </Button>
-        </Box>
+        </Box> */}
       </Box>
     );
   }

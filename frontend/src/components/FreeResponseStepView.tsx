@@ -58,7 +58,7 @@ export default function FreeResponseStepView({
         position: "relative",
       }}
     >
-      {/* Back Arrow Button - Top Left */}
+      {/* Back Arrow Button - Top Left
       <Box sx={{ p: 2, display: "flex", alignItems: "flex-start" }}>
         <IconButton
           onClick={handleBack}
@@ -72,7 +72,7 @@ export default function FreeResponseStepView({
         >
           <ArrowBackIcon />
         </IconButton>
-      </Box>
+      </Box> */}
 
       {/* Main Content Container */}
       <Box
@@ -218,7 +218,7 @@ export default function FreeResponseStepView({
             Save
           </Button>
 
-          {/* Continue Button - Right Aligned */}
+          {/* Continue Button - Right Aligned
           <Button
             onClick={handleContinue}
             variant="contained"
@@ -238,7 +238,7 @@ export default function FreeResponseStepView({
             aria-label="Continue to next step"
           >
             Continue
-          </Button>
+          </Button> */}
         </Box>
       </Box>
     </Box>
