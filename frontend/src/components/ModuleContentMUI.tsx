@@ -12,6 +12,7 @@ import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { markStepCompleted } from "@/lib/firebase/db-operations";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -75,6 +76,12 @@ export default function ModuleContentMUI({
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
+  // Keep user progress updated
+  const refreshProgress = async () => {
+    const progress = await getUserProgress(userId, moduleId);
+    setUserProgress(progress);
+  };
+
   // Step View with Navigation
   if (showSteps && steps.length > 0) {
     const currentStep = steps[currentStepIndex];
@@ -86,8 +93,15 @@ export default function ModuleContentMUI({
     };
 
     const handleNext = () => {
+      markStepCompleted(userId, moduleId, currentStep.id);
+      getUserProgress(userId, moduleId).then((progress) => {
+        setUserProgress(progress);
+      });
       if (currentStepIndex < steps.length - 1) {
         setCurrentStepIndex(currentStepIndex + 1);
+      } else {
+        setShowSteps(false);
+        refreshProgress();
       }
     };
 
@@ -114,7 +128,10 @@ export default function ModuleContentMUI({
           {currentStepIndex === 0 ? (
             <Button
               variant="outlined"
-              onClick={() => setShowSteps(false)}
+              onClick={async () => {
+                setShowSteps(false);
+                await refreshProgress();
+              }}
               sx={{
                 borderRadius: "16px",
                 px: 3,
@@ -140,7 +157,23 @@ export default function ModuleContentMUI({
           <Typography sx={{ fontWeight: "bold" }}>
             Step {currentStepIndex + 1} of {steps.length}
           </Typography>
-
+          {currentStepIndex === steps.length - 1 ? (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              sx={{
+                borderRadius: "16px",
+                px: 3,
+                py: 1,
+                bgcolor: (t) => t.palette.common.black,
+                "&:hover": {
+                  bgcolor: (t) => t.palette.grey[800],
+                },
+              }}
+            >
+              Finish
+            </Button>
+          ) : (
           <Button
             variant="contained"
             onClick={handleNext}
@@ -157,6 +190,7 @@ export default function ModuleContentMUI({
           >
             Next
           </Button>
+          )}
         </Box>
 
         {/* Step Content - Full Height */}
