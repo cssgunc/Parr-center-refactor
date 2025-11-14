@@ -14,6 +14,7 @@ import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { UserRoundIcon } from "lucide-react";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -227,7 +228,7 @@ export default function ModuleContentMUI({
               <FlashcardsStepView step={currentStep as FlashcardsStep} />
             )}
             {currentStep.type === "freeResponse" && (
-              <FreeResponseStepView step={currentStep as FreeResponseStep} />
+              <FreeResponseStepView step={currentStep as FreeResponseStep} userId={userId} moduleId={moduleId}/>
             )}
           </Box>
         </Box>
