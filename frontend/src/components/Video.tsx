@@ -162,23 +162,6 @@ export function Video({ moduleId }: { moduleId: number }) {
               >
                 Continue
               </Button>
-              <Button
-                variant="contained"
-                sx={{
-                  py: 1.5,
-                  px: 3,
-                  borderRadius: '16px',
-                  bgcolor: (t) => t.palette.common.black,
-                  color: 'white',
-                  fontSize: '1.25rem',
-                  minWidth: '150px',
-                  '&:hover': {
-                    bgcolor: (t) => t.palette.common.black,
-                  },
-                }}
-              >
-                View Journal
-              </Button>
             </Box>
           </Box>
         );
