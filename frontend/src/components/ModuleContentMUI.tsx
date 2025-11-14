@@ -47,23 +47,23 @@ export default function ModuleContentMUI({
   useEffect(() => {
     if (!moduleId) return;
 
-    // Reset state immediately when module changes
-    setContent(null);
-    setSteps([]);
-    setUserProgress(null);
-    setShowSteps(false);
-    setCurrentStepIndex(0);
+    // Reset only view state when module changes
+    // Keep all data (content, steps, userProgress) to avoid any flashing
+    setShowSteps(false);     // Exit step view
+    setCurrentStepIndex(0);  // Reset step navigation
 
     const fetchContent = async () => {
-      const content = await getModuleById(moduleId);
+      // Fetch all data in parallel and update all state together
+      // This prevents any state from being out of sync during the transition
+      const [content, moduleSteps, progress] = await Promise.all([
+        getModuleById(moduleId),
+        getStepsByModuleId(moduleId),
+        getUserProgress(userId, moduleId)
+      ]);
+
+      // Update all state at once - React will batch these updates
       setContent(content);
-
-      // Fetch steps
-      const moduleSteps = await getStepsByModuleId(moduleId);
       setSteps(moduleSteps);
-
-      // Fetch user progress
-      const progress = await getUserProgress(userId, moduleId);
       setUserProgress(progress);
     };
 
