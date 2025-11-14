@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import FlashcardModal from "./FlashcardModal";
 import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
 import Link from 'next/link';
 import { Video } from "./Video";
@@ -17,7 +16,6 @@ interface ModuleContentProps {
 }
 
 export default function ModuleContentMUI({ moduleId, index, userId }: ModuleContentProps) {
-  const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
   const [showVideoView, setShowVideoView] = useState(false);
   // const [showJournalEntry, setShowJournalEntry] = useState(false);
   
@@ -184,24 +182,6 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
             View Journal
           </Button>
         </Link>
-
-        <Button
-          onClick={() => setFlashcardModalOpen(true)}
-          variant="contained"
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: '16px',
-            bgcolor: (t) => t.palette.common.black,
-            color: 'white',
-            fontSize: '1.25rem',
-            '&:hover': {
-              bgcolor: (t) => t.palette.common.black,
-            },
-          }}
-        >
-          View Flashcards
-        </Button>
       </Box>
 
       <Box
@@ -286,12 +266,6 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
           {content?.description}
         </Typography>
       </Box>
-
-      <FlashcardModal
-        open={flashcardModalOpen}
-        onClose={() => setFlashcardModalOpen(false)}
-        moduleId={index + 1}
-      />
     </Box>
   );
 }
