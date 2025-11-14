@@ -53,6 +53,7 @@ export default function FreeResponseStepView({
       sx={{
         display: "flex",
         flexDirection: "column",
+        width: "100%",
         minHeight: "100vh",
         bgcolor: "background.default",
         position: "relative",
@@ -114,7 +115,7 @@ export default function FreeResponseStepView({
             mb: 3,
             textAlign: "center",
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
           }}
         >
           Post-Reflection Journal Entry
@@ -128,7 +129,7 @@ export default function FreeResponseStepView({
             mb: 3,
             textAlign: "left",
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
             lineHeight: 1.6,
           }}
         >
@@ -144,7 +145,7 @@ export default function FreeResponseStepView({
           placeholder="Type your answer here...."
           sx={{
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
             mb: 2,
             "& .MuiOutlinedInput-root": {
               borderRadius: "8px",
@@ -178,7 +179,7 @@ export default function FreeResponseStepView({
               mb: 3,
               textAlign: "left",
               width: "100%",
-              maxWidth: "800px",
+              maxWidth: "1200px",
             }}
           >
             This free response should take {step.estimatedMinutes} minutes.
@@ -192,7 +193,7 @@ export default function FreeResponseStepView({
             justifyContent: "space-between",
             alignItems: "center",
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
             mb: 4,
           }}
         >

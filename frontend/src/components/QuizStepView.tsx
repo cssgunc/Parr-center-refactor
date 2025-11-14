@@ -57,7 +57,7 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
   }, [answers, questions, step.passingScore]);
 
   return (
-    <Box sx={{ mt: 4, bgcolor: "background.paper", p: 3, borderRadius: 2 }}>
+    <Box sx={{ width: "100%", maxWidth: "1400px", mt: 4, bgcolor: "background.paper", p: 3, borderRadius: 2 }}>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
         Quiz
       </Typography>

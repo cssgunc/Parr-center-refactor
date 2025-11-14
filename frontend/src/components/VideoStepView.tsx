@@ -18,7 +18,8 @@ export default function VideoStepView({ step }: VideoStepProps) {
         sx={{
           display: "flex",
           flexDirection: "column",
-          m: "10",
+          width: "100%",
+          p: 4,
         }}
       >
         {/* Back Button */}
@@ -110,8 +111,8 @@ export default function VideoStepView({ step }: VideoStepProps) {
         <Box
           sx={{
             position: "relative",
-            width: "85%",
-            maxWidth: "1200px",
+            width: "100%",
+            maxWidth: "1600px",
             mx: "auto",
             mb: 4,
             borderRadius: "8px",

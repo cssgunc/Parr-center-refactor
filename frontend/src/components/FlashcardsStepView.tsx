@@ -39,8 +39,8 @@ export default function FlashcardsStepView({ step }: FlashcardStepProps) {
   return (
     <Box
       sx={{
-        width: "100%",
-        maxWidth: "1000px",
+        width: "80%",
+        maxWidth: "1400px",
         height: "90vh",
         mx: "auto",
         display: "flex",

@@ -47,6 +47,13 @@ export default function ModuleContentMUI({
   useEffect(() => {
     if (!moduleId) return;
 
+    // Reset state immediately when module changes
+    setContent(null);
+    setSteps([]);
+    setUserProgress(null);
+    setShowSteps(false);
+    setCurrentStepIndex(0);
+
     const fetchContent = async () => {
       const content = await getModuleById(moduleId);
       setContent(content);
@@ -61,10 +68,6 @@ export default function ModuleContentMUI({
     };
 
     fetchContent();
-
-    // Reset step view when module changes
-    setShowSteps(false);
-    setCurrentStepIndex(0);
   }, [moduleId, userId]);
 
   if (!content) {
@@ -121,43 +124,18 @@ export default function ModuleContentMUI({
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "100vh",
+          height: "100%",
           overflow: "hidden",
         }}
       >
-        {/* Step Content */}
-        <Box
-          sx={{
-            flex: 1,
-            overflow: "auto",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            p: 3,
-          }}
-        >
-          {currentStep.type === "video" && (
-            <VideoStepView step={currentStep as VideoStep} />
-          )}
-          {currentStep.type === "quiz" && (
-            <QuizStepView step={currentStep as QuizStep} />
-          )}
-          {currentStep.type === "flashcards" && (
-            <FlashcardsStepView step={currentStep as FlashcardsStep} />
-          )}
-          {currentStep.type === "freeResponse" && (
-            <FreeResponseStepView step={currentStep as FreeResponseStep} />
-          )}
-        </Box>
-
-        {/* Navigation Controls */}
+        {/* Navigation Controls - Top */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            p: 3,
-            borderTop: (t) => `1px solid ${t.palette.grey[200]}`,
+            p: 2,
+            borderBottom: (t) => `1px solid ${t.palette.grey[200]}`,
             bgcolor: "white",
           }}
         >
@@ -194,6 +172,43 @@ export default function ModuleContentMUI({
           >
             Next
           </Button>
+        </Box>
+
+        {/* Step Content - Full Height */}
+        <Box
+          sx={{
+            flex: 1,
+            overflow: "auto",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: "1400px",
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {currentStep.type === "video" && (
+              <VideoStepView step={currentStep as VideoStep} />
+            )}
+            {currentStep.type === "quiz" && (
+              <QuizStepView step={currentStep as QuizStep} />
+            )}
+            {currentStep.type === "flashcards" && (
+              <FlashcardsStepView step={currentStep as FlashcardsStep} />
+            )}
+            {currentStep.type === "freeResponse" && (
+              <FreeResponseStepView step={currentStep as FreeResponseStep} />
+            )}
+          </Box>
         </Box>
       </Box>
     );
