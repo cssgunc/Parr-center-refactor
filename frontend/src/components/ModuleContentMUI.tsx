@@ -163,25 +163,6 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         >
           Start Module
         </Button>
-        <Link href={`/modules/${moduleId}/journal`} passHref>
-          <Button
-            variant="contained"
-            component="a"
-            sx={{
-              py: 1.5,
-              px: 2,
-              borderRadius: '16px',
-              bgcolor: (t) => t.palette.common.black,
-              color: 'white',
-              fontSize: '1.25rem',
-              '&:hover': {
-                bgcolor: (t) => t.palette.common.black,
-              },
-            }}
-          >
-            View Journal
-          </Button>
-        </Link>
       </Box>
 
       <Box

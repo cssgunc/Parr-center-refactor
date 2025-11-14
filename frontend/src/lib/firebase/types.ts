@@ -107,3 +107,14 @@ export interface FreeResponseStep extends StepBase {
 
 // Step type used throughout the app
 export type Step = VideoStep | QuizStep | FlashcardsStep | FreeResponseStep;
+
+// Journal
+export interface JournalEntry {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
+  moduleId?: string; // optional - for future module association
+  stepId?: string;   // optional - for future step association
+}

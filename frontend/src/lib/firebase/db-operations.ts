@@ -17,7 +17,7 @@ import {
   writeBatch,
   orderBy,
 } from "firebase/firestore";
-import { User, Module, Step, UserProgress, StepType, STEP_COLLECTIONS } from "./types";
+import { User, Module, Step, UserProgress, StepType, STEP_COLLECTIONS, JournalEntry } from "./types";
 
 // Module CRUD operations
 
@@ -355,4 +355,87 @@ export const getUserModules = async (userId: string) => {
     id: doc.id,
     ...doc.data(),
   })) as Module[];
+};
+
+// Journal CRUD operations
+
+export const getJournalEntries = async (userId: string): Promise<JournalEntry[]> => {
+  try {
+    const journalRef = collection(db, "users", userId, "journal");
+    const journalQuery = query(journalRef, orderBy("updatedAt", "desc"));
+    const journalSnapshot = await getDocs(journalQuery);
+
+    return journalSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as JournalEntry[];
+  } catch (error) {
+    // If collection doesn't exist, return empty array
+    console.log('Journal collection does not exist yet for user:', userId);
+    return [];
+  }
+};
+
+export const createJournalEntry = async (userId: string, entryData: Partial<JournalEntry>): Promise<JournalEntry> => {
+  try {
+    // Ensure user document exists first
+    const userDocRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      // Create basic user document if it doesn't exist
+      await setDoc(userDocRef, {
+        id: userId,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    }
+
+    const newEntry = {
+      ...entryData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    const journalRef = collection(db, "users", userId, "journal");
+    const entryDocRef = await addDoc(journalRef, newEntry);
+
+    console.log('Journal entry created successfully:', entryDocRef.id);
+
+    return {
+      id: entryDocRef.id,
+      ...entryData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as JournalEntry;
+  } catch (error) {
+    console.error('Failed to create journal entry:', error);
+    throw new Error('Failed to create journal entry');
+  }
+};
+
+export const updateJournalEntry = async (
+  userId: string,
+  entryId: string,
+  updates: Partial<Omit<JournalEntry, 'id'>>
+): Promise<void> => {
+  try {
+    const entryRef = doc(db, "users", userId, "journal", entryId);
+    await updateDoc(entryRef, {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Failed to update journal entry:', error);
+    throw new Error('Failed to update journal entry');
+  }
+};
+
+export const deleteJournalEntry = async (userId: string, entryId: string): Promise<void> => {
+  try {
+    const entryRef = doc(db, "users", userId, "journal", entryId);
+    await deleteDoc(entryRef);
+  } catch (error) {
+    console.error('Failed to delete journal entry:', error);
+    throw new Error('Failed to delete journal entry');
+  }
 };
