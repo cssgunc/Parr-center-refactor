@@ -5,6 +5,8 @@ import {
   getUserProgress,
   startUserProgress,
   getStepsByModuleId,
+  completeModule,
+  markStepCompleted,
 } from "@/lib/firebase/db-operations";
 import { Module, Step, VideoStep, QuizStep, FlashcardsStep, FreeResponseStep, UserProgress } from "@/lib/firebase/types";
 import FreeResponseStepView from "./FreeResponseStepView";
@@ -12,7 +14,6 @@ import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { markStepCompleted } from "@/lib/firebase/db-operations";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -100,6 +101,7 @@ export default function ModuleContentMUI({
       if (currentStepIndex < steps.length - 1) {
         setCurrentStepIndex(currentStepIndex + 1);
       } else {
+        completeModule(userId, moduleId);
         setShowSteps(false);
         refreshProgress();
       }
