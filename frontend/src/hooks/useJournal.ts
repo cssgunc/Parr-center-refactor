@@ -1,90 +1,133 @@
 import { useState, useEffect } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import {
+  getJournalEntries,
+  createJournalEntry,
+  updateJournalEntry,
+  deleteJournalEntry
+} from '@/lib/firebase/db-operations';
+import { JournalEntry } from '@/lib/firebase/types';
 import { debounce } from '@/utils/debounce';
 
-export interface JournalEntry {
-  id: string;
-  title: string;
-  body: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export function useJournal(moduleId: string) {
-  const storageKey = `journal:${moduleId}`;
-  
+export function useJournal() {
+  const [user, loading, error] = useAuthState(auth);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setEntries(parsed);
-        if (parsed.length > 0) setActiveId(parsed[0].id);
-      }
-    } catch (err) {
-      console.error('Failed to parse journal entries', err);
-    }
-  }, [moduleId]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
 
-  // Debounced save to localStorage
-  const saveEntries = debounce((entries: JournalEntry[]) => {
-    localStorage.setItem(storageKey, JSON.stringify(entries));
+  // Load entries using getDocs instead of real-time listener to avoid Firebase SDK bug
+  useEffect(() => {
+    if (!user) {
+      setEntries([]);
+      setActiveId(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const loadEntries = async () => {
+      try {
+        const journalEntries = await getJournalEntries(user.uid);
+        setEntries(journalEntries);
+        if (journalEntries.length > 0 && !activeId) {
+          setActiveId(journalEntries[0].id);
+        }
+        setIsLoading(false);
+        setDbError(null);
+      } catch (error) {
+        console.error('Error loading journal entries:', error);
+        setDbError('Failed to load journal entries');
+        setIsLoading(false);
+      }
+    };
+
+    loadEntries();
+  }, [user]);
+
+  // Debounced update function
+  const debouncedUpdate = debounce(async (userId: string, entryId: string, updates: Partial<Omit<JournalEntry, 'id'>>) => {
+    try {
+      await updateJournalEntry(userId, entryId, updates);
+    } catch (error) {
+      console.error('Failed to update journal entry:', error);
+      setDbError('Failed to save changes');
+    }
   }, 500);
 
-  const createEntry = () => {
-    const newEntry: JournalEntry = {
-      id: crypto.randomUUID(),
-      title: '',
-      body: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    setEntries(prev => [newEntry, ...prev]);
-    setActiveId(newEntry.id);
-    saveEntries([newEntry, ...entries]);
-    return newEntry.id;
+  const createEntry = async () => {
+    if (!user) {
+      setDbError('You must be logged in to create journal entries');
+      return null;
+    }
+
+    try {
+      const newEntry = await createJournalEntry(user.uid, {
+        title: '',
+        body: '',
+      });
+
+      // Refresh entries list
+      const journalEntries = await getJournalEntries(user.uid);
+      setEntries(journalEntries);
+      setActiveId(newEntry.id);
+      return newEntry.id;
+    } catch (error) {
+      console.error('Failed to create journal entry:', error);
+      setDbError('Failed to create new entry');
+      return null;
+    }
   };
 
   const updateEntry = (id: string, updates: Partial<Omit<JournalEntry, 'id'>>) => {
-    setEntries(prev => {
-      const updated = prev.map(entry => {
-        if (entry.id === id) {
-          return {
-            ...entry,
-            ...updates,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return entry;
-      });
-      saveEntries(updated);
-      return updated;
-    });
+    if (!user) {
+      setDbError('You must be logged in to update journal entries');
+      return;
+    }
+
+    // Optimistically update local state
+    setEntries(prev => prev.map(entry => {
+      if (entry.id === id) {
+        return { ...entry, ...updates };
+      }
+      return entry;
+    }));
+
+    // Debounced database update
+    debouncedUpdate(user.uid, id, updates);
   };
 
-  const deleteEntry = (id: string) => {
-    setEntries(prev => {
-      const filtered = prev.filter(entry => entry.id !== id);
-      saveEntries(filtered);
-      return filtered;
-    });
-    if (activeId === id) {
-      setActiveId(entries.length > 1 ? entries[1].id : null);
+  const deleteEntry = async (id: string) => {
+    if (!user) {
+      setDbError('You must be logged in to delete journal entries');
+      return;
+    }
+
+    try {
+      await deleteJournalEntry(user.uid, id);
+
+      // Refresh entries list
+      const journalEntries = await getJournalEntries(user.uid);
+      setEntries(journalEntries);
+
+      if (activeId === id) {
+        setActiveId(journalEntries.length > 0 ? journalEntries[0].id : null);
+      }
+    } catch (error) {
+      console.error('Failed to delete journal entry:', error);
+      setDbError('Failed to delete entry');
     }
   };
 
   return {
-    entries: entries.sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    ),
+    entries,
     activeId,
     setActiveId,
     createEntry,
     updateEntry,
-    deleteEntry
+    deleteEntry,
+    isLoading: loading || isLoading,
+    error: error?.message || dbError,
+    isAuthenticated: !!user,
   };
 }

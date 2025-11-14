@@ -26,18 +26,21 @@ interface JournalUIState {
   lastSearch?: string;
 }
 
-export function Journal({ moduleId }: { moduleId: string }) {
+export function Journal() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const {
     entries,
     activeId,
     setActiveId,
     createEntry,
     updateEntry,
-    deleteEntry
-  } = useJournal(moduleId);
+    deleteEntry,
+    isLoading,
+    error,
+    isAuthenticated
+  } = useJournal();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortMode, setSortMode] = useState<'updated' | 'created'>('updated');
@@ -75,8 +78,19 @@ export function Journal({ moduleId }: { moduleId: string }) {
       entry.body.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
-      const dateA = new Date(sortMode === 'updated' ? a.updatedAt : a.createdAt);
-      const dateB = new Date(sortMode === 'updated' ? b.updatedAt : b.createdAt);
+      const rawDateA = sortMode === 'updated' ? a.updatedAt : a.createdAt;
+      const rawDateB = sortMode === 'updated' ? b.updatedAt : b.createdAt;
+
+      const dateA = rawDateA instanceof Date ? rawDateA :
+        (rawDateA && typeof rawDateA === 'object' && 'toDate' in rawDateA && typeof rawDateA.toDate === 'function')
+          ? rawDateA.toDate()
+          : new Date();
+
+      const dateB = rawDateB instanceof Date ? rawDateB :
+        (rawDateB && typeof rawDateB === 'object' && 'toDate' in rawDateB && typeof rawDateB.toDate === 'function')
+          ? rawDateB.toDate()
+          : new Date();
+
       return dateB.getTime() - dateA.getTime();
     });
 
@@ -86,7 +100,7 @@ export function Journal({ moduleId }: { moduleId: string }) {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
       e.preventDefault();
-      const newId = createEntry();
+      createEntry();
       if (isMobile) setIsEditing(true);
     } else if ((e.ctrlKey || e.metaKey) && e.key === 's' && activeId) {
       e.preventDefault();
@@ -120,6 +134,39 @@ export function Journal({ moduleId }: { moduleId: string }) {
     }
   }, [activeEntry?.title, activeEntry?.body]);
 
+  // Authentication check
+  if (!isAuthenticated) {
+    return (
+      <Box display="flex" alignItems="center" justifyContent="center" height="100vh">
+        <Typography variant="h6" color="text.secondary">
+          Please log in to access your journal
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Box display="flex" alignItems="center" justifyContent="center" height="100vh">
+        <Typography variant="h6" color="text.secondary">
+          Loading journal...
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box display="flex" alignItems="center" justifyContent="center" height="100vh">
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
       {/* Left Sidebar - List View */}
@@ -133,10 +180,10 @@ export function Journal({ moduleId }: { moduleId: string }) {
       }}>
         <Card square elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Stack spacing={1} p={2}>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={() => {
-                const newId = createEntry();
+                createEntry();
                 if (isMobile) setIsEditing(true);
               }}
               fullWidth
