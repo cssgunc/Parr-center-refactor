@@ -1,5 +1,22 @@
-export function formatRelative(dateStr: string): string {
-  const date = new Date(dateStr);
+export function formatRelative(dateInput: string | Date | { toDate?: () => Date, seconds?: number }): string {
+  let date: Date;
+
+  if (typeof dateInput === 'string') {
+    date = new Date(dateInput);
+  } else if (dateInput instanceof Date) {
+    date = dateInput;
+  } else if (dateInput && typeof dateInput === 'object') {
+    // Handle Firestore Timestamp
+    if ('toDate' in dateInput && typeof dateInput.toDate === 'function') {
+      date = dateInput.toDate();
+    } else if ('seconds' in dateInput && typeof dateInput.seconds === 'number') {
+      date = new Date(dateInput.seconds * 1000);
+    } else {
+      date = new Date();
+    }
+  } else {
+    date = new Date();
+  }
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   
