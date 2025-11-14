@@ -105,8 +105,8 @@ export default function ProfilePage() {
   }).length;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
-      <div className="bg-white shadow-lg rounded-2xl p-10 max-w-2xl w-full">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10">
+      <div className="shadow-lg rounded-2xl p-10 max-w-2xl w-full" style={{ background: "linear-gradient(to bottom, white 0%, white 20%, #d5eaff 100%)" }}>
         {/* HEADER */}
         <SectionHeader
           title="Your Profile"
@@ -115,7 +115,7 @@ export default function ProfilePage() {
 
         {/* USER INFO */}
         {user && (
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
+          <div className="border border-gray-200 rounded-xl p-6 mb-8">
             <div className="flex items-center mb-4">
               <Image
                 src={user.photoURL ? user.photoURL : ""}

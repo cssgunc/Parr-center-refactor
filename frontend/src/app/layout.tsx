@@ -57,14 +57,33 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable} bg-gradient-to-b from-gray-50 to-white`}
+        className={`${inter.variable} ${robotoMono.variable} ${playfairDisplay.variable} ${workSans.variable} ${cormorantGaramond.variable} bg-gradient-to-b from-blue-50 to-gray-50`}
       >
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <Navbar />
             <Toaster position="top-center" />
-            {children}
+
+            <main className="flex-1">
+              <div
+                className="relative mx-auto max-w-7xl rounded-xl border border-gray-100
+                           p-6 shadow-xl transition-all duration-300 hover:shadow-2xl
+                           overflow-hidden"
+                style={{
+                  backgroundImage:
+                    "url('https://grainy-gradients.vercel.app/dots.png'), url('https://grainy-gradients.vercel.app/dots.png'), linear-gradient(to bottom, white 0%, white 1%, #abd8ff 100%)",
+                  backgroundRepeat: "repeat, repeat, no-repeat",
+                  backgroundSize: "96px 96px, 96px 96px, cover",
+                  backgroundPosition: "0 0, 48px 48px, center",
+                }}
+              >
+                <div className="relative">
+                  {children}
+                </div>
+              </div>
+            </main>
+
             <Footer />
           </ThemeProvider>
         </AppRouterCacheProvider>
