@@ -10,7 +10,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 type AuthGateProps = {
   children: ReactNode;
   requireAdmin?: boolean;
-  redirectIfAuthedTo?: string;
+  redirectRoute?: boolean;
   adminPath?: string;
   studentPath?: string;
 };
@@ -22,6 +22,7 @@ type AuthGateProps = {
 export default function AuthGate({
   children,
   requireAdmin,
+  redirectRoute = false,
   adminPath = "/admin",
   studentPath = "/student",
 }: AuthGateProps) {
@@ -42,9 +43,10 @@ export default function AuthGate({
           return;
         }
 
+        const isAdmin = await getUserRole(user.uid);
+
         //Makes sure that admin screen doesn't flash on direct route to /admin and
         if (requireAdmin) {
-          const isAdmin = await getUserRole(user.uid);
           if (isAdmin) {
             setReady(true);
             return;
@@ -55,12 +57,13 @@ export default function AuthGate({
           }
         }
 
-        const isAdmin = await getUserRole(user.uid);
         navigating.current = true;
-        router.replace(isAdmin ? adminPath : studentPath);
+        if (redirectRoute) {
+          router.replace(isAdmin ? adminPath : studentPath);
+        }
         setReady(true);
-        return;
       } catch (error) {
+        navigating.current = true;
         router.replace("/login");
       }
     });

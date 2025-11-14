@@ -16,7 +16,7 @@ export default function Home() {
    */
 
   return (
-    <AuthGate>
+    <AuthGate redirectRoute={true}>
       <></>
     </AuthGate>
   );
