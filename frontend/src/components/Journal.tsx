@@ -78,8 +78,19 @@ export function Journal() {
       entry.body.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
-      const dateA = new Date(sortMode === 'updated' ? a.updatedAt : a.createdAt);
-      const dateB = new Date(sortMode === 'updated' ? b.updatedAt : b.createdAt);
+      const rawDateA = sortMode === 'updated' ? a.updatedAt : a.createdAt;
+      const rawDateB = sortMode === 'updated' ? b.updatedAt : b.createdAt;
+
+      const dateA = rawDateA instanceof Date ? rawDateA :
+        (rawDateA && typeof rawDateA === 'object' && 'toDate' in rawDateA && typeof rawDateA.toDate === 'function')
+          ? rawDateA.toDate()
+          : new Date();
+
+      const dateB = rawDateB instanceof Date ? rawDateB :
+        (rawDateB && typeof rawDateB === 'object' && 'toDate' in rawDateB && typeof rawDateB.toDate === 'function')
+          ? rawDateB.toDate()
+          : new Date();
+
       return dateB.getTime() - dateA.getTime();
     });
 
