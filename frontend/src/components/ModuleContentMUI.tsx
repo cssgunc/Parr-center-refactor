@@ -3,7 +3,6 @@ import { Box, Typography, Button, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
 import Link from 'next/link';
-import { Video } from "./Video";
 import { getModuleById, getUserProgress, startUserProgress } from "@/lib/firebase/db-operations";
 import { Module } from "@/lib/firebase/types";
 import JournalEntry from "./JournalEntry";

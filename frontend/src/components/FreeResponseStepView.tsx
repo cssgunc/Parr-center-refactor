@@ -12,8 +12,8 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { FreeResponseStep } from "@/lib/firebase/types";
 
-interface JournalEntryProps {
-  freeResponseStep: FreeResponseStep;
+interface FreeResponseProps {
+  step: FreeResponseStep;
   onBack?: () => void;
 }
 
@@ -23,10 +23,10 @@ interface JournalEntryProps {
  * Displays a free response journal entry form matching the design specification.
  * Allows users to write and save journal entries for module reflection.
  */
-export default function JournalEntry({
-  freeResponseStep,
+export default function FreeResponseStepView({
+  step,
   onBack,
-}: JournalEntryProps) {
+}: FreeResponseProps) {
   const theme = useTheme();
   const [response, setResponse] = useState<string>("");
 
@@ -132,7 +132,7 @@ export default function JournalEntry({
             lineHeight: 1.6,
           }}
         >
-          {freeResponseStep.prompt}
+          {step.prompt}
         </Typography>
 
         {/* Text Input Area */}
@@ -163,14 +163,14 @@ export default function JournalEntry({
           }}
           slotProps={{
             htmlInput: {
-              maxLength: freeResponseStep.maxLength,
+              maxLength: step.maxLength,
               "aria-label": "Journal entry response",
             },
           }}
         />
 
         {/* Estimated Time Subtext */}
-        {freeResponseStep.estimatedMinutes && (
+        {step.estimatedMinutes && (
           <Typography
             sx={{
               fontSize: "0.875rem",
@@ -181,8 +181,7 @@ export default function JournalEntry({
               maxWidth: "800px",
             }}
           >
-            This free response should take {freeResponseStep.estimatedMinutes}{" "}
-            minutes.
+            This free response should take {step.estimatedMinutes} minutes.
           </Typography>
         )}
 
@@ -245,4 +244,3 @@ export default function JournalEntry({
     </Box>
   );
 }
-
