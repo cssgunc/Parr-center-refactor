@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Box, Typography, Button, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import FlashcardModal from "./FlashcardModal";
 import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
-import Link from 'next/link';
 
 export function Video({ moduleId }: { moduleId: number }) {
     const [showVideoView, setShowVideoView] = useState(false);

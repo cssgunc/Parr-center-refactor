@@ -8,6 +8,7 @@ import { getModuleById, getUserProgress, startUserProgress } from "@/lib/firebas
 import { Module } from "@/lib/firebase/types";
 import JournalEntry from "./JournalEntry";
 import { getFirstMockFreeResponseStep } from "@/data/mockFreeResponseSteps";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -17,7 +18,9 @@ interface ModuleContentProps {
 
 export default function ModuleContentMUI({ moduleId, index, userId }: ModuleContentProps) {
   const [showVideoView, setShowVideoView] = useState(false);
-  // const [showJournalEntry, setShowJournalEntry] = useState(false);
+  const [numSteps, setNumSteps] = useState<number>(0);
+  const [numCompletedSteps, setNumCompletedSteps] = useState<number>(0);
+  const [started, setStarted] = useState<boolean>(false);
   
   // Reset video view when module changes
   useEffect(() => {
@@ -41,9 +44,17 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
   
     const fetchContent = async () => {
       const content = await getModuleById(moduleId);
+      const stepCount = content ? content.stepCount : 0;
+      const progress = await getUserProgress(userId, moduleId);
+      const started = progress ? true : false;
+      const completedSteps = progress ? progress.completedStepIds.length : 0;
+      setStarted(started);
+      setNumCompletedSteps(completedSteps);
       setContent(content);
+      setNumSteps(stepCount);
+      setNumCompletedSteps(completedSteps);
     };
-  
+
     fetchContent();
 
   }, [moduleId]);
@@ -132,7 +143,7 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
           fontWeight: 'bold',
           fontFamily: 'var(--font-secondary)',
           color: (t) => t.palette.error.main,
-          mb: 1,
+          mb: 4,
         }}
       >
         {content?.title}
@@ -142,10 +153,30 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         sx={{
           display: 'flex',
           gap: 1,
-          mb: 8,
+          mb: 4,
         }}
       >
+        {started ? (
         <Button
+          onClick = {() => handleStartModule()}
+          variant="contained"
+          sx={{
+            py: 1.5,
+            px: 2,
+            borderRadius: '16px',
+            bgcolor: (t) => t.palette.common.black,
+            fontWeight: 'bold',
+            color: 'white',
+            fontSize: '1.25rem',
+            '&:hover': {
+              bgcolor: (t) => t.palette.common.black,
+            },
+          }}
+        >
+          Continue Module
+        </Button>
+        ) : (
+          <Button
           onClick = {() => handleStartModule()}
           variant="contained"
           sx={{
@@ -163,11 +194,12 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         >
           Start Module
         </Button>
+        )}
       </Box>
 
       <Box
         sx={{
-          mb: 8,
+          mb: 4,
         }}
       >
         <Typography
@@ -179,48 +211,29 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         >
           Current Progress
         </Typography>
-        {/* TODO USE getUserProgress Step Indicators */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            mt: 1,
-            ml: '10vw',
-          }}
-        >
-          {[1, 2, 3, 4].map((step) => (
-            <Box key={step} sx={{ display: 'flex', alignItems: 'center' }}>
-              <Button
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  border: (t) => `1px solid ${t.palette.grey[300]}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  color: (t) => t.palette.grey[800],
-                  minWidth: 32,
-                  p: 0,
-                  '&:hover': {
-                    bgcolor: (t) => t.palette.grey[100],
-                  },
-                }}
-              >
-                {step}
-              </Button>
-              {step < 4 && (
-                <Box
-                  sx={{
-                    width: 64,
-                    height: 1,
-                    bgcolor: (t) => t.palette.grey[200],
-                  }}
-                />
+        <Box className="flex flex-row gap-5 mt-5">
+          {Array.from({ length: numSteps }, (_, i) => i + 1).map((step) => (
+            <Box key={step}>
+              {step <= numCompletedSteps ? (
+                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-green-600 hover:bg-green-700">
+                  {step}
+                </div>
+              ) : (
+                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-gray-100 hover:bg-gray-200">
+                  {step}
+                </div>
               )}
             </Box>
           ))}
+          {numSteps > 0 && numCompletedSteps === numSteps && (
+            <CheckCircleIcon 
+              sx={{
+                color: (t) => t.palette.success.main,
+                fontSize: '2rem',
+                alignSelf: 'center',
+              }}
+            />
+          )}
         </Box>
       </Box>
 
@@ -241,7 +254,6 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
           sx={{
             color: (t) => t.palette.common.black,
             lineHeight: '1.6',
-            ml: '5vw',
           }}
         >
           {content?.description}
