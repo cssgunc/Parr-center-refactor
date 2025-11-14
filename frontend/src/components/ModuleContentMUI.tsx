@@ -9,6 +9,8 @@ import { Module } from "@/lib/firebase/types";
 import JournalEntry from "./JournalEntry";
 import { getFirstMockFreeResponseStep } from "@/data/mockFreeResponseSteps";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import QuizStep from './QuizStep';
+import { mockQuizzes } from '@/data/mockQuizzes';
 
 interface ModuleContentProps {
   moduleId: string;
@@ -21,10 +23,12 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
   const [numSteps, setNumSteps] = useState<number>(0);
   const [numCompletedSteps, setNumCompletedSteps] = useState<number>(0);
   const [started, setStarted] = useState<boolean>(false);
+  const [showQuiz, setShowQuiz] = useState<boolean>(false);
   
   // Reset video view when module changes
   useEffect(() => {
     setShowVideoView(false);
+    setShowQuiz(false);
   }, [moduleId]);
 
   const [content, setContent] = useState<Module | null>(null);
@@ -109,6 +113,29 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
   // if (showVideoView) {
   //   return (
   //     <Video moduleId={moduleId} />
+  //   );
+  // }
+
+  // Quiz View - when toggled we replace the current overview content
+  // if (showQuiz) {
+  //   return (
+  //     <Box
+  //       sx={{
+  //         display: 'flex',
+  //         flexDirection: 'column',
+  //         m: '8vw',
+  //       }}
+  //     >
+  //       <Box sx={{ mb: 2 }}>
+  //         <IconButton
+  //           onClick={() => setShowQuiz(false)}
+  //           aria-label="Back"
+  //         >
+  //           <ArrowBackIcon />
+  //         </IconButton>
+  //       </Box>
+  //       <QuizStep questions={mockQuizzes.questions} passingScore={mockQuizzes.passingScore} onClose={() => setShowQuiz(false)} />
+  //     </Box>
   //   );
   // }
 
@@ -258,6 +285,7 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
         >
           {content?.description}
         </Typography>
+        {/* Quiz now replaces the overview when toggled (see above) */}
       </Box>
     </Box>
   );
