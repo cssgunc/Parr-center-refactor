@@ -15,6 +15,7 @@ import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
 import { getFirstMockFreeResponseStep } from "@/data/mockFreeResponseSteps";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface ModuleContentProps {
   moduleId: string;
@@ -69,31 +70,6 @@ export default function ModuleContentMUI({
 
     fetchContent();
   }, [moduleId, userId]);
-
-  if (!content) {
-    return (
-      <Box>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontWeight: "bold",
-            color: (t) => t.palette.grey[800],
-          }}
-        >
-          Module {moduleId}
-        </Typography>
-        <Typography
-          sx={{
-            mt: 2,
-            color: (t) => t.palette.grey[700],
-          }}
-        >
-          No content available for this module yet.
-        </Typography>
-      </Box>
-    );
-  }
 
   // Format duration from seconds to MM:SS
   const formatDuration = (seconds?: number): string => {
@@ -245,7 +221,7 @@ export default function ModuleContentMUI({
           fontWeight: "bold",
           fontFamily: "var(--font-secondary)",
           color: (t) => t.palette.error.main,
-          mb: 1,
+          mb: 4,
         }}
       >
         {content?.title}
@@ -255,7 +231,7 @@ export default function ModuleContentMUI({
         sx={{
           display: "flex",
           gap: 1,
-          mb: 8,
+          mb: 4,
         }}
       >
         <Button
@@ -299,7 +275,7 @@ export default function ModuleContentMUI({
 
       <Box
         sx={{
-          mb: 8,
+          mb: 4,
         }}
       >
         <Typography
@@ -311,56 +287,40 @@ export default function ModuleContentMUI({
         >
           Current Progress
         </Typography>
-        {/* TODO USE getUserProgress Step Indicators */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            mt: 1,
-            ml: "10vw",
-          }}
-        >
-          {[1, 2, 3, 4].map((step) => (
-            <Box key={step} sx={{ display: "flex", alignItems: "center" }}>
-              <Button
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: (t) => `1px solid ${t.palette.grey[300]}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                  color: (t) => t.palette.grey[800],
-                  minWidth: 32,
-                  p: 0,
-                  "&:hover": {
-                    bgcolor: (t) => t.palette.grey[100],
-                  },
-                }}
-              >
-                {step}
-              </Button>
-              {step < 4 && (
-                <Box
-                  sx={{
-                    width: 64,
-                    height: 1,
-                    bgcolor: (t) => t.palette.grey[200],
-                  }}
-                />
+        <Box className="flex flex-row gap-5 mt-5">
+          {Array.from({ length: steps.length }, (_, i) => i + 1).map((step) => (
+            <Box key={step}>
+              {userProgress && step <= userProgress.completedStepIds.length ? (
+                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-green-600 hover:bg-green-700">
+                  {step}
+                </div>
+              ) : (
+                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-gray-100 hover:bg-gray-200">
+                  {step}
+                </div>
               )}
             </Box>
           ))}
+          {steps.length > 0 && userProgress?.completedStepIds.length === steps.length && (
+            <CheckCircleIcon 
+              sx={{
+                color: (t) => t.palette.success.main,
+                fontSize: '2rem',
+                alignSelf: 'center',
+              }}
+            />
+          )}
         </Box>
       </Box>
 
-      <Box sx={{}}>
+      <Box
+        sx={{
+        }}
+      >
         <Typography
           sx={{
             fontWeight: 600,
-            fontSize: "1.125rem",
+            fontSize: '1.125rem',
             mb: 1,
           }}
         >
@@ -369,8 +329,7 @@ export default function ModuleContentMUI({
         <Typography
           sx={{
             color: (t) => t.palette.common.black,
-            lineHeight: "1.6",
-            ml: "5vw",
+            lineHeight: '1.6',
           }}
         >
           {content?.description}
