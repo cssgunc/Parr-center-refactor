@@ -12,8 +12,8 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { FreeResponseStep } from "@/lib/firebase/types";
 
-interface JournalEntryProps {
-  freeResponseStep: FreeResponseStep;
+interface FreeResponseProps {
+  step: FreeResponseStep;
   onBack?: () => void;
 }
 
@@ -23,10 +23,10 @@ interface JournalEntryProps {
  * Displays a free response journal entry form matching the design specification.
  * Allows users to write and save journal entries for module reflection.
  */
-export default function JournalEntry({
-  freeResponseStep,
+export default function FreeResponseStepView({
+  step,
   onBack,
-}: JournalEntryProps) {
+}: FreeResponseProps) {
   const theme = useTheme();
   const [response, setResponse] = useState<string>("");
 
@@ -53,12 +53,13 @@ export default function JournalEntry({
       sx={{
         display: "flex",
         flexDirection: "column",
+        width: "100%",
         minHeight: "100vh",
         bgcolor: "background.default",
         position: "relative",
       }}
     >
-      {/* Back Arrow Button - Top Left */}
+      {/* Back Arrow Button - Top Left
       <Box sx={{ p: 2, display: "flex", alignItems: "flex-start" }}>
         <IconButton
           onClick={handleBack}
@@ -72,7 +73,7 @@ export default function JournalEntry({
         >
           <ArrowBackIcon />
         </IconButton>
-      </Box>
+      </Box> */}
 
       {/* Main Content Container */}
       <Box
@@ -114,7 +115,7 @@ export default function JournalEntry({
             mb: 3,
             textAlign: "center",
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
           }}
         >
           Post-Reflection Journal Entry
@@ -128,11 +129,11 @@ export default function JournalEntry({
             mb: 3,
             textAlign: "left",
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
             lineHeight: 1.6,
           }}
         >
-          {freeResponseStep.prompt}
+          {step.prompt}
         </Typography>
 
         {/* Text Input Area */}
@@ -144,7 +145,7 @@ export default function JournalEntry({
           placeholder="Type your answer here...."
           sx={{
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
             mb: 2,
             "& .MuiOutlinedInput-root": {
               borderRadius: "8px",
@@ -163,14 +164,14 @@ export default function JournalEntry({
           }}
           slotProps={{
             htmlInput: {
-              maxLength: freeResponseStep.maxLength,
+              maxLength: step.maxLength,
               "aria-label": "Journal entry response",
             },
           }}
         />
 
         {/* Estimated Time Subtext */}
-        {freeResponseStep.estimatedMinutes && (
+        {step.estimatedMinutes && (
           <Typography
             sx={{
               fontSize: "0.875rem",
@@ -178,11 +179,10 @@ export default function JournalEntry({
               mb: 3,
               textAlign: "left",
               width: "100%",
-              maxWidth: "800px",
+              maxWidth: "1200px",
             }}
           >
-            This free response should take {freeResponseStep.estimatedMinutes}{" "}
-            minutes.
+            This free response should take {step.estimatedMinutes} minutes.
           </Typography>
         )}
 
@@ -193,7 +193,7 @@ export default function JournalEntry({
             justifyContent: "space-between",
             alignItems: "center",
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "1200px",
             mb: 4,
           }}
         >
@@ -219,7 +219,7 @@ export default function JournalEntry({
             Save
           </Button>
 
-          {/* Continue Button - Right Aligned */}
+          {/* Continue Button - Right Aligned
           <Button
             onClick={handleContinue}
             variant="contained"
@@ -239,10 +239,9 @@ export default function JournalEntry({
             aria-label="Continue to next step"
           >
             Continue
-          </Button>
+          </Button> */}
         </Box>
       </Box>
     </Box>
   );
 }
-
