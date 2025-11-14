@@ -117,27 +117,27 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
   // }
 
   // Quiz View - when toggled we replace the current overview content
-  if (showQuiz) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          m: '8vw',
-        }}
-      >
-        <Box sx={{ mb: 2 }}>
-          <IconButton
-            onClick={() => setShowQuiz(false)}
-            aria-label="Back"
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
-        <QuizStep questions={mockQuizzes.questions} passingScore={mockQuizzes.passingScore} onClose={() => setShowQuiz(false)} />
-      </Box>
-    );
-  }
+  // if (showQuiz) {
+  //   return (
+  //     <Box
+  //       sx={{
+  //         display: 'flex',
+  //         flexDirection: 'column',
+  //         m: '8vw',
+  //       }}
+  //     >
+  //       <Box sx={{ mb: 2 }}>
+  //         <IconButton
+  //           onClick={() => setShowQuiz(false)}
+  //           aria-label="Back"
+  //         >
+  //           <ArrowBackIcon />
+  //         </IconButton>
+  //       </Box>
+  //       <QuizStep questions={mockQuizzes.questions} passingScore={mockQuizzes.passingScore} onClose={() => setShowQuiz(false)} />
+  //     </Box>
+  //   );
+  // }
 
   // Overview View
   return (
@@ -241,20 +241,6 @@ export default function ModuleContentMUI({ moduleId, index, userId }: ModuleCont
             View Journal
           </Button>
         </Link>
-        <Button
-          variant="outlined"
-          onClick={() => setShowQuiz((s) => !s)}
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: '16px',
-            borderColor: (t) => t.palette.grey[300],
-            color: (t) => t.palette.grey[800],
-            fontSize: '1rem',
-          }}
-        >
-          {showQuiz ? 'Hide Quiz' : 'Show Quiz'}
-        </Button>
       </Box>
 
       <Box
