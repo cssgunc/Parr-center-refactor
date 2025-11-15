@@ -8,6 +8,9 @@ import {
   TextField,
   IconButton,
   useTheme,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { FreeResponseStep } from "@/lib/firebase/types";
@@ -29,22 +32,26 @@ export default function FreeResponseStepView({
 }: FreeResponseProps) {
   const theme = useTheme();
   const [response, setResponse] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    // TODO: Connect to Firebase to save the journal entry
-    // This should save the user's response to the database associated with the step and user
-    console.log("Save button clicked - TODO: Implement Firebase save");
-  };
+  const handleSave = async () => {
+    // Temporary UI-only save flow. Replace with real DB call later.
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      // Simulate async save so users see spinner + success snackbar
+      await new Promise((res) => setTimeout(res, 700));
 
-  const handleContinue = () => {
-    // TODO: Implement continue functionality
-    // This should navigate to the next step or mark the step as complete
-    console.log("Continue button clicked - TODO: Implement continue action");
-  };
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
+      // On success, show confirmation
+      setSaveSuccess(true);
+      console.log("Save simulated: success");
+    } catch (err) {
+      console.error("Save simulated: error", err);
+      setSaveError("Failed to save");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -201,6 +208,7 @@ export default function FreeResponseStepView({
           <Button
             onClick={handleSave}
             variant="contained"
+            disabled={isSaving}
             sx={{
               py: 1.5,
               px: 4,
@@ -213,10 +221,20 @@ export default function FreeResponseStepView({
               "&:hover": {
                 bgcolor: "#002244",
               },
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 1,
             }}
-            aria-label="Save journal entry"
+            aria-label={isSaving ? "Saving journal entry" : "Save journal entry"}
           >
-            Save
+            {isSaving ? (
+              <>
+                <CircularProgress size={18} color="inherit" />
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
           </Button>
 
           {/* Continue Button - Right Aligned
@@ -242,6 +260,32 @@ export default function FreeResponseStepView({
           </Button> */}
         </Box>
       </Box>
+      {/* Success / Error Snackbars */}
+      <Snackbar
+        open={saveSuccess}
+        autoHideDuration={3000}
+        onClose={() => setSaveSuccess(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSaveSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Saved
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!saveError}
+        autoHideDuration={4000}
+        onClose={() => setSaveError(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSaveError(null)} severity="error" sx={{ width: "100%" }}>
+          {saveError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
