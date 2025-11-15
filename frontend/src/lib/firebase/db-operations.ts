@@ -376,19 +376,32 @@ export const getJournalEntries = async (userId: string): Promise<JournalEntry[]>
   }
 };
 
+export const getJournalEntryByStepId = async (userId: string, stepId: string): Promise<JournalEntry | null> => {
+  try {
+    const journalRef = collection(db, "users", userId, "journal");
+    const journalQuery = query(journalRef, where("stepId", "==", stepId));
+    const journalSnapshot = await getDocs(journalQuery);
+
+    if (!journalSnapshot.empty) {
+      const doc = journalSnapshot.docs[0];
+      return {
+        id: doc.id,
+        ...doc.data(),
+      } as JournalEntry;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching journal entry by stepId:', error);
+    return null;
+  }
+};
+
 export const createJournalEntry = async (userId: string, entryData: Partial<JournalEntry>): Promise<JournalEntry> => {
   try {
     // Ensure user document exists first
     const userDocRef = doc(db, "users", userId);
     const userDoc = await getDoc(userDocRef);
-
-    if (!userDoc.exists()) {
-      // Create basic user document if it doesn't exist
-      await setDoc(userDocRef, {
-        id: userId,
-        createdAt: serverTimestamp(),
-      }, { merge: true });
-    }
 
     const newEntry = {
       ...entryData,

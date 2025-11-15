@@ -6,15 +6,16 @@ import {
   Typography,
   Button,
   TextField,
-  IconButton,
   useTheme,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { FreeResponseStep } from "@/lib/firebase/types";
+import { createJournalEntry, getJournalEntryByStepId, updateJournalEntry } from "@/lib/firebase/db-operations";
+import { useEffect } from "react";
 
 interface FreeResponseProps {
   step: FreeResponseStep;
-  onBack?: () => void;
+  userId: string;
+  moduleId: string;
 }
 
 /**
@@ -25,26 +26,38 @@ interface FreeResponseProps {
  */
 export default function FreeResponseStepView({
   step,
-  onBack,
+  userId,
+  moduleId,
 }: FreeResponseProps) {
   const theme = useTheme();
   const [response, setResponse] = useState<string>("");
 
-  const handleSave = () => {
-    // TODO: Connect to Firebase to save the journal entry
-    // This should save the user's response to the database associated with the step and user
-    console.log("Save button clicked - TODO: Implement Firebase save");
+  const getInitialResponse = async () => {
+    await getJournalEntryByStepId(userId, step.id).then((entry) => {
+      setResponse("");
+      if (entry) {
+        setResponse(entry.body);
+      }
+    });
   };
+  
+  useEffect(() => {
+    getInitialResponse();
+  }, [step]);
 
-  const handleContinue = () => {
-    // TODO: Implement continue functionality
-    // This should navigate to the next step or mark the step as complete
-    console.log("Continue button clicked - TODO: Implement continue action");
-  };
+  const handleSave = async () => {
+    const existingEntry = await getJournalEntryByStepId(userId, step.id);
+    const entryData = {
+      stepId: step.id,
+      body: response,
+      title: step.prompt,
+      moduleId: moduleId,
+    };
 
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
+    if (existingEntry) {
+      await updateJournalEntry(userId, existingEntry.id, entryData);
+    } else {
+      await createJournalEntry(userId, entryData);
     }
   };
 
@@ -59,21 +72,6 @@ export default function FreeResponseStepView({
         position: "relative",
       }}
     >
-      {/* Back Arrow Button - Top Left
-      <Box sx={{ p: 2, display: "flex", alignItems: "flex-start" }}>
-        <IconButton
-          onClick={handleBack}
-          sx={{
-            color: theme.palette.common.black,
-            "&:hover": {
-              bgcolor: theme.palette.grey[100],
-            },
-          }}
-          aria-label="Go back"
-        >
-          <ArrowBackIcon />
-        </IconButton>
-      </Box> */}
 
       {/* Main Content Container */}
       <Box
