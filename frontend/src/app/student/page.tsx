@@ -16,13 +16,18 @@ export default function StudentPage() {
   const userId = auth.currentUser ? auth.currentUser.uid : "";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <AuthGate>
         {
           // ===== STUDENT PORTAL VIEW =====
           // This is the student-facing learning portal with module content
           //ProtectedRoute route will redirect to /login if user is not authenticated
-          <div className="min-h-screen bg-white flex flex-col">
+          <div
+            className="min-h-screen flex flex-col"
+            style={{
+              background: "linear-gradient(to bottom, white 0%, white 1%, #abd8ff 100%)",
+            }}
+          >
             {/* Back to Home Button */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
               {/* <button

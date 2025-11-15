@@ -64,7 +64,22 @@ export default function RootLayout({
             <CssBaseline />
             <Navbar />
             <Toaster position="top-center" />
-            {children}
+
+            <main className="flex-1">
+              <div
+                className="relative mx-auto max-w-7xl rounded-xl border border-gray-100
+                           p-6 shadow-xl transition-all duration-300 hover:shadow-2xl
+                           overflow-hidden"
+                style={{
+                  background: "linear-gradient(to bottom, white 0%, white 1%, #abd8ff 100%)",
+                }}
+              >
+                <div className="relative">
+                  {children}
+                </div>
+              </div>
+            </main>
+
             <Footer />
           </ThemeProvider>
         </AppRouterCacheProvider>
