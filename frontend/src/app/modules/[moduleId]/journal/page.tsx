@@ -1,11 +1,19 @@
 'use client';
 
-import { Journal } from '@/components/Journal';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-export default function JournalPage({
+export default function ModuleJournalPage({
   params
 }: {
   params: { moduleId: string }
 }) {
-  return <Journal moduleId={params.moduleId} />;
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to global journal page
+    router.push('/journal');
+  }, [router]);
+
+  return null;
 }

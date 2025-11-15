@@ -8,6 +8,7 @@ import {
 import { Module } from "@/lib/firebase/types";
 import { Container, Typography, Box, Input } from "@mui/material";
 import { useEffect, useState } from "react";
+import ModuleTestPage from "@/components/ModuleTestPage";
 
 export default function ModulesPage() {
   return (

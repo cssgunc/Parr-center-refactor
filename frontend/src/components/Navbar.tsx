@@ -82,6 +82,26 @@ export default function Navbar() {
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {user && (
+              <Button
+                component={Link}
+                href="/journal"
+                variant={pathname === "/journal" ? "contained" : "outlined"}
+                sx={{
+                  color: pathname === "/journal" ? "white" : "primary.main",
+                  backgroundColor: pathname === "/journal" ? "primary.main" : "transparent",
+                  borderColor: "primary.main",
+                  textTransform: "none",
+                  fontSize: "16px",
+                  borderRadius: "16px",
+                  px: 3,
+                  py: 1,
+                }}
+              >
+                Journal
+              </Button>
+            )}
+
             {isAdmin && (
               <Button
                 component={Link}

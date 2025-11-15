@@ -250,6 +250,11 @@ service cloud.firestore {
         allow write: if isSignedIn() && request.auth.uid == userId && validateProgress();
         allow read: if isSignedIn() && request.auth.uid == userId;
       }
+
+      // JOURNAL
+      match /journal/{entryId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
   }
 }
