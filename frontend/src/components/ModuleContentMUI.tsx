@@ -14,6 +14,7 @@ import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import confetti from "canvas-confetti";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -97,6 +98,12 @@ export default function ModuleContentMUI({
       } else {
         await completeModule(userId, moduleId);
         await refreshProgress();
+        confetti({
+          particleCount: 300,
+          spread: 120,
+          startVelocity: 40,
+          origin: { y: 0.6 }
+        });
         setShowSteps(false);
       }
     };
