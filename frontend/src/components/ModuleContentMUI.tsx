@@ -14,7 +14,6 @@ import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { UserRoundIcon } from "lucide-react";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -32,6 +31,7 @@ export default function ModuleContentMUI({
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [showSteps, setShowSteps] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const handleStartModule = async () => {
     if (!userProgress) {
@@ -70,41 +70,34 @@ export default function ModuleContentMUI({
     fetchContent();
   }, [moduleId, userId]);
 
-  // Format duration from seconds to MM:SS
-  const formatDuration = (seconds?: number): string => {
-    if (!seconds) return "";
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
-
   // Keep user progress updated
-  const refreshProgress = async () => {
-    const progress = await getUserProgress(userId, moduleId);
-    setUserProgress(progress);
+  const refreshProgress = () => {
+    getUserProgress(userId, moduleId).then((progress) => {
+      setUserProgress(progress);
+    });
   };
 
   // Step View with Navigation
   if (showSteps && steps.length > 0) {
     const currentStep = steps[currentStepIndex];
 
-    const handlePrevious = () => {
+    const handlePrevious = async () => {
       if (currentStepIndex > 0) {
         setCurrentStepIndex(currentStepIndex - 1);
+      } else {
+        await refreshProgress();
+        setShowSteps(false);
       }
     };
 
-    const handleNext = () => {
-      markStepCompleted(userId, moduleId, currentStep.id);
-      getUserProgress(userId, moduleId).then((progress) => {
-        setUserProgress(progress);
-      });
+    const handleNext = async () => {
+      await markStepCompleted(userId, moduleId, currentStep.id);
       if (currentStepIndex < steps.length - 1) {
         setCurrentStepIndex(currentStepIndex + 1);
       } else {
-        completeModule(userId, moduleId);
+        await completeModule(userId, moduleId);
+        await refreshProgress();
         setShowSteps(false);
-        refreshProgress();
       }
     };
 
@@ -131,10 +124,7 @@ export default function ModuleContentMUI({
           {currentStepIndex === 0 ? (
             <Button
               variant="outlined"
-              onClick={async () => {
-                setShowSteps(false);
-                await refreshProgress();
-              }}
+              onClick={handlePrevious}
               sx={{
                 borderRadius: "16px",
                 px: 3,
