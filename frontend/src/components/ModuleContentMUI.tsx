@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import moduleVideos, { ModuleVideo } from "@/data/moduleVideos";
-import Link from "next/link";
 import {
   getModuleById,
   getUserProgress,
   startUserProgress,
   getStepsByModuleId,
+  completeModule,
+  markStepCompleted,
 } from "@/lib/firebase/db-operations";
 import { Module, Step, VideoStep, QuizStep, FlashcardsStep, FreeResponseStep, UserProgress } from "@/lib/firebase/types";
 import FreeResponseStepView from "./FreeResponseStepView";
 import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
-import { getFirstMockFreeResponseStep } from "@/data/mockFreeResponseSteps";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import confetti from "canvas-confetti";
 
 interface ModuleContentProps {
   moduleId: string;
@@ -32,6 +32,7 @@ export default function ModuleContentMUI({
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [showSteps, setShowSteps] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const handleStartModule = async () => {
     if (!userProgress) {
@@ -70,52 +71,40 @@ export default function ModuleContentMUI({
     fetchContent();
   }, [moduleId, userId]);
 
-  if (!content) {
-    return (
-      <Box>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontWeight: "bold",
-            color: (t) => t.palette.grey[800],
-          }}
-        >
-          Module {moduleId}
-        </Typography>
-        <Typography
-          sx={{
-            mt: 2,
-            color: (t) => t.palette.grey[700],
-          }}
-        >
-          No content available for this module yet.
-        </Typography>
-      </Box>
-    );
-  }
-
-  // Format duration from seconds to MM:SS
-  const formatDuration = (seconds?: number): string => {
-    if (!seconds) return "";
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  // Keep user progress updated
+  const refreshProgress = () => {
+    getUserProgress(userId, moduleId).then((progress) => {
+      setUserProgress(progress);
+    });
   };
 
   // Step View with Navigation
   if (showSteps && steps.length > 0) {
     const currentStep = steps[currentStepIndex];
 
-    const handlePrevious = () => {
+    const handlePrevious = async () => {
       if (currentStepIndex > 0) {
         setCurrentStepIndex(currentStepIndex - 1);
+      } else {
+        await refreshProgress();
+        setShowSteps(false);
       }
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
+      await markStepCompleted(userId, moduleId, currentStep.id);
       if (currentStepIndex < steps.length - 1) {
         setCurrentStepIndex(currentStepIndex + 1);
+      } else {
+        await completeModule(userId, moduleId);
+        await refreshProgress();
+        confetti({
+          particleCount: 300,
+          spread: 120,
+          startVelocity: 40,
+          origin: { y: 0.6 }
+        });
+        setShowSteps(false);
       }
     };
 
@@ -139,10 +128,22 @@ export default function ModuleContentMUI({
             bgcolor: "white",
           }}
         >
+          {currentStepIndex === 0 ? (
+            <Button
+              variant="outlined"
+              onClick={handlePrevious}
+              sx={{
+                borderRadius: "16px",
+                px: 3,
+                py: 1,
+              }}
+            >
+              Back
+            </Button>
+          ) : (
           <Button
             variant="outlined"
             onClick={handlePrevious}
-            disabled={currentStepIndex === 0}
             sx={{
               borderRadius: "16px",
               px: 3,
@@ -151,11 +152,28 @@ export default function ModuleContentMUI({
           >
             Previous
           </Button>
+          )}
 
           <Typography sx={{ fontWeight: "bold" }}>
             Step {currentStepIndex + 1} of {steps.length}
           </Typography>
-
+          {currentStepIndex === steps.length - 1 ? (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              sx={{
+                borderRadius: "16px",
+                px: 3,
+                py: 1,
+                bgcolor: (t) => t.palette.common.black,
+                "&:hover": {
+                  bgcolor: (t) => t.palette.grey[800],
+                },
+              }}
+            >
+              Finish
+            </Button>
+          ) : (
           <Button
             variant="contained"
             onClick={handleNext}
@@ -172,6 +190,7 @@ export default function ModuleContentMUI({
           >
             Next
           </Button>
+          )}
         </Box>
 
         {/* Step Content - Full Height */}
@@ -197,7 +216,7 @@ export default function ModuleContentMUI({
             }}
           >
             {currentStep.type === "video" && (
-              <VideoStepView step={currentStep as VideoStep} />
+              <VideoStepView step={currentStep as VideoStep}/>
             )}
             {currentStep.type === "quiz" && (
               <QuizStepView step={currentStep as QuizStep} />
@@ -206,7 +225,7 @@ export default function ModuleContentMUI({
               <FlashcardsStepView step={currentStep as FlashcardsStep} />
             )}
             {currentStep.type === "freeResponse" && (
-              <FreeResponseStepView step={currentStep as FreeResponseStep} />
+              <FreeResponseStepView step={currentStep as FreeResponseStep} userId={userId} moduleId={moduleId}/>
             )}
           </Box>
         </Box>
@@ -245,7 +264,7 @@ export default function ModuleContentMUI({
           fontWeight: "bold",
           fontFamily: "var(--font-secondary)",
           color: (t) => t.palette.error.main,
-          mb: 1,
+          mb: 4,
         }}
       >
         {content?.title}
@@ -255,7 +274,7 @@ export default function ModuleContentMUI({
         sx={{
           display: "flex",
           gap: 1,
-          mb: 8,
+          mb: 4,
         }}
       >
         <Button
@@ -276,30 +295,11 @@ export default function ModuleContentMUI({
         >
           {userProgress ? "Continue Module" : "Start Module"}
         </Button>
-        <Link href={`/modules/${moduleId}/journal`} passHref>
-          <Button
-            variant="contained"
-            component="a"
-            sx={{
-              py: 1.5,
-              px: 2,
-              borderRadius: "16px",
-              bgcolor: (t) => t.palette.common.black,
-              color: "white",
-              fontSize: "1.25rem",
-              "&:hover": {
-                bgcolor: (t) => t.palette.common.black,
-              },
-            }}
-          >
-            View Journal
-          </Button>
-        </Link>
       </Box>
 
       <Box
         sx={{
-          mb: 8,
+          mb: 4,
         }}
       >
         <Typography
@@ -311,56 +311,40 @@ export default function ModuleContentMUI({
         >
           Current Progress
         </Typography>
-        {/* TODO USE getUserProgress Step Indicators */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            mt: 1,
-            ml: "10vw",
-          }}
-        >
-          {[1, 2, 3, 4].map((step) => (
-            <Box key={step} sx={{ display: "flex", alignItems: "center" }}>
-              <Button
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: (t) => `1px solid ${t.palette.grey[300]}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                  color: (t) => t.palette.grey[800],
-                  minWidth: 32,
-                  p: 0,
-                  "&:hover": {
-                    bgcolor: (t) => t.palette.grey[100],
-                  },
-                }}
-              >
-                {step}
-              </Button>
-              {step < 4 && (
-                <Box
-                  sx={{
-                    width: 64,
-                    height: 1,
-                    bgcolor: (t) => t.palette.grey[200],
-                  }}
-                />
+        <Box className="flex flex-row gap-5 mt-5">
+          {Array.from({ length: steps.length }, (_, i) => i + 1).map((step) => (
+            <Box key={step}>
+              {userProgress && step <= userProgress.completedStepIds.length ? (
+                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-green-600 hover:bg-green-700">
+                  {step}
+                </div>
+              ) : (
+                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-gray-100 hover:bg-gray-200">
+                  {step}
+                </div>
               )}
             </Box>
           ))}
+          {steps.length > 0 && userProgress?.completedStepIds.length === steps.length && (
+            <CheckCircleIcon 
+              sx={{
+                color: (t) => t.palette.success.main,
+                fontSize: '2rem',
+                alignSelf: 'center',
+              }}
+            />
+          )}
         </Box>
       </Box>
 
-      <Box sx={{}}>
+      <Box
+        sx={{
+        }}
+      >
         <Typography
           sx={{
             fontWeight: 600,
-            fontSize: "1.125rem",
+            fontSize: '1.125rem',
             mb: 1,
           }}
         >
@@ -369,8 +353,7 @@ export default function ModuleContentMUI({
         <Typography
           sx={{
             color: (t) => t.palette.common.black,
-            lineHeight: "1.6",
-            ml: "5vw",
+            lineHeight: '1.6',
           }}
         >
           {content?.description}
