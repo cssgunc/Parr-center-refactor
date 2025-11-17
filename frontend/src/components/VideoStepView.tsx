@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Link from "next/link";
 import { VideoStep } from "@/lib/firebase/types";
 
 interface VideoStepProps {
@@ -9,7 +7,6 @@ interface VideoStepProps {
 }
 
 export default function VideoStepView({ step }: VideoStepProps) {
-  const [showVideoView, setShowVideoView] = useState(false);
   const videoData = step;
 
   if (videoData) {
@@ -22,20 +19,6 @@ export default function VideoStepView({ step }: VideoStepProps) {
           p: 4,
         }}
       >
-        {/* Back Button */}
-        <Box sx={{ mb: 3 }}>
-          <IconButton
-            onClick={() => setShowVideoView(false)}
-            sx={{
-              color: (t) => t.palette.common.black,
-              "&:hover": {
-                bgcolor: (t) => t.palette.grey[100],
-              },
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
 
         {/* Title */}
         <Typography

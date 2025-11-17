@@ -6,18 +6,19 @@ import {
   Typography,
   Button,
   TextField,
-  IconButton,
   useTheme,
   Snackbar,
   Alert,
   CircularProgress,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { FreeResponseStep } from "@/lib/firebase/types";
+import { createJournalEntry, getJournalEntryByStepId, updateJournalEntry } from "@/lib/firebase/db-operations";
+import { useEffect } from "react";
 
 interface FreeResponseProps {
   step: FreeResponseStep;
-  onBack?: () => void;
+  userId: string;
+  moduleId: string;
 }
 
 /**
@@ -28,7 +29,8 @@ interface FreeResponseProps {
  */
 export default function FreeResponseStepView({
   step,
-  onBack,
+  userId,
+  moduleId,
 }: FreeResponseProps) {
   const theme = useTheme();
   const [response, setResponse] = useState<string>("");
@@ -36,22 +38,32 @@ export default function FreeResponseStepView({
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const handleSave = async () => {
-    // Temporary UI-only save flow. Replace with real DB call later.
-    setSaveError(null);
-    setIsSaving(true);
-    try {
-      // Simulate async save so users see spinner + success snackbar
-      await new Promise((res) => setTimeout(res, 700));
+  const getInitialResponse = async () => {
+    await getJournalEntryByStepId(userId, step.id).then((entry) => {
+      setResponse("");
+      if (entry) {
+        setResponse(entry.body);
+      }
+    });
+  };
+  
+  useEffect(() => {
+    getInitialResponse();
+  }, [step]);
 
-      // On success, show confirmation
-      setSaveSuccess(true);
-      console.log("Save simulated: success");
-    } catch (err) {
-      console.error("Save simulated: error", err);
-      setSaveError("Failed to save");
-    } finally {
-      setIsSaving(false);
+  const handleSave = async () => {
+    const existingEntry = await getJournalEntryByStepId(userId, step.id);
+    const entryData = {
+      stepId: step.id,
+      body: response,
+      title: step.prompt,
+      moduleId: moduleId,
+    };
+
+    if (existingEntry) {
+      await updateJournalEntry(userId, existingEntry.id, entryData);
+    } else {
+      await createJournalEntry(userId, entryData);
     }
   };
 
@@ -66,21 +78,6 @@ export default function FreeResponseStepView({
         position: "relative",
       }}
     >
-      {/* Back Arrow Button - Top Left
-      <Box sx={{ p: 2, display: "flex", alignItems: "flex-start" }}>
-        <IconButton
-          onClick={handleBack}
-          sx={{
-            color: theme.palette.common.black,
-            "&:hover": {
-              bgcolor: theme.palette.grey[100],
-            },
-          }}
-          aria-label="Go back"
-        >
-          <ArrowBackIcon />
-        </IconButton>
-      </Box> */}
 
       {/* Main Content Container */}
       <Box
