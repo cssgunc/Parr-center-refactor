@@ -94,28 +94,13 @@ export default function FreeResponseStepView({
           position: "relative",
         }}
       >
-        {/* Section Title - Centered, Serif Font */}
-        <Typography
-          variant="h3"
-          component="h1"
-          sx={{
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            fontFamily: "var(--font-secondary)",
-            color: theme.palette.common.black,
-            textAlign: "center",
-            mb: 4,
-          }}
-        >
-          Part 1: Immediate Engagement
-        </Typography>
+
 
         {/* Journal Entry Title */}
         <Typography
-          variant="h4"
-          component="h2"
+          variant="h2"
           sx={{
-            fontSize: "1.5rem",
+            fontSize: "2.0 rem",
             fontWeight: "bold",
             fontFamily: "var(--font-primary)",
             color: theme.palette.common.black,
@@ -125,7 +110,7 @@ export default function FreeResponseStepView({
             maxWidth: "1200px",
           }}
         >
-          Post-Reflection Journal Entry
+          {step.title}
         </Typography>
 
         {/* Prompt Text */}
