@@ -52,18 +52,29 @@ export default function FreeResponseStepView({
   }, [step]);
 
   const handleSave = async () => {
-    const existingEntry = await getJournalEntryByStepId(userId, step.id);
-    const entryData = {
-      stepId: step.id,
-      body: response,
-      title: step.prompt,
-      moduleId: moduleId,
-    };
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      const existingEntry = await getJournalEntryByStepId(userId, step.id);
+      const entryData = {
+        stepId: step.id,
+        body: response,
+        title: step.prompt,
+        moduleId: moduleId,
+      };
 
-    if (existingEntry) {
-      await updateJournalEntry(userId, existingEntry.id, entryData);
-    } else {
-      await createJournalEntry(userId, entryData);
+      if (existingEntry) {
+        await updateJournalEntry(userId, existingEntry.id, entryData);
+      } else {
+        await createJournalEntry(userId, entryData);
+      }
+
+      setSaveSuccess(true);
+    } catch (err: any) {
+      console.error("Failed to save journal entry:", err);
+      setSaveError(err?.message ?? "Failed to save");
+    } finally {
+      setIsSaving(false);
     }
   };
 
