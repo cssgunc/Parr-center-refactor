@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, IconButton } from "@mui/material";
+import { normalizeYouTubeEmbedUrl } from "@/utils/youtube";
 import { VideoStep } from "@/lib/firebase/types";
 
 interface VideoStepProps {
@@ -8,6 +9,7 @@ interface VideoStepProps {
 
 export default function VideoStepView({ step }: VideoStepProps) {
   const videoData = step;
+  const embedUrl = normalizeYouTubeEmbedUrl(videoData.youtubeUrl) ?? videoData.youtubeUrl;
 
   if (videoData) {
     return (
@@ -33,49 +35,6 @@ export default function VideoStepView({ step }: VideoStepProps) {
         >
           {videoData.title}
         </Typography>
-
-        {/* Progress Indicator
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            mb: 4,
-          }}
-        >
-          {[1, 2, 3, 4].map((step) => (
-            <Box key={step} sx={{ display: "flex", alignItems: "center" }}>
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  border: (t) => `2px solid ${t.palette.grey[300]}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                  fontSize: "1rem",
-                  bgcolor:
-                    step === 1 ? (t) => t.palette.grey[800] : "transparent",
-                  color: step === 1 ? "white" : (t) => t.palette.grey[800],
-                }}
-              >
-                {step}
-              </Box>
-              {step < 4 && (
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 2,
-                    bgcolor: (t) => t.palette.grey[200],
-                    mx: 1,
-                  }}
-                />
-              )}
-            </Box>
-          ))}
-        </Box> */}
 
         {/* Watch the Video Heading */}
         <Typography
@@ -110,7 +69,7 @@ export default function VideoStepView({ step }: VideoStepProps) {
         >
           <Box
             component="iframe"
-            src={videoData.youtubeUrl}
+            src={embedUrl}
             sx={{
               position: "absolute",
               top: 0,
@@ -123,36 +82,6 @@ export default function VideoStepView({ step }: VideoStepProps) {
             allowFullScreen
           />
         </Box>
-
-        {/* Action Buttons - Bottom Right
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 2,
-            mt: "auto",
-          }}
-        >
-          <Button
-            variant="contained"
-            sx={{
-              py: 1.5,
-              px: 3,
-              borderRadius: "16px",
-              bgcolor: (t) => t.palette.common.black,
-              fontWeight: "bold",
-              color: "white",
-              fontSize: "1.25rem",
-              minWidth: "150px",
-              "&:hover": {
-                bgcolor: (t) => t.palette.common.black,
-              },
-            }}
-          >
-            Continue
-          </Button>
-        </Box> */}
       </Box>
     );
   }
