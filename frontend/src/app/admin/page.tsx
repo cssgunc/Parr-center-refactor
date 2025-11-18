@@ -2,8 +2,11 @@
 
 import AuthGate from "@/components/AuthGate";
 import ModulesPage from "@/components/ModulesPage";
+import { useState } from "react";
+import UserManagement from "@/components/UserManagement";
 
 export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<"modules" | "users">("modules");
   return (
     <div className="min-h-screen bg-gray-50">
       <AuthGate requireAdmin>
@@ -19,13 +22,29 @@ export default function AdminPage() {
                   Admin Dashboard
                 </h1>
 
-                {/* Back to Home Button */}
-                {/* <button
-                    onClick={() => setCurrentView("home")}
-                    className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                {/* Tabs for user mangement view and modules view*/}
+                <div className="flex gap-6">
+                  <button
+                    onClick={() => setActiveTab("modules")}
+                    className={`pb-3 font-medium text-sm transition-colors duration-200 border-b-2 ${
+                      activeTab === "modules"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-600 hover:text-gray-900"
+                    }`}
                   >
-                    ← Back to Home
-                  </button> */}
+                    Modules
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("users")}
+                    className={`pb-3 font-medium text-md transition-colors duration-200 border-b-2 ${
+                      activeTab === "users"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Users
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -34,7 +53,7 @@ export default function AdminPage() {
                 This is where all the module management functionality lives.
                 It handles displaying, creating, editing, and deleting modules and features.
               */}
-            <ModulesPage />
+            {activeTab === "modules" ? <ModulesPage /> : <UserManagement />}
           </div>
         }
       </AuthGate>
