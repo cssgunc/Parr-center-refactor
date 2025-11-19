@@ -9,13 +9,13 @@ import {
   useTheme,
 } from "@mui/material";
 import { FreeResponseStep } from "@/lib/firebase/types";
-import { createJournalEntry, getJournalEntryByStepId, updateJournalEntry } from "@/lib/firebase/db-operations";
-import { useEffect } from "react";
+import { saveFreeResponseToJournal } from "@/lib/firebase/db-operations";
 
 interface FreeResponseProps {
   step: FreeResponseStep;
   userId: string;
   moduleId: string;
+  moduleTitle: string;
 }
 
 /**
@@ -28,37 +28,19 @@ export default function FreeResponseStepView({
   step,
   userId,
   moduleId,
+  moduleTitle,
 }: FreeResponseProps) {
   const theme = useTheme();
   const [response, setResponse] = useState<string>("");
 
-  const getInitialResponse = async () => {
-    await getJournalEntryByStepId(userId, step.id).then((entry) => {
-      setResponse("");
-      if (entry) {
-        setResponse(entry.body);
-      }
-    });
-  };
-  
-  useEffect(() => {
-    getInitialResponse();
-  }, [step]);
-
   const handleSave = async () => {
-    const existingEntry = await getJournalEntryByStepId(userId, step.id);
-    const entryData = {
-      stepId: step.id,
-      body: response,
-      title: step.prompt,
-      moduleId: moduleId,
-    };
-
-    if (existingEntry) {
-      await updateJournalEntry(userId, existingEntry.id, entryData);
-    } else {
-      await createJournalEntry(userId, entryData);
-    }
+    await saveFreeResponseToJournal(
+      userId,
+      moduleId,
+      moduleTitle,
+      step.prompt,
+      response
+    );
   };
 
   return (

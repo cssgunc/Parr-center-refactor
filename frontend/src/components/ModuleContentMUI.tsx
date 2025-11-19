@@ -225,7 +225,7 @@ export default function ModuleContentMUI({
               <FlashcardsStepView step={currentStep as FlashcardsStep} />
             )}
             {currentStep.type === "freeResponse" && (
-              <FreeResponseStepView step={currentStep as FreeResponseStep} userId={userId} moduleId={moduleId}/>
+              <FreeResponseStepView step={currentStep as FreeResponseStep} userId={userId} moduleId={moduleId} moduleTitle={content?.title || ""}/>
             )}
           </Box>
         </Box>
