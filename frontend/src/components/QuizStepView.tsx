@@ -157,9 +157,6 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
             <Typography sx={{ color: (t) => t.palette.text.secondary }}>
               {questions.length} question{questions.length !== 1 ? "s" : ""}
             </Typography>
-            <Button variant="contained" sx={{ ml: "auto" }}>
-              Continue
-            </Button>
           </>
         ) : (
           <>
@@ -182,7 +179,6 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
             <Button variant="contained" onClick={reset}>
               Retake
             </Button>
-            <Button variant="contained">Continue</Button>
           </>
         )}
       </Box>

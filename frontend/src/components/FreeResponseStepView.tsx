@@ -7,6 +7,9 @@ import {
   Button,
   TextField,
   useTheme,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import { FreeResponseStep } from "@/lib/firebase/types";
 import { saveFreeResponseToJournal } from "@/lib/firebase/db-operations";
@@ -32,15 +35,28 @@ export default function FreeResponseStepView({
 }: FreeResponseProps) {
   const theme = useTheme();
   const [response, setResponse] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleSave = async () => {
-    await saveFreeResponseToJournal(
-      userId,
-      moduleId,
-      moduleTitle,
-      step.prompt,
-      response
-    );
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      await saveFreeResponseToJournal(
+        userId,
+        moduleId,
+        moduleTitle,
+        step.prompt,
+        response
+      );
+      setSaveSuccess(true);
+    } catch (err: any) {
+      console.error("Failed to save journal entry:", err);
+      setSaveError(err?.message ?? "Failed to save");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -54,7 +70,6 @@ export default function FreeResponseStepView({
         position: "relative",
       }}
     >
-
       {/* Main Content Container */}
       <Box
         sx={{
@@ -67,28 +82,11 @@ export default function FreeResponseStepView({
           position: "relative",
         }}
       >
-        {/* Section Title - Centered, Serif Font */}
-        <Typography
-          variant="h3"
-          component="h1"
-          sx={{
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            fontFamily: "var(--font-secondary)",
-            color: theme.palette.common.black,
-            textAlign: "center",
-            mb: 4,
-          }}
-        >
-          Part 1: Immediate Engagement
-        </Typography>
-
         {/* Journal Entry Title */}
         <Typography
-          variant="h4"
-          component="h2"
+          variant="h2"
           sx={{
-            fontSize: "1.5rem",
+            fontSize: "2.0 rem",
             fontWeight: "bold",
             fontFamily: "var(--font-primary)",
             color: theme.palette.common.black,
@@ -98,7 +96,7 @@ export default function FreeResponseStepView({
             maxWidth: "1200px",
           }}
         >
-          Post-Reflection Journal Entry
+          {step.title}
         </Typography>
 
         {/* Prompt Text */}
@@ -181,6 +179,7 @@ export default function FreeResponseStepView({
           <Button
             onClick={handleSave}
             variant="contained"
+            disabled={isSaving}
             sx={{
               py: 1.5,
               px: 4,
@@ -193,10 +192,22 @@ export default function FreeResponseStepView({
               "&:hover": {
                 bgcolor: "#002244",
               },
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 1,
             }}
-            aria-label="Save journal entry"
+            aria-label={
+              isSaving ? "Saving journal entry" : "Save journal entry"
+            }
           >
-            Save
+            {isSaving ? (
+              <>
+                <CircularProgress size={18} color="inherit" />
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
           </Button>
 
           {/* Continue Button - Right Aligned
@@ -222,6 +233,36 @@ export default function FreeResponseStepView({
           </Button> */}
         </Box>
       </Box>
+      {/* Success / Error Snackbars */}
+      <Snackbar
+        open={saveSuccess}
+        autoHideDuration={3000}
+        onClose={() => setSaveSuccess(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSaveSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Saved
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!saveError}
+        autoHideDuration={4000}
+        onClose={() => setSaveError(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSaveError(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {saveError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
