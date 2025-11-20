@@ -1,11 +1,27 @@
 "use client";
-import { useState, useEffect } from "react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { useState, useEffect, useMemo } from "react";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  getDoc,
+} from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/firebaseConfig";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { toast } from "sonner";
+import MasterPasswordWindow from "./MasterPasswordWindow";
+import {
+  Search,
+  X,
+  ShieldCheck,
+  Users,
+  User,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 //Data of users to be displayed
 interface UserData {
@@ -17,9 +33,13 @@ interface UserData {
 
 export default function UserManagement() {
   const [user] = useAuthState(auth);
-  const [users, setUsers] = useState<UserData[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]); //Holds Users
   const [loading, setLoading] = useState(true);
-
+  const [searchQuery, setSearchQuery] = useState(""); //search query state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const USERS_PER_PAGE = 9;
   const currentUserId = user?.uid;
 
   //Get's all users from the firebase
@@ -45,8 +65,7 @@ export default function UserManagement() {
   const toggleAdmin = async (user: UserData) => {
     try {
       const docRef = doc(db, "users", user.id);
-
-      const resp = await updateDoc(docRef, {
+      await updateDoc(docRef, {
         isAdmin: !user.isAdmin,
       });
 
@@ -61,6 +80,110 @@ export default function UserManagement() {
       toast.error("Failed to update user");
     }
   };
+
+  // Open password modal
+  const handleToggleClick = (userToToggle: UserData) => {
+    setSelectedUser(userToToggle);
+    setShowPasswordModal(true);
+  };
+
+  // Verify password and toggle admin
+  const handlePasswordSubmit = async (passwordInput: string) => {
+    try {
+      // Fetch master password from Firebase config/settings document
+      const configRef = doc(db, "config", "settings");
+
+      const configSnap = await getDoc(configRef);
+      console.log(configSnap);
+      if (!configSnap.exists()) {
+        toast.error("Master password not configured");
+        return;
+      }
+      const masterPassword = configSnap.data()?.masterPassword;
+      if (!masterPassword) {
+        toast.error("Master password not found");
+        return;
+      }
+
+      // Verify password
+      if (passwordInput !== masterPassword) {
+        toast.error("Incorrect password");
+        return;
+      }
+
+      // Password correct, toggle admin
+      if (selectedUser) {
+        await toggleAdmin(selectedUser);
+        setShowPasswordModal(false);
+        setSelectedUser(null);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to verify password");
+    }
+  };
+
+  // Cancel password modal
+  const handlePasswordCancel = () => {
+    setShowPasswordModal(false);
+    setSelectedUser(null);
+  };
+
+  //Filter users based on search query
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return users;
+    }
+    const query = searchQuery.toLowerCase();
+    return users.filter(
+      (user) =>
+        user.email.toLowerCase().includes(query) ||
+        user.displayName.toLowerCase().includes(query)
+    );
+  }, [users, searchQuery]);
+
+  //Filters the queried users based on which page is the current page
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+    const endIndex = startIndex + USERS_PER_PAGE;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage]);
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE); //Total number of pages with given users
+
+  //Get's the visible page numbers at the bottom of the UI, based on where the current page is
+  const getVisiblePages = () => {
+    const maxVisible = 5;
+    const pages: number[] = [];
+
+    if (totalPages <= maxVisible) {
+      // Show all pages if total is 5 or less
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else if (currentPage <= 3) {
+      // Near the start: show 1, 2, 3, 4, 5
+      for (let i = 1; i <= maxVisible; i++) {
+        pages.push(i);
+      }
+    } else if (currentPage >= totalPages - 2) {
+      // Near the end: show last 5 pages
+      for (let i = totalPages - 4; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // In the middle: show current page ± 2
+      for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  };
+
+  //On search querey change, the page resets back to page 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   //Load Users on mount
   useEffect(() => {
@@ -87,6 +210,7 @@ export default function UserManagement() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Header*/}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             User Management
@@ -97,104 +221,166 @@ export default function UserManagement() {
           </p>
         </div>
 
-        {users.length === 0 ? (
+        {/* Search Bar */}
+        <div className="mb-6 max-w-md">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name or email..."
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-gray-600"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            )}
+          </div>
+
+          <p className="mt-2 text-sm text-gray-600">
+            Showing {paginatedUsers.length} of {filteredUsers.length} users
+            {searchQuery && ` (filtered from ${users.length} total)`}
+          </p>
+        </div>
+
+        {/* User Cards */}
+        {filteredUsers.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
-              <svg
-                className="w-16 h-16 mx-auto"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
+              <Users className="w-16 h-16 mx-auto" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No users yet
+              No users found
             </h3>
             <p className="text-gray-500">
-              Users will appear here once they sign up
+              {searchQuery
+                ? `No users match "${searchQuery}"`
+                : "Users will appear here once they sign up"}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
-              >
-                <div className="mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {user.displayName || "No name"}
-                  </h3>
-                  <p className="text-gray-600 text-sm">{user.email}</p>
-                </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className="mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {user.displayName || "No name"}
+                    </h3>
+                    <p className="text-gray-600 text-sm">{user.email}</p>
+                  </div>
 
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        user.isAdmin
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          user.isAdmin
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                       >
                         {user.isAdmin ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                          />
+                          <ShieldCheck className="w-4 h-4 mr-1" />
                         ) : (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
+                          <User className="w-4 h-4 mr-1" />
                         )}
-                      </svg>
-                      {user.isAdmin ? "Admin" : "Student"}
-                    </span>
-                  </div>
-                  {user.id === currentUserId && (
-                    <div className="text-xs text-blue-600 font-medium">
-                      (You)
+                        {user.isAdmin ? "Admin" : "Student"}
+                      </span>
                     </div>
-                  )}
-                </div>
+                    {user.id === currentUserId && (
+                      <div className="text-xs text-blue-600 font-medium">
+                        (You)
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleToggleClick(user)}
+                      disabled={user.id === currentUserId}
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                        user.id === currentUserId
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : user.isAdmin
+                          ? "bg-blue-100 hover:bg-blue-200 text-black-700"
+                          : "bg-emerald-100 hover:bg-emerald-200 text-black-700"
+                      }`}
+                    >
+                      {user.isAdmin ? "Remove Admin" : "Make Admin"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {getVisiblePages().map((pageNum) => (
                   <button
-                    onClick={() => toggleAdmin(user)}
-                    disabled={user.id === currentUserId}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                      user.id === currentUserId
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : user.isAdmin
-                        ? "bg-blue-100 hover:bg-blue-200 text-black-700"
-                        : "bg-emerald-100 hover:bg-emerald-200 text-black-700"
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                     }`}
                   >
-                    {user.isAdmin ? "Remove Admin" : "Make Admin"}
+                    {pageNum}
                   </button>
-                </div>
+                ))}
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
+        {/* Password Popup Window */}
+        <MasterPasswordWindow
+          isOpen={showPasswordModal}
+          userEmail={selectedUser?.email || ""}
+          isRemovingAdmin={selectedUser?.isAdmin || false}
+          onConfirm={handlePasswordSubmit}
+          onCancel={handlePasswordCancel}
+        />
       </div>
     </div>
   );
