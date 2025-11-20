@@ -33,6 +33,9 @@ export default function ModuleContentMUI({
   const [showSteps, setShowSteps] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [freeResponsesByStepId, setFreeResponsesByStepId] = useState<
+    Record<string, string>
+  >({});
 
   const handleStartModule = async () => {
     if (!userProgress) {
@@ -66,6 +69,8 @@ export default function ModuleContentMUI({
       setContent(content);
       setSteps(moduleSteps);
       setUserProgress(progress);
+      // Reset free response map when module changes/steps reload
+      setFreeResponsesByStepId({});
     };
 
     fetchContent();
@@ -76,6 +81,13 @@ export default function ModuleContentMUI({
     getUserProgress(userId, moduleId).then((progress) => {
       setUserProgress(progress);
     });
+  };
+
+  const handleFreeResponseChange = (stepId: string, value: string) => {
+    setFreeResponsesByStepId((prev) => ({
+      ...prev,
+      [stepId]: value,
+    }));
   };
 
   // Step View with Navigation
@@ -225,7 +237,16 @@ export default function ModuleContentMUI({
               <FlashcardsStepView step={currentStep as FlashcardsStep} />
             )}
             {currentStep.type === "freeResponse" && (
-              <FreeResponseStepView step={currentStep as FreeResponseStep} userId={userId} moduleId={moduleId} moduleTitle={content?.title || ""}/>
+              <FreeResponseStepView
+                step={currentStep as FreeResponseStep}
+                userId={userId}
+                moduleId={moduleId}
+                moduleTitle={content?.title || ""}
+                response={freeResponsesByStepId[currentStep.id] ?? ""}
+                onChangeResponse={(value) =>
+                  handleFreeResponseChange(currentStep.id, value)
+                }
+              />
             )}
           </Box>
         </Box>

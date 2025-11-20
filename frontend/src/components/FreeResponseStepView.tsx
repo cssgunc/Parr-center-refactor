@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -19,6 +19,8 @@ interface FreeResponseProps {
   userId: string;
   moduleId: string;
   moduleTitle: string;
+  response: string;
+  onChangeResponse: (value: string) => void;
 }
 
 /**
@@ -32,12 +34,14 @@ export default function FreeResponseStepView({
   userId,
   moduleId,
   moduleTitle,
+  response,
+  onChangeResponse,
 }: FreeResponseProps) {
   const theme = useTheme();
-  const [response, setResponse] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
 
   const handleSave = async () => {
     setSaveError(null);
@@ -119,7 +123,7 @@ export default function FreeResponseStepView({
           multiline
           rows={12}
           value={response}
-          onChange={(e) => setResponse(e.target.value)}
+          onChange={(e) => onChangeResponse(e.target.value)}
           placeholder="Type your answer here...."
           sx={{
             width: "100%",
