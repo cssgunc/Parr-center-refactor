@@ -17,15 +17,7 @@ import {
   writeBatch,
   orderBy,
 } from "firebase/firestore";
-import {
-  User,
-  Module,
-  Step,
-  UserProgress,
-  StepType,
-  STEP_COLLECTIONS,
-  JournalEntry,
-} from "./types";
+import { User, Module, Step, UserProgress, StepType, STEP_COLLECTIONS, JournalEntry } from "./types";
 
 // Module CRUD operations
 
@@ -71,12 +63,7 @@ export const deleteModule = async (
   if (deleteSteps) {
     // Delete from all step subcollections
     const batch = writeBatch(db);
-    const collectionNames: StepType[] = [
-      "video",
-      "quiz",
-      "flashcards",
-      "freeResponse",
-    ];
+    const collectionNames: StepType[] = ["video", "quiz", "flashcards", "freeResponse"];
 
     await Promise.all(
       collectionNames.map(async (type) => {
@@ -116,12 +103,7 @@ export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
   const allSteps: Step[] = [];
 
   // Query each subcollection type
-  const collectionNames: StepType[] = [
-    "video",
-    "quiz",
-    "flashcards",
-    "freeResponse",
-  ];
+  const collectionNames: StepType[] = ["video", "quiz", "flashcards", "freeResponse"];
 
   await Promise.all(
     collectionNames.map(async (type) => {
@@ -220,38 +202,18 @@ export const userSignupCheck = async (userId: string) => {
   const userDocRef = doc(db, "users", userId);
   const userDoc = await getDoc(userDocRef);
   return userDoc.exists();
-};
+}
 
 export const createUser = async (userData: Partial<User>) => {
   const userDocRef = doc(db, "users", userData.id!);
-  await setDoc(
-    userDocRef,
-    {
-      ...userData,
-      createdAt: serverTimestamp(),
-      lastLoginAt: serverTimestamp(),
-      isAdmin: false,
-    },
-    { merge: true }
-  );
-
-  // Create journal entries for all public modules
-  const publicModules = await getPublicModules();
-  await Promise.all(
-    publicModules.map(async (module) => {
-      const journalRef = doc(db, "users", userData.id!, "journal", module.id);
-      await setDoc(journalRef, {
-        title: module.title,
-        body: "",
-        moduleId: module.id,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    })
-  );
-
+  await setDoc(userDocRef, {
+    ...userData,
+    createdAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp(),
+    isAdmin: false
+  }, {merge: true});
   return { id: userData.id, ...userData } as User;
-};
+}
 
 export const isAdminUser = async (userId: string) => {
   const userDocRef = doc(db, "users", userId);
@@ -261,7 +223,7 @@ export const isAdminUser = async (userId: string) => {
     return userData.isAdmin === true;
   }
   return false;
-};
+}
 
 export const startUserProgress = async (userId: string, moduleId: string) => {
   const progressRef = doc(db, "users", userId, "progress", moduleId);
@@ -324,10 +286,7 @@ export const markStepCompleted = async (
 };
 
 export const updateQuizScore = async (
-  userId: string,
-  moduleId: string,
-  stepId: string,
-  score: number
+  userId: string, moduleId: string, stepId: string, score: number
 ) => {
   const progressRef = doc(db, "users", userId, "progress", moduleId);
   const progressDoc = await getDoc(progressRef);
@@ -356,7 +315,9 @@ export const updateQuizScore = async (
   }
 };
 
-export const completeModule = async (userId: string, moduleId: string) => {
+export const completeModule = async (
+  userId: string, moduleId: string
+) => {
   const progressRef = doc(db, "users", userId, "progress", moduleId);
   await updateDoc(progressRef, {
     completedAt: serverTimestamp(),
@@ -398,9 +359,7 @@ export const getUserModules = async (userId: string) => {
 
 // Journal CRUD operations
 
-export const getJournalEntries = async (
-  userId: string
-): Promise<JournalEntry[]> => {
+export const getJournalEntries = async (userId: string): Promise<JournalEntry[]> => {
   try {
     const journalRef = collection(db, "users", userId, "journal");
     const journalQuery = query(journalRef, orderBy("updatedAt", "desc"));
@@ -412,15 +371,12 @@ export const getJournalEntries = async (
     })) as JournalEntry[];
   } catch (error) {
     // If collection doesn't exist, return empty array
-    console.log("Journal collection does not exist yet for user:", userId);
+    console.log('Journal collection does not exist yet for user:', userId);
     return [];
   }
 };
 
-export const getJournalEntryByStepId = async (
-  userId: string,
-  stepId: string
-): Promise<JournalEntry | null> => {
+export const getJournalEntryByStepId = async (userId: string, stepId: string): Promise<JournalEntry | null> => {
   try {
     const journalRef = collection(db, "users", userId, "journal");
     const journalQuery = query(journalRef, where("stepId", "==", stepId));
@@ -436,15 +392,12 @@ export const getJournalEntryByStepId = async (
       return null;
     }
   } catch (error) {
-    console.error("Error fetching journal entry by stepId:", error);
+    console.error('Error fetching journal entry by stepId:', error);
     return null;
   }
 };
 
-export const createJournalEntry = async (
-  userId: string,
-  entryData: Partial<JournalEntry>
-): Promise<JournalEntry> => {
+export const createJournalEntry = async (userId: string, entryData: Partial<JournalEntry>): Promise<JournalEntry> => {
   try {
     // Ensure user document exists first
     const userDocRef = doc(db, "users", userId);
@@ -459,7 +412,7 @@ export const createJournalEntry = async (
     const journalRef = collection(db, "users", userId, "journal");
     const entryDocRef = await addDoc(journalRef, newEntry);
 
-    console.log("Journal entry created successfully:", entryDocRef.id);
+    console.log('Journal entry created successfully:', entryDocRef.id);
 
     return {
       id: entryDocRef.id,
@@ -468,15 +421,15 @@ export const createJournalEntry = async (
       updatedAt: new Date(),
     } as JournalEntry;
   } catch (error) {
-    console.error("Failed to create journal entry:", error);
-    throw new Error("Failed to create journal entry");
+    console.error('Failed to create journal entry:', error);
+    throw new Error('Failed to create journal entry');
   }
 };
 
 export const updateJournalEntry = async (
   userId: string,
   entryId: string,
-  updates: Partial<Omit<JournalEntry, "id">>
+  updates: Partial<Omit<JournalEntry, 'id'>>
 ): Promise<void> => {
   try {
     const entryRef = doc(db, "users", userId, "journal", entryId);
@@ -485,80 +438,17 @@ export const updateJournalEntry = async (
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error("Failed to update journal entry:", error);
-    throw new Error("Failed to update journal entry");
+    console.error('Failed to update journal entry:', error);
+    throw new Error('Failed to update journal entry');
   }
 };
 
-export const deleteJournalEntry = async (
-  userId: string,
-  entryId: string
-): Promise<void> => {
+export const deleteJournalEntry = async (userId: string, entryId: string): Promise<void> => {
   try {
     const entryRef = doc(db, "users", userId, "journal", entryId);
     await deleteDoc(entryRef);
   } catch (error) {
-    console.error("Failed to delete journal entry:", error);
-    throw new Error("Failed to delete journal entry");
-  }
-};
-
-// Save a free response to the module's journal entry
-export const saveFreeResponseToJournal = async (
-  userId: string,
-  moduleId: string,
-  moduleTitle: string,
-  prompt: string,
-  answer: string
-): Promise<void> => {
-  try {
-    const journalRef = doc(db, "users", userId, "journal", moduleId);
-    const journalDoc = await getDoc(journalRef);
-
-    let currentBody = "";
-
-    if (journalDoc.exists()) {
-      currentBody = journalDoc.data().body || "";
-    }
-
-    // Parse existing body to find and update the prompt section
-    const sections = currentBody.split("\n\n").filter((s) => s.trim());
-    let promptFound = false;
-
-    const updatedSections = sections.map((section) => {
-      const lines = section.split("\n");
-      if (lines[0] === prompt) {
-        promptFound = true;
-        return `${prompt}\n${answer}`;
-      }
-      return section;
-    });
-
-    // If prompt not found, append new section
-    if (!promptFound) {
-      updatedSections.push(`${prompt}\n${answer}`);
-    }
-
-    const newBody = updatedSections.join("\n\n");
-
-    if (journalDoc.exists()) {
-      // Update existing journal entry
-      await updateDoc(journalRef, {
-        body: newBody,
-        updatedAt: serverTimestamp(),
-      });
-    } else {
-      // Create new journal entry (edge case: module added after account creation)
-      await setDoc(journalRef, {
-        title: moduleTitle,
-        body: newBody,
-        moduleId: moduleId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    }
-  } catch (error) {
-    console.error("Failed to save free response to journal:", error);
-    throw new Error("Failed to save free response to journal");
+    console.error('Failed to delete journal entry:', error);
+    throw new Error('Failed to delete journal entry');
   }
 };

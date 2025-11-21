@@ -27,9 +27,6 @@ export default function ModuleTestPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [freeResponsesByStepId, setFreeResponsesByStepId] = useState<
-    Record<string, string>
-  >({});
 
   const MODULE_ID = "testmodule1";
 
@@ -128,13 +125,6 @@ export default function ModuleTestPage() {
 
   const currentStep = steps[currentStepIndex];
 
-  const handleFreeResponseChange = (stepId: string, value: string) => {
-    setFreeResponsesByStepId((prev) => ({
-      ...prev,
-      [stepId]: value,
-    }));
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -210,13 +200,6 @@ export default function ModuleTestPage() {
                 {currentStep.type === "freeResponse" && (
                   <FreeResponseStepView
                     step={currentStep as FreeResponseStep}
-                    userId={user?.uid || ""}
-                    moduleId={MODULE_ID}
-                    moduleTitle={module?.title || ""}
-                    response={freeResponsesByStepId[currentStep.id] ?? ""}
-                    onChangeResponse={(value) =>
-                      handleFreeResponseChange(currentStep.id, value)
-                    }
                   />
                 )}
               </>
