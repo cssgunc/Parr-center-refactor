@@ -28,16 +28,6 @@ export default function StudentPage() {
               background: "linear-gradient(to bottom, white 0%, white 1%, #abd8ff 100%)",
             }}
           >
-            {/* Back to Home Button */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
-              {/* <button
-                onClick={() => setCurrentView("home")}
-                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
-              >
-                ← Back to Home
-              </button> */}
-            </div>
-
             <div className="flex flex-1">
               <Sidebar
                 selectedModule={selectedModule}
@@ -45,7 +35,7 @@ export default function StudentPage() {
                 onSelectIndex={setIndex}
               />
               <main className="flex-1 overflow-auto">
-                <div className="p-6">
+                <div className="">
                   <ModuleContentMUI
                     moduleId={selectedModule}
                     index={index}

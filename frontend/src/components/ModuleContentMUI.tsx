@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, IconButton } from "@mui/material";
+import { Box, Typography, Button, useTheme } from "@mui/material";
 import {
   getModuleById,
   getUserProgress,
@@ -37,6 +37,7 @@ export default function ModuleContentMUI({
     Record<string, string>
   >({});
   const [nextEnabled, setNextEnabled] = useState(true);
+  const theme = useTheme();
 
   const handleStartModule = async () => {
     if (!userProgress) {
@@ -149,8 +150,9 @@ export default function ModuleContentMUI({
             justifyContent: "space-between",
             alignItems: "center",
             p: 2,
-            borderBottom: (t) => `1px solid ${t.palette.grey[200]}`,
             bgcolor: "white",
+            borderTopRightRadius: "16px",
+            border: `1px solid ${theme.palette.grey[300]}`,
           }}
         >
           {currentStepIndex === 0 ? (

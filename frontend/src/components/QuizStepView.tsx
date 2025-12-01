@@ -9,6 +9,7 @@ import {
   RadioGroup,
   Typography,
   Alert,
+  useTheme,
 } from "@mui/material";
 import { QuizStep } from "@/lib/firebase/types";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -28,6 +29,7 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
   const questions = step.questions;
   const [showCheckIcon, setShowCheckIcon] = useState(false);
   const allAnswered = useMemo(() => answers.every((a) => a >= 0), [answers]);
+  const theme = useTheme();
 
   const handleSelect = (qIndex: number, choiceIndex: number) => {
     setAnswers((prev) => {
@@ -77,9 +79,18 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
   }, [graded, results.passed, onPassedChange]);
 
   return (
-    <Box sx={{ width: "100%", maxWidth: "1400px", mt: 4, bgcolor: "background.paper", p: 3, borderRadius: 2 }}>
+    <Box sx={{ width: "80%", maxWidth: "1400px", my: 4, bgcolor: "background.paper", p: 3, border: `1px solid ${theme.palette.grey[300]}`, borderRadius: 2 }}>
       <div className="flex items-center space-x-2 mb-4">
-      <Typography variant="h5" sx={{ fontWeight: 700}}>
+      <Typography
+        variant="h4"
+        component={"h1"}
+        sx={{
+          fontSize: "2rem",
+          fontWeight: "bold",
+          fontFamily: "var(--font-primary)",
+          color: theme.palette.common.black,
+        }}
+      >
         Quiz
       </Typography>
       {showCheckIcon &&

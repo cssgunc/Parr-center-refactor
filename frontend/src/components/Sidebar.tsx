@@ -42,8 +42,8 @@ export default function Sidebar({ selectedModule, onSelect, onSelectIndex }: Sid
   }, [modules]);
 
   return (
-    <div className="hidden md:block w-60 bg-white border-r border-gray-300 h-full overflow-y-auto font-secondary">
-      <div className="py-4">
+    <div className="hidden md:block w-60 bg-white border border-gray-300 h-full overflow-y-auto font-secondary rounded-l-xl">
+      <div>
         <nav>
           {modules.map((module, index) => (
             <div key={module.id} className={`${index < modules.length - 1 ? "border-b border-gray-300" : ""}`}>
