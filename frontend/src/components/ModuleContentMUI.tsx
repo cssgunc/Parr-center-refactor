@@ -55,6 +55,7 @@ export default function ModuleContentMUI({
 
     // Reset only view state when module changes
     // Keep all data (content, steps, userProgress) to avoid any flashing
+    setNextEnabled(true);   // Reset next button
     setShowSteps(false);     // Exit step view
     setCurrentStepIndex(0);  // Reset step navigation
 
@@ -184,10 +185,27 @@ export default function ModuleContentMUI({
           <Typography sx={{ fontWeight: "bold" }}>
             Step {currentStepIndex + 1} of {steps.length}
           </Typography>
-          {currentStepIndex === steps.length - 1 ? (
+          {currentStepIndex === steps.length - 1 ? nextEnabled ? (
             <Button
               variant="contained"
               onClick={handleNext}
+              sx={{
+                borderRadius: "16px",
+                px: 3,
+                py: 1,
+                bgcolor: (t) => t.palette.common.black,
+                "&:hover": {
+                  bgcolor: (t) => t.palette.grey[800],
+                },
+              }}
+            >
+              Finish
+            </Button>
+          ) : 
+          (
+            <Button
+              variant="contained"
+              disabled={true}
               sx={{
                 borderRadius: "16px",
                 px: 3,

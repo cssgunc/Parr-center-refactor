@@ -72,7 +72,7 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
 
   useEffect(() => {
     if (graded) {
-      onPassedChange(results.percent);
+      results.passed && onPassedChange(results.percent);
     } else {
       onPassedChange(0);
     }
