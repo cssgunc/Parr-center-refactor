@@ -124,11 +124,12 @@ export default function Navbar() {
             {isAdmin && (
               <Button
                 component={Link}
-                href={pathname.startsWith("/admin") ? "/student" : "/admin"}
-                variant="contained"
+                href="/admin"
+                variant={pathname === "/admin" ? "contained" : "outlined"}
                 sx={{
-                  backgroundColor: "primary.main",
                   color: "white",
+                  backgroundColor: pathname === "/admin" ? "primary.main" : "transparent",
+                  borderColor: pathname === "/admin" ? "primary.main" : "outlined",
                   textTransform: "none",
                   fontSize: "16px",
                   borderRadius: "16px",
@@ -136,7 +137,7 @@ export default function Navbar() {
                   py: 1,
                 }}
               >
-                {pathname.startsWith("/admin") ? "Modules" : "Admin Dashboard"}
+                Admin Dashboard
               </Button>
             )}
 
