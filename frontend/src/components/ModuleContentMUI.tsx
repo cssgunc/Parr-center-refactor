@@ -7,6 +7,7 @@ import {
   getStepsByModuleId,
   completeModule,
   markStepCompleted,
+  updateQuizScore
 } from "@/lib/firebase/db-operations";
 import { Module, Step, VideoStep, QuizStep, FlashcardsStep, FreeResponseStep, UserProgress } from "@/lib/firebase/types";
 import FreeResponseStepView from "./FreeResponseStepView";
@@ -32,10 +33,10 @@ export default function ModuleContentMUI({
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [showSteps, setShowSteps] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [freeResponsesByStepId, setFreeResponsesByStepId] = useState<
     Record<string, string>
   >({});
+  const [nextEnabled, setNextEnabled] = useState(true);
 
   const handleStartModule = async () => {
     if (!userProgress) {
@@ -90,13 +91,24 @@ export default function ModuleContentMUI({
     }));
   };
 
+  const handleQuizPassedChange = (score: number) => {
+    if (score > 0) {
+      setNextEnabled(true);
+      updateQuizScore(userId, moduleId, steps[currentStepIndex].id, score);
+    } else {
+      !(userProgress?.quizScores[steps[currentStepIndex].id]) && setNextEnabled(false);
+    }
+  }
+
   // Step View with Navigation
   if (showSteps && steps.length > 0) {
     const currentStep = steps[currentStepIndex];
 
     const handlePrevious = async () => {
+      setNextEnabled(true);
       if (currentStepIndex > 0) {
         setCurrentStepIndex(currentStepIndex - 1);
+        refreshProgress();
       } else {
         await refreshProgress();
         setShowSteps(false);
@@ -107,6 +119,7 @@ export default function ModuleContentMUI({
       await markStepCompleted(userId, moduleId, currentStep.id);
       if (currentStepIndex < steps.length - 1) {
         setCurrentStepIndex(currentStepIndex + 1);
+        refreshProgress();
       } else {
         await completeModule(userId, moduleId);
         await refreshProgress();
@@ -185,11 +198,27 @@ export default function ModuleContentMUI({
             >
               Finish
             </Button>
-          ) : (
+          ) : nextEnabled ? (
           <Button
             variant="contained"
             onClick={handleNext}
             disabled={currentStepIndex === steps.length - 1}
+            sx={{
+              borderRadius: "16px",
+              px: 3,
+              py: 1,
+              bgcolor: (t) => t.palette.common.black,
+              "&:hover": {
+                bgcolor: (t) => t.palette.grey[800],
+              },
+            }}
+          >
+            Next
+          </Button>
+          ) : (
+            <Button
+            variant="contained"
+            disabled={true}
             sx={{
               borderRadius: "16px",
               px: 3,
@@ -231,7 +260,9 @@ export default function ModuleContentMUI({
               <VideoStepView step={currentStep as VideoStep}/>
             )}
             {currentStep.type === "quiz" && (
-              <QuizStepView step={currentStep as QuizStep} />
+              <QuizStepView step={currentStep as QuizStep} quizPassed={nextEnabled} onPassedChange={(value) => 
+                handleQuizPassedChange(value)
+              }/>
             )}
             {currentStep.type === "flashcards" && (
               <FlashcardsStepView step={currentStep as FlashcardsStep} />

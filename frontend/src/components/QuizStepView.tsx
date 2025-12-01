@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -11,19 +11,22 @@ import {
   Alert,
 } from "@mui/material";
 import { QuizStep } from "@/lib/firebase/types";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
 
 interface QuizStepViewProps {
   step: QuizStep;
-  onClose?: () => void;
+  quizPassed: boolean;
+  onPassedChange: (score: number) => void;
 }
 
-export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
+export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizStepViewProps) {
   const [answers, setAnswers] = useState<number[]>(() =>
     step.questions.map(() => -1)
   );
   const [graded, setGraded] = useState(false);
   const questions = step.questions;
-
+  const [showCheckIcon, setShowCheckIcon] = useState(false);
   const allAnswered = useMemo(() => answers.every((a) => a >= 0), [answers]);
 
   const handleSelect = (qIndex: number, choiceIndex: number) => {
@@ -56,11 +59,37 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
     return { correctCount, percent, passed };
   }, [answers, questions, step.passingScore]);
 
+  // Initialize passed score to 0 (fail) on mount
+  useEffect(() => {
+    onPassedChange(0);
+  }, []);
+
+  useEffect(() => {
+    quizPassed ? setShowCheckIcon(true) : setShowCheckIcon(false);
+  }, [quizPassed]);
+
+  useEffect(() => {
+    if (graded) {
+      onPassedChange(results.percent);
+    } else {
+      onPassedChange(0);
+    }
+  }, [graded, results.passed, onPassedChange]);
+
   return (
     <Box sx={{ width: "100%", maxWidth: "1400px", mt: 4, bgcolor: "background.paper", p: 3, borderRadius: 2 }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+      <div className="flex items-center space-x-2 mb-4">
+      <Typography variant="h5" sx={{ fontWeight: 700}}>
         Quiz
       </Typography>
+      {showCheckIcon &&
+      <CheckCircleIcon 
+        sx={{
+          color: (t) => t.palette.success.main,
+          fontSize: '1.5rem',
+        }}
+      />}
+      </div>
 
       {questions.map((q, qi) => {
         const userAnswer = answers[qi];

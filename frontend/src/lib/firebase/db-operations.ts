@@ -335,7 +335,9 @@ export const updateQuizScore = async (
   if (progressDoc.exists()) {
     const progressData = progressDoc.data();
     const currentScores = progressData.quizScores || {};
-    currentScores[stepId] = score;
+    if (currentScores[stepId] === undefined || score > currentScores[stepId]) {
+      currentScores[stepId] = score;
+    }
 
     await updateDoc(progressRef, {
       quizScores: currentScores,
