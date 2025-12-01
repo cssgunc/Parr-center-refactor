@@ -79,8 +79,8 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
   }, [graded, results.passed, onPassedChange]);
 
   return (
-    <Box sx={{ width: "80%", maxWidth: "1400px", my: 4, bgcolor: "background.paper", p: 3, border: `1px solid ${theme.palette.grey[300]}`, borderRadius: 2 }}>
-      <div className="flex items-center space-x-2 mb-4">
+    <Box sx={{ width: "80%", maxWidth: "1400px", my: 4, bgcolor: "background.paper", p: 3, border: `1px solid ${theme.palette.grey[300]}`, borderRadius: "16px" }}>
+      <div className="flex items-center space-x-2 mb-4 border-b pb-6">
       <Typography
         variant="h4"
         component={"h1"}

@@ -154,6 +154,7 @@ export default function ModuleContentMUI({
             bgcolor: "white",
             borderTopRightRadius: "16px",
             border: `1px solid ${theme.palette.grey[300]}`,
+            borderLeft: "none",
           }}
         >
           {currentStepIndex === 0 ? (
