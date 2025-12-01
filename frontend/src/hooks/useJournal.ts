@@ -17,6 +17,11 @@ export function useJournal() {
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
 
+  const isLockedEntry = (id: string) => {
+    const entry = entries.find(e => e.id === id);
+    return !!entry?.moduleId;
+  };
+
   // Load entries using getDocs instead of real-time listener to avoid Firebase SDK bug
   useEffect(() => {
     if (!user) {
@@ -84,15 +89,17 @@ export function useJournal() {
       setDbError('You must be logged in to update journal entries');
       return;
     }
-
+  
+    if (isLockedEntry(id)) {
+      setDbError('This note is linked to a module and cannot be edited here');
+      return;
+    }
+  
     // Optimistically update local state
-    setEntries(prev => prev.map(entry => {
-      if (entry.id === id) {
-        return { ...entry, ...updates };
-      }
-      return entry;
-    }));
-
+    setEntries(prev =>
+      prev.map(entry => (entry.id === id ? { ...entry, ...updates } : entry))
+    );
+  
     // Debounced database update
     debouncedUpdate(user.uid, id, updates);
   };
@@ -102,14 +109,13 @@ export function useJournal() {
       setDbError('You must be logged in to delete journal entries');
       return;
     }
-
+  
     try {
       await deleteJournalEntry(user.uid, id);
-
-      // Refresh entries list
+  
       const journalEntries = await getJournalEntries(user.uid);
       setEntries(journalEntries);
-
+  
       if (activeId === id) {
         setActiveId(journalEntries.length > 0 ? journalEntries[0].id : null);
       }

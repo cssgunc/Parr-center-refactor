@@ -20,6 +20,8 @@ import {
 } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LockIcon from '@mui/icons-material/Lock';
+import { Tooltip } from '@mui/material';
 
 interface JournalUIState {
   sortMode: 'updated' | 'created';
@@ -29,6 +31,7 @@ interface JournalUIState {
 export function Journal() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
 
   const {
     entries,
@@ -95,6 +98,7 @@ export function Journal() {
     });
 
   const activeEntry = entries.find(entry => entry.id === activeId);
+  const isLocked = !!activeEntry?.moduleId;
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -254,9 +258,20 @@ export function Journal() {
                     }
                   }}
                 >
-                  <Typography variant="subtitle1" fontWeight={activeId === entry.id ? 'bold' : 'normal'} noWrap>
-                    {entry.title || 'Untitled'}
-                  </Typography>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={activeId === entry.id ? 'bold' : 'normal'}
+                      noWrap
+                    >
+                      {entry.title || 'Untitled'}
+                    </Typography>
+                    {entry.moduleId && (
+                      <Tooltip title="Linked to a module – read-only">
+                        <LockIcon fontSize="small" />
+                      </Tooltip>
+                    )}
+                  </Box>
                   <Typography variant="body2" color="text.secondary" noWrap>
                     {entry.body.substring(0, 100)}
                   </Typography>
@@ -287,15 +302,20 @@ export function Journal() {
                 )}
                 <Input
                   value={activeEntry.title}
-                  onChange={(e) => updateEntry(activeId!, { title: e.target.value })}
-                  placeholder="Title"
+                  onChange={(e) => {
+                    if (!isLocked) {
+                      updateEntry(activeId!, { title: e.target.value });
+                    }
+                  }}
+                  placeholder={isLocked ? 'Title (locked – linked to a module)' : 'Title'}
                   fullWidth
+                  inputProps={{ readOnly: isLocked }}
                   sx={{ 
                     fontSize: '1.25rem', 
                     fontWeight: 'bold',
                     '& input': { py: 1 }
                   }}
-                  aria-label="Note title"
+                  aria-label={isLocked ? 'Locked note title' : 'Note title'}
                 />
                 <Button 
                   variant="outlined" 
@@ -319,10 +339,15 @@ export function Journal() {
               
               <TextField
                 value={activeEntry.body}
-                onChange={(e) => updateEntry(activeId!, { body: e.target.value })}
-                placeholder="Start writing..."
+                onChange={(e) => {
+                  if (!isLocked) {
+                    updateEntry(activeId!, { body: e.target.value });
+                  }
+                }}
+                placeholder={isLocked ? 'This note is locked because it is linked to a module.' : 'Start writing...'}
                 multiline
                 fullWidth
+                inputProps={{ readOnly: isLocked }}
                 minRows={10}
                 sx={{
                   flex: 1,
@@ -337,7 +362,6 @@ export function Journal() {
                     width: '100%'
                   }
                 }}
-                inputProps={{ 'aria-label': 'Note body' }}
               />
             </>
           ) : (
