@@ -83,14 +83,32 @@ export default function Navbar() {
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {user && (
+              <>
+              <Button
+              component={Link}
+              href="/student"
+              variant={pathname === "/student" ? "contained" : "outlined"}
+              sx={{
+                color: "white",
+                backgroundColor: pathname === "/student" ? "primary.main" : "transparent",
+                borderColor: pathname === "/student" ? "primary.main" : "outlined",
+                textTransform: "none",
+                fontSize: "16px",
+                borderRadius: "16px",
+                px: 3,
+                py: 1,
+              }}
+              >
+                Modules
+              </Button>
               <Button
                 component={Link}
                 href="/journal"
-                variant={"contained"}
+                variant={pathname === "/journal" ? "contained" : "outlined"}
                 sx={{
                   color: "white",
-                  backgroundColor: "primary.main",
-                  borderColor: "primary.main",
+                  backgroundColor: pathname === "/journal" ? "primary.main" : "transparent",
+                  borderColor: pathname === "/journal" ? "primary.main" : "outlined",
                   textTransform: "none",
                   fontSize: "16px",
                   borderRadius: "16px",
@@ -100,6 +118,7 @@ export default function Navbar() {
               >
                 Journal
               </Button>
+              </>
             )}
 
             {isAdmin && (
