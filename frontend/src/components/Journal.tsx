@@ -168,15 +168,13 @@ export function Journal() {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
+    <Box sx={{ display: 'flex', height: '100vh', border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '16px', overflow: 'hidden' }}>
       {/* Left Sidebar - List View */}
       <Box sx={{
         width: isMobile ? '100%' : '30%',
         minWidth: 300,
         display: isMobile && isEditing ? 'none' : 'block',
         height: '100%',
-        borderRight: 1,
-        borderColor: 'divider'
       }}>
         <Card square elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Stack spacing={1} p={2}>
