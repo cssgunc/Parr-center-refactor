@@ -7,7 +7,8 @@ import {
   getStepsByModuleId,
   completeModule,
   markStepCompleted,
-  updateQuizScore
+  updateQuizScore,
+  getJournalEntryByStepId
 } from "@/lib/firebase/db-operations";
 import { Module, Step, VideoStep, QuizStep, FlashcardsStep, FreeResponseStep, UserProgress } from "@/lib/firebase/types";
 import FreeResponseStepView from "./FreeResponseStepView";
@@ -78,6 +79,44 @@ export default function ModuleContentMUI({
 
     fetchContent();
   }, [moduleId, userId]);
+
+  useEffect(() => {
+    if (!showSteps || steps.length === 0) return;
+  
+    const currentStep = steps[currentStepIndex];
+    if (currentStep.type !== "freeResponse") return;
+  
+    const stepId = currentStep.id;
+  
+    // Already have a value for this step? Don't refetch from Firestore.
+    if (freeResponsesByStepId[stepId] !== undefined) return;
+  
+    const fetchFreeResponse = async () => {
+      try {
+        const journalEntry = await getJournalEntryByStepId(userId, stepId);
+        if (!journalEntry) return;
+  
+        // body is a map: { [stepId]: [prompt, answer] }
+        const body = journalEntry.body as unknown as Record<string, [string, string]> | undefined;
+        if (!body) return;
+  
+        const entryForStep = body[stepId];
+        if (!entryForStep) return;
+  
+        const [, answer] = entryForStep;
+  
+        setFreeResponsesByStepId(prev => ({
+          ...prev,
+          [stepId]: answer,
+        }));
+      } catch (err) {
+        console.error("Failed to sync free response from journal:", err);
+      }
+    };
+  
+    fetchFreeResponse();
+  }, [showSteps, steps, currentStepIndex, userId, freeResponsesByStepId]);
+  
 
   // Keep user progress updated
   const refreshProgress = () => {
@@ -291,6 +330,7 @@ export default function ModuleContentMUI({
             {currentStep.type === "freeResponse" && (
               <FreeResponseStepView
                 step={currentStep as FreeResponseStep}
+                stepId={currentStep.id}
                 userId={userId}
                 moduleId={moduleId}
                 moduleTitle={content?.title || ""}

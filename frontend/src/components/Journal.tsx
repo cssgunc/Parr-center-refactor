@@ -64,6 +64,7 @@ export function Journal() {
       }
     }
   }, []);
+
   
   // Save UI preferences
   useEffect(() => {
@@ -74,28 +75,68 @@ export function Journal() {
     localStorage.setItem(`journal:ui`, JSON.stringify(uiState));
   }, [sortMode, searchQuery]);
   
+  const getEntryBodyText = (entry: any): string => {
+    const body = entry.body;
+  
+    if (!body) return '';
+  
+    // Normal journal entry: body is a plain string
+    if (typeof body === 'string') {
+      return body;
+    }
+  
+    // Module-linked entry: body is a map { [stepId]: [prompt, answer] }
+    if (typeof body === 'object') {
+      try {
+        const sections = Object.values(body) as [string, string][];
+    
+        return sections
+          .map(([prompt, answer]) => {
+            const promptLine = `${prompt.trim()}:`;
+            const answerLine = `- ${answer.trim()}`;
+            return `${promptLine}\n${answerLine}`;
+          })
+          .join('\n\n');
+      } catch {
+        return '';
+      }
+    }
+    
+  
+    return '';
+  };
+  
+
   // Filter and sort entries
   const filteredEntries = entries
-    .filter(entry => 
-      entry.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      entry.body.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => {
-      const rawDateA = sortMode === 'updated' ? a.updatedAt : a.createdAt;
-      const rawDateB = sortMode === 'updated' ? b.updatedAt : b.createdAt;
+  .filter(entry => {
+    const q = searchQuery.toLowerCase();
+    const bodyText = getEntryBodyText(entry).toLowerCase();
 
-      const dateA = rawDateA instanceof Date ? rawDateA :
-        (rawDateA && typeof rawDateA === 'object' && 'toDate' in rawDateA && typeof rawDateA.toDate === 'function')
-          ? rawDateA.toDate()
-          : new Date();
+    return (
+      entry.title.toLowerCase().includes(q) ||
+      bodyText.includes(q)
+    );
+  })
+  .sort((a, b) => {
+    const rawDateA = sortMode === 'updated' ? a.updatedAt : a.createdAt;
+    const rawDateB = sortMode === 'updated' ? b.updatedAt : b.createdAt;
 
-      const dateB = rawDateB instanceof Date ? rawDateB :
-        (rawDateB && typeof rawDateB === 'object' && 'toDate' in rawDateB && typeof rawDateB.toDate === 'function')
-          ? rawDateB.toDate()
-          : new Date();
+    const dateA = rawDateA instanceof Date
+      ? rawDateA
+      : (rawDateA && typeof rawDateA === 'object' && 'toDate' in rawDateA && typeof rawDateA.toDate === 'function')
+        ? rawDateA.toDate()
+        : new Date();
 
-      return dateB.getTime() - dateA.getTime();
-    });
+    const dateB = rawDateB instanceof Date
+      ? rawDateB
+      : (rawDateB && typeof rawDateB === 'object' && 'toDate' in rawDateB && typeof rawDateB.toDate === 'function')
+        ? rawDateB.toDate()
+        : new Date();
+
+    return dateB.getTime() - dateA.getTime();
+  });
+
 
   const activeEntry = entries.find(entry => entry.id === activeId);
   const isLocked = !!activeEntry?.moduleId;
@@ -273,7 +314,7 @@ export function Journal() {
                     )}
                   </Box>
                   <Typography variant="body2" color="text.secondary" noWrap>
-                    {entry.body.substring(0, 100)}
+                    {getEntryBodyText(entry).substring(0, 100)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {formatRelative(entry.updatedAt)}
@@ -338,13 +379,17 @@ export function Journal() {
               <Divider />
               
               <TextField
-                value={activeEntry.body}
+                value={getEntryBodyText(activeEntry)}
                 onChange={(e) => {
                   if (!isLocked) {
                     updateEntry(activeId!, { body: e.target.value });
                   }
                 }}
-                placeholder={isLocked ? 'This note is locked because it is linked to a module.' : 'Start writing...'}
+                placeholder={
+                  isLocked
+                    ? 'This note is locked because it is linked to a module.'
+                    : 'Start writing...'
+                }
                 multiline
                 fullWidth
                 inputProps={{ readOnly: isLocked }}

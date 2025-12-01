@@ -16,6 +16,7 @@ import { saveFreeResponseToJournal } from "@/lib/firebase/db-operations";
 
 interface FreeResponseProps {
   step: FreeResponseStep;
+  stepId: string;
   userId: string;
   moduleId: string;
   moduleTitle: string;
@@ -31,6 +32,7 @@ interface FreeResponseProps {
  */
 export default function FreeResponseStepView({
   step,
+  stepId,
   userId,
   moduleId,
   moduleTitle,
@@ -52,7 +54,8 @@ export default function FreeResponseStepView({
         moduleId,
         moduleTitle,
         step.prompt,
-        response
+        response,
+        stepId
       );
       setSaveSuccess(true);
     } catch (err: any) {
