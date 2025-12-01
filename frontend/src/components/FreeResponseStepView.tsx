@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -12,13 +12,15 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { FreeResponseStep } from "@/lib/firebase/types";
-import { createJournalEntry, getJournalEntryByStepId, updateJournalEntry } from "@/lib/firebase/db-operations";
-import { useEffect } from "react";
+import { saveFreeResponseToJournal } from "@/lib/firebase/db-operations";
 
 interface FreeResponseProps {
   step: FreeResponseStep;
   userId: string;
   moduleId: string;
+  moduleTitle: string;
+  response: string;
+  onChangeResponse: (value: string) => void;
 }
 
 /**
@@ -31,44 +33,27 @@ export default function FreeResponseStepView({
   step,
   userId,
   moduleId,
+  moduleTitle,
+  response,
+  onChangeResponse,
 }: FreeResponseProps) {
   const theme = useTheme();
-  const [response, setResponse] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const getInitialResponse = async () => {
-    await getJournalEntryByStepId(userId, step.id).then((entry) => {
-      setResponse("");
-      if (entry) {
-        setResponse(entry.body);
-      }
-    });
-  };
-  
-  useEffect(() => {
-    getInitialResponse();
-  }, [step]);
 
   const handleSave = async () => {
     setSaveError(null);
     setIsSaving(true);
     try {
-      const existingEntry = await getJournalEntryByStepId(userId, step.id);
-      const entryData = {
-        stepId: step.id,
-        body: response,
-        title: step.prompt,
-        moduleId: moduleId,
-      };
-
-      if (existingEntry) {
-        await updateJournalEntry(userId, existingEntry.id, entryData);
-      } else {
-        await createJournalEntry(userId, entryData);
-      }
-
+      await saveFreeResponseToJournal(
+        userId,
+        moduleId,
+        moduleTitle,
+        step.prompt,
+        response
+      );
       setSaveSuccess(true);
     } catch (err: any) {
       console.error("Failed to save journal entry:", err);
@@ -89,7 +74,6 @@ export default function FreeResponseStepView({
         position: "relative",
       }}
     >
-
       {/* Main Content Container */}
       <Box
         sx={{
@@ -102,8 +86,6 @@ export default function FreeResponseStepView({
           position: "relative",
         }}
       >
-
-
         {/* Journal Entry Title */}
         <Typography
           variant="h2"
@@ -141,7 +123,7 @@ export default function FreeResponseStepView({
           multiline
           rows={12}
           value={response}
-          onChange={(e) => setResponse(e.target.value)}
+          onChange={(e) => onChangeResponse(e.target.value)}
           placeholder="Type your answer here...."
           sx={{
             width: "100%",
@@ -218,7 +200,9 @@ export default function FreeResponseStepView({
               alignItems: "center",
               gap: 1,
             }}
-            aria-label={isSaving ? "Saving journal entry" : "Save journal entry"}
+            aria-label={
+              isSaving ? "Saving journal entry" : "Save journal entry"
+            }
           >
             {isSaving ? (
               <>
@@ -275,7 +259,11 @@ export default function FreeResponseStepView({
         onClose={() => setSaveError(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setSaveError(null)} severity="error" sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setSaveError(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
           {saveError}
         </Alert>
       </Snackbar>
