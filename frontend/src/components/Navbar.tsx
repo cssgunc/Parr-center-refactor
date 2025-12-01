@@ -86,10 +86,10 @@ export default function Navbar() {
               <Button
                 component={Link}
                 href="/journal"
-                variant={pathname === "/journal" ? "contained" : "outlined"}
+                variant={"contained"}
                 sx={{
-                  color: pathname === "/journal" ? "white" : "primary.main",
-                  backgroundColor: pathname === "/journal" ? "primary.main" : "transparent",
+                  color: "white",
+                  backgroundColor: "primary.main",
                   borderColor: "primary.main",
                   textTransform: "none",
                   fontSize: "16px",
