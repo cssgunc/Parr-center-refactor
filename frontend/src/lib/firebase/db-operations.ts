@@ -242,7 +242,7 @@ export const createUser = async (userData: Partial<User>) => {
       const journalRef = doc(db, "users", userData.id!, "journal", module.id);
       await setDoc(journalRef, {
         title: module.title,
-        body: "",
+        body: {},
         moduleId: module.id,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
