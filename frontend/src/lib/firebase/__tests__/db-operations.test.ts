@@ -181,7 +181,7 @@ describe("Step CRUD Operations", () => {
       (serverTimestamp as jest.Mock).mockReturnValue("TIMESTAMP");
 
       const stepData = {
-        type: "video",
+        type: "video" as const,
         title: "Video Step",
         order: 10,
         isOptional: false,

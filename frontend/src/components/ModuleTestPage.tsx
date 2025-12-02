@@ -30,6 +30,7 @@ export default function ModuleTestPage() {
   const [freeResponsesByStepId, setFreeResponsesByStepId] = useState<
     Record<string, string>
   >({});
+  const [quizPassed, setQuizPassed] = useState(false);
 
   const MODULE_ID = "testmodule1";
 
@@ -135,6 +136,10 @@ export default function ModuleTestPage() {
     }));
   };
 
+  const handleQuizPassedChange = (score: number) => {
+    setQuizPassed(score > 0);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -205,11 +210,16 @@ export default function ModuleTestPage() {
                   <VideoStepView step={currentStep as VideoStep} />
                 )}
                 {currentStep.type === "quiz" && (
-                  <QuizStepView step={currentStep as QuizStep} />
+                  <QuizStepView 
+                    step={currentStep as QuizStep}
+                    quizPassed={quizPassed}
+                    onPassedChange={handleQuizPassedChange}
+                  />
                 )}
                 {currentStep.type === "freeResponse" && (
                   <FreeResponseStepView
                     step={currentStep as FreeResponseStep}
+                    stepId={currentStep.id}
                     userId={user?.uid || ""}
                     moduleId={MODULE_ID}
                     moduleTitle={module?.title || ""}
