@@ -31,6 +31,12 @@ export default function AuthGate({
   const navigating = useRef(false);
 
   useEffect(() => {
+    if (!app) {
+      console.error('Firebase app not initialized. Check environment variables.');
+      router.replace("/login");
+      return;
+    }
+
     const auth = getAuth(app);
 
     const unsub = onAuthStateChanged(auth, async (user) => {

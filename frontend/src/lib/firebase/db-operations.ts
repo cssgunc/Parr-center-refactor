@@ -31,6 +31,9 @@ import {
 
 // get module by ID - DOES NOT include steps subcollection
 export const getModuleById = async (moduleId: string): Promise<Module> => {
+  if (!db) {
+    throw new Error("Firebase database not initialized. Check environment variables.");
+  }
   const moduleDocRef = doc(db, "modules", moduleId);
   const moduleDoc = await getDoc(moduleDocRef);
 
