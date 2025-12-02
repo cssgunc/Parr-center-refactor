@@ -34,6 +34,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
     // 1️⃣ Watch for Auth state (get current user)
+    if (!auth) {
+      setLoading(false);
+      router.push("/login");
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
         router.push("/login");

@@ -17,7 +17,7 @@ import { getUserRole } from "@/lib/firebase/Authentication/GetUserRole";
 import { usePathname } from "next/navigation";
 
 export default function Navbar() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth || undefined);
   const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
 

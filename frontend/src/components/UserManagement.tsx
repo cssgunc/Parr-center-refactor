@@ -32,7 +32,7 @@ interface UserData {
 }
 
 export default function UserManagement() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth || undefined);
   const [users, setUsers] = useState<UserData[]>([]); //Holds Users
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(""); //search query state

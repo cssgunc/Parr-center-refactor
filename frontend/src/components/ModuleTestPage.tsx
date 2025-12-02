@@ -21,7 +21,7 @@ import FreeResponseStepView from "./FreeResponseStepView";
 import QuizStepView from "./QuizStepView";
 
 export default function ModuleTestPage() {
-  const [user, authLoading] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth || undefined);
   const [module, setModule] = useState<Module | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
   const [loading, setLoading] = useState(true);

@@ -15,7 +15,7 @@ import ModuleEditor from './ModuleEditor';
 
 export default function ModulesPage() {
   // ===== FIREBASE AUTH =====
-  const [user, authLoading] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth || undefined);
 
   // ===== ZUSTAND STORE =====
   const {

@@ -11,7 +11,7 @@ import { JournalEntry } from '@/lib/firebase/types';
 import { debounce } from '@/utils/debounce';
 
 export function useJournal() {
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading, error] = useAuthState(auth || undefined);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
