@@ -10,6 +10,9 @@ import { Container, Typography, Box, Input } from "@mui/material";
 import { useEffect, useState } from "react";
 import ModuleTestPage from "@/components/ModuleTestPage";
 
+// Force dynamic rendering to prevent static generation issues with Firebase Auth
+export const dynamic = 'force-dynamic';
+
 export default function ModulesPage() {
   return (
     <Container

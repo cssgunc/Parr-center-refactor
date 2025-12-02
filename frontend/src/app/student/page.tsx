@@ -1,9 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import ModuleContentMUI from "@/components/ModuleContentMUI";
 import AuthGate from "@/components/AuthGate";
 import { auth } from "../../lib/firebase/firebaseConfig";
+
+// Force dynamic rendering to prevent static generation issues with Firebase Auth
+export const dynamic = 'force-dynamic';
 
 export default function StudentPage() {
   /**
@@ -13,7 +16,14 @@ export default function StudentPage() {
    */
   const [selectedModule, setSelectedModule] = useState<string>("");
   const [index, setIndex] = useState<number>(0);
-  const userId = auth.currentUser ? auth.currentUser.uid : "";
+  const [userId, setUserId] = useState<string>("");
+
+  useEffect(() => {
+    // Only access auth.currentUser in the browser
+    if (typeof window !== 'undefined' && auth.currentUser) {
+      setUserId(auth.currentUser.uid);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen">

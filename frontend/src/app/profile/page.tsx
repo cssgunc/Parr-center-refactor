@@ -20,6 +20,9 @@ import {
 } from "../../components/progress";
 import Image from "next/image";
 
+// Force dynamic rendering to prevent static generation issues with Firebase Auth
+export const dynamic = 'force-dynamic';
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);

@@ -1,6 +1,9 @@
 "use client";
 import AuthGate from "@/components/AuthGate";
 
+// Force dynamic rendering to prevent static generation issues with Firebase Auth
+export const dynamic = 'force-dynamic';
+
 /**
  * HOME COMPONENT
  *

@@ -5,6 +5,9 @@ import ModulesPage from "@/components/ModulesPage";
 import { useState } from "react";
 import UserManagement from "@/components/UserManagement";
 
+// Force dynamic rendering to prevent static generation issues with Firebase Auth
+export const dynamic = 'force-dynamic';
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<"modules" | "users">("modules");
   return (
