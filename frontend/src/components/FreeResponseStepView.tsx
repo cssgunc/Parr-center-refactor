@@ -16,6 +16,7 @@ import { saveFreeResponseToJournal } from "@/lib/firebase/db-operations";
 
 interface FreeResponseProps {
   step: FreeResponseStep;
+  stepId: string;
   userId: string;
   moduleId: string;
   moduleTitle: string;
@@ -31,6 +32,7 @@ interface FreeResponseProps {
  */
 export default function FreeResponseStepView({
   step,
+  stepId,
   userId,
   moduleId,
   moduleTitle,
@@ -52,7 +54,8 @@ export default function FreeResponseStepView({
         moduleId,
         moduleTitle,
         step.prompt,
-        response
+        response,
+        stepId
       );
       setSaveSuccess(true);
     } catch (err: any) {
@@ -68,10 +71,12 @@ export default function FreeResponseStepView({
       sx={{
         display: "flex",
         flexDirection: "column",
-        width: "100%",
-        minHeight: "100vh",
+        width: "80%",
         bgcolor: "background.default",
         position: "relative",
+        borderRadius: "16px",
+        my: 4,
+        border: `1px solid ${theme.palette.grey[300]}`,
       }}
     >
       {/* Main Content Container */}
@@ -80,24 +85,23 @@ export default function FreeResponseStepView({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          px: "8vw",
-          pb: 12,
-          flex: 1,
-          position: "relative",
+          p: 3,
         }}
       >
         {/* Journal Entry Title */}
         <Typography
-          variant="h2"
+          variant="h4"
+          component={"h1"}
           sx={{
-            fontSize: "2.0 rem",
+            fontSize: "2rem",
             fontWeight: "bold",
             fontFamily: "var(--font-primary)",
             color: theme.palette.common.black,
-            mb: 3,
-            textAlign: "center",
             width: "100%",
             maxWidth: "1200px",
+            borderBottom: `1px solid ${theme.palette.grey[200]}`,
+            pb: 3,
+            mb: 3,
           }}
         >
           {step.title}
@@ -194,7 +198,7 @@ export default function FreeResponseStepView({
               fontSize: "1rem",
               textTransform: "none",
               "&:hover": {
-                bgcolor: "#002244",
+                bgcolor: theme.palette.primary.dark,
               },
               display: "inline-flex",
               alignItems: "center",

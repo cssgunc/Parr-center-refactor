@@ -8,14 +8,14 @@ import UserManagement from "@/components/UserManagement";
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<"modules" | "users">("modules");
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 border rounded-xl border-gray-200">
       <AuthGate requireAdmin>
         {
           // ===== ADMIN VIEW =====
           // This is the admin dashboard where users can manage modules and feature
           <div>
             {/* Admin Dashboard Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="bg-white border-b rounded-t-xl border-gray-200 px-6 py-4">
               <div className="flex items-center justify-between">
                 {/* Page title */}
                 <h1 className="text-2xl font-bold text-gray-900">

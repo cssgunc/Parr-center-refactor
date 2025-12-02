@@ -150,7 +150,7 @@ export default function ProfilePage() {
                 ).toLocaleDateString()}
               </p>
               <p>
-                <span className="font-medium text-gray-700">Last Active:</span>{" "}
+                <span className="font-medium text-gray-700">Last Login:</span>{" "}
                 {(user.lastLoginAt instanceof Date
                   ? user.lastLoginAt
                   : user.lastLoginAt.toDate()

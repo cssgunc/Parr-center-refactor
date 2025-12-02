@@ -40,14 +40,15 @@ export default function FlashcardsStepView({ step }: FlashcardStepProps) {
     <Box
       sx={{
         width: "80%",
-        maxWidth: "1400px",
         height: "90vh",
         mx: "auto",
         display: "flex",
         flexDirection: "column",
         bgcolor: "white",
         borderRadius: "16px",
+        border: `1px solid ${theme.palette.grey[300]}`,
         overflow: "hidden",
+        my: 4,
       }}
     >
       {/* Header */}

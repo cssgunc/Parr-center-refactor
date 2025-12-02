@@ -242,7 +242,7 @@ export const createUser = async (userData: Partial<User>) => {
       const journalRef = doc(db, "users", userData.id!, "journal", module.id);
       await setDoc(journalRef, {
         title: module.title,
-        body: "",
+        body: {},
         moduleId: module.id,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -335,7 +335,9 @@ export const updateQuizScore = async (
   if (progressDoc.exists()) {
     const progressData = progressDoc.data();
     const currentScores = progressData.quizScores || {};
-    currentScores[stepId] = score;
+    if (currentScores[stepId] === undefined || score > currentScores[stepId]) {
+      currentScores[stepId] = score;
+    }
 
     await updateDoc(progressRef, {
       quizScores: currentScores,
@@ -423,23 +425,29 @@ export const getJournalEntryByStepId = async (
 ): Promise<JournalEntry | null> => {
   try {
     const journalRef = collection(db, "users", userId, "journal");
-    const journalQuery = query(journalRef, where("stepId", "==", stepId));
-    const journalSnapshot = await getDocs(journalQuery);
+    const snapshot = await getDocs(journalRef);
 
-    if (!journalSnapshot.empty) {
-      const doc = journalSnapshot.docs[0];
-      return {
-        id: doc.id,
-        ...doc.data(),
-      } as JournalEntry;
-    } else {
-      return null;
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      const bodyMap = data.body as Record<string, [string, string]> | undefined;
+
+      if (!bodyMap) continue;
+
+      if (bodyMap[stepId]) {
+        return {
+          id: docSnap.id,
+          ...data,
+        } as JournalEntry;
+      }
     }
+
+    return null;
   } catch (error) {
     console.error("Error fetching journal entry by stepId:", error);
     return null;
   }
 };
+
 
 export const createJournalEntry = async (
   userId: string,
@@ -509,50 +517,37 @@ export const saveFreeResponseToJournal = async (
   moduleId: string,
   moduleTitle: string,
   prompt: string,
-  answer: string
+  answer: string,
+  stepId: string
 ): Promise<void> => {
   try {
     const journalRef = doc(db, "users", userId, "journal", moduleId);
     const journalDoc = await getDoc(journalRef);
 
-    let currentBody = "";
+    // Each entry is [prompt, answer]
+    const newEntry: [string, string] = [prompt, answer];
 
     if (journalDoc.exists()) {
-      currentBody = journalDoc.data().body || "";
-    }
+      const data = journalDoc.data();
+      const body =
+        (data.body as Record<string, [string, string]>) ?? {};
 
-    // Parse existing body to find and update the prompt section
-    const sections = currentBody.split("\n\n").filter((s) => s.trim());
-    let promptFound = false;
+      // upsert this step
+      body[stepId] = newEntry;
 
-    const updatedSections = sections.map((section) => {
-      const lines = section.split("\n");
-      if (lines[0] === prompt) {
-        promptFound = true;
-        return `${prompt}\n${answer}`;
-      }
-      return section;
-    });
-
-    // If prompt not found, append new section
-    if (!promptFound) {
-      updatedSections.push(`${prompt}\n${answer}`);
-    }
-
-    const newBody = updatedSections.join("\n\n");
-
-    if (journalDoc.exists()) {
-      // Update existing journal entry
       await updateDoc(journalRef, {
-        body: newBody,
+        body,
+        moduleId, // keep moduleId consistent
         updatedAt: serverTimestamp(),
       });
     } else {
-      // Create new journal entry (edge case: module added after account creation)
+      // Create new doc with a body map
       await setDoc(journalRef, {
         title: moduleTitle,
-        body: newBody,
-        moduleId: moduleId,
+        moduleId,
+        body: {
+          [stepId]: newEntry,
+        },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

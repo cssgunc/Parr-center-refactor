@@ -17,7 +17,7 @@ export default function VideoStepView({ step }: VideoStepProps) {
         sx={{
           display: "flex",
           flexDirection: "column",
-          width: "100%",
+          width: "80%",
           p: 4,
         }}
       >

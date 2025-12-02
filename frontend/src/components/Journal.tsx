@@ -20,6 +20,8 @@ import {
 } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LockIcon from '@mui/icons-material/Lock';
+import { Tooltip } from '@mui/material';
 
 interface JournalUIState {
   sortMode: 'updated' | 'created';
@@ -29,6 +31,7 @@ interface JournalUIState {
 export function Journal() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
 
   const {
     entries,
@@ -61,6 +64,7 @@ export function Journal() {
       }
     }
   }, []);
+
   
   // Save UI preferences
   useEffect(() => {
@@ -71,30 +75,71 @@ export function Journal() {
     localStorage.setItem(`journal:ui`, JSON.stringify(uiState));
   }, [sortMode, searchQuery]);
   
+  const getEntryBodyText = (entry: any): string => {
+    const body = entry.body;
+  
+    if (!body) return '';
+  
+    // Normal journal entry: body is a plain string
+    if (typeof body === 'string') {
+      return body;
+    }
+  
+    // Module-linked entry: body is a map { [stepId]: [prompt, answer] }
+    if (typeof body === 'object') {
+      try {
+        const sections = Object.values(body) as [string, string][];
+    
+        return sections
+          .map(([prompt, answer]) => {
+            const promptLine = `${prompt.trim()}:`;
+            const answerLine = `- ${answer.trim()}`;
+            return `${promptLine}\n${answerLine}`;
+          })
+          .join('\n\n');
+      } catch {
+        return '';
+      }
+    }
+    
+  
+    return '';
+  };
+  
+
   // Filter and sort entries
   const filteredEntries = entries
-    .filter(entry => 
-      entry.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      entry.body.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => {
-      const rawDateA = sortMode === 'updated' ? a.updatedAt : a.createdAt;
-      const rawDateB = sortMode === 'updated' ? b.updatedAt : b.createdAt;
+  .filter(entry => {
+    const q = searchQuery.toLowerCase();
+    const bodyText = getEntryBodyText(entry).toLowerCase();
 
-      const dateA = rawDateA instanceof Date ? rawDateA :
-        (rawDateA && typeof rawDateA === 'object' && 'toDate' in rawDateA && typeof rawDateA.toDate === 'function')
-          ? rawDateA.toDate()
-          : new Date();
+    return (
+      entry.title.toLowerCase().includes(q) ||
+      bodyText.includes(q)
+    );
+  })
+  .sort((a, b) => {
+    const rawDateA = sortMode === 'updated' ? a.updatedAt : a.createdAt;
+    const rawDateB = sortMode === 'updated' ? b.updatedAt : b.createdAt;
 
-      const dateB = rawDateB instanceof Date ? rawDateB :
-        (rawDateB && typeof rawDateB === 'object' && 'toDate' in rawDateB && typeof rawDateB.toDate === 'function')
-          ? rawDateB.toDate()
-          : new Date();
+    const dateA = rawDateA instanceof Date
+      ? rawDateA
+      : (rawDateA && typeof rawDateA === 'object' && 'toDate' in rawDateA && typeof rawDateA.toDate === 'function')
+        ? rawDateA.toDate()
+        : new Date();
 
-      return dateB.getTime() - dateA.getTime();
-    });
+    const dateB = rawDateB instanceof Date
+      ? rawDateB
+      : (rawDateB && typeof rawDateB === 'object' && 'toDate' in rawDateB && typeof rawDateB.toDate === 'function')
+        ? rawDateB.toDate()
+        : new Date();
+
+    return dateB.getTime() - dateA.getTime();
+  });
+
 
   const activeEntry = entries.find(entry => entry.id === activeId);
+  const isLocked = !!activeEntry?.moduleId;
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -168,15 +213,13 @@ export function Journal() {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
+    <Box sx={{ display: 'flex', height: '100vh', border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '16px', overflow: 'hidden' }}>
       {/* Left Sidebar - List View */}
       <Box sx={{
         width: isMobile ? '100%' : '30%',
         minWidth: 300,
         display: isMobile && isEditing ? 'none' : 'block',
         height: '100%',
-        borderRight: 1,
-        borderColor: 'divider'
       }}>
         <Card square elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Stack spacing={1} p={2}>
@@ -256,11 +299,22 @@ export function Journal() {
                     }
                   }}
                 >
-                  <Typography variant="subtitle1" fontWeight={activeId === entry.id ? 'bold' : 'normal'} noWrap>
-                    {entry.title || 'Untitled'}
-                  </Typography>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={activeId === entry.id ? 'bold' : 'normal'}
+                      noWrap
+                    >
+                      {entry.title || 'Untitled'}
+                    </Typography>
+                    {entry.moduleId && (
+                      <Tooltip title="Linked to a module – read-only">
+                        <LockIcon fontSize="small" />
+                      </Tooltip>
+                    )}
+                  </Box>
                   <Typography variant="body2" color="text.secondary" noWrap>
-                    {entry.body.substring(0, 100)}
+                    {getEntryBodyText(entry).substring(0, 100)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {formatRelative(entry.updatedAt)}
@@ -289,15 +343,20 @@ export function Journal() {
                 )}
                 <Input
                   value={activeEntry.title}
-                  onChange={(e) => updateEntry(activeId!, { title: e.target.value })}
-                  placeholder="Title"
+                  onChange={(e) => {
+                    if (!isLocked) {
+                      updateEntry(activeId!, { title: e.target.value });
+                    }
+                  }}
+                  placeholder={isLocked ? 'Title (locked – linked to a module)' : 'Title'}
                   fullWidth
+                  inputProps={{ readOnly: isLocked }}
                   sx={{ 
                     fontSize: '1.25rem', 
                     fontWeight: 'bold',
                     '& input': { py: 1 }
                   }}
-                  aria-label="Note title"
+                  aria-label={isLocked ? 'Locked note title' : 'Note title'}
                 />
                 <Button 
                   variant="outlined" 
@@ -320,11 +379,20 @@ export function Journal() {
               <Divider />
               
               <TextField
-                value={activeEntry.body}
-                onChange={(e) => updateEntry(activeId!, { body: e.target.value })}
-                placeholder="Start writing..."
+                value={getEntryBodyText(activeEntry)}
+                onChange={(e) => {
+                  if (!isLocked) {
+                    updateEntry(activeId!, { body: e.target.value });
+                  }
+                }}
+                placeholder={
+                  isLocked
+                    ? 'This note is locked because it is linked to a module.'
+                    : 'Start writing...'
+                }
                 multiline
                 fullWidth
+                inputProps={{ readOnly: isLocked }}
                 minRows={10}
                 sx={{
                   flex: 1,
@@ -339,7 +407,6 @@ export function Journal() {
                     width: '100%'
                   }
                 }}
-                inputProps={{ 'aria-label': 'Note body' }}
               />
             </>
           ) : (
