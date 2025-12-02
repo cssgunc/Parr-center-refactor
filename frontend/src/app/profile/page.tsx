@@ -209,15 +209,19 @@ export default function ProfilePage() {
           </button>
 
           <button
-            onClick={() =>
+            onClick={() => {
+              if (!auth) {
+                router.push("/login");
+                return;
+              }
               signOut(auth)
                 .then(() => {
                   router.push("/login");
                 })
                 .catch((error) => {
                   console.error("❌ Error signing out:", error);
-                })
-            }
+                });
+            }}
             className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
           >
             Sign Out
