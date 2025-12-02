@@ -6,6 +6,7 @@ import { getPublicModules } from "@/lib/firebase/db-operations";
 interface Module {
   id: string;
   title: string;
+  order: number;
 }
 
 interface SidebarProps {
@@ -25,10 +26,13 @@ export default function Sidebar({ selectedModule, onSelect, onSelectIndex }: Sid
   useEffect(() => {
     const fetchModules = async () => {
       const modulesData = await getPublicModules();
-      const mappedModules = modulesData.map(mod => ({
-        id: mod.id,
-        title: mod.title
-      }));
+      const mappedModules = modulesData
+        .map(mod => ({
+          id: mod.id,
+          title: mod.title,
+          order: mod.order || 999 // Default high order for modules without order
+        }))
+        .sort((a, b) => a.order - b.order); // Sort by order ascending
       setModules(mappedModules);
     };
     fetchModules();

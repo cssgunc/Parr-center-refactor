@@ -47,14 +47,25 @@ export const getModuleById = async (moduleId: string): Promise<Module> => {
 export const createModule = async (
   moduleData: Partial<Module>
 ): Promise<Module> => {
+  // If no order is provided, find the next available order
+  let order = moduleData.order;
+  if (!order) {
+    const existingModules = await getPublicModules();
+    const existingOrders = existingModules
+      .map(m => m.order || 0)
+      .filter(o => o > 0);
+    order = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1;
+  }
+
   const newModule = {
     ...moduleData,
     stepCount: moduleData.stepCount || 0,
+    order,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
   const moduleDocRef = await addDoc(collection(db!, "modules"), newModule);
-  return { id: moduleDocRef.id, ...moduleData } as Module;
+  return { id: moduleDocRef.id, ...moduleData, order, stepCount: moduleData.stepCount || 0 } as Module;
 };
 
 export const updateModule = async (moduleId: string, moduleData: any) => {
@@ -64,6 +75,37 @@ export const updateModule = async (moduleId: string, moduleData: any) => {
     updatedAt: serverTimestamp(),
   });
   return { id: moduleId, ...moduleData };
+};
+
+// Utility function to assign unique orders to existing modules without order
+export const assignOrdersToExistingModules = async (): Promise<void> => {
+  try {
+    const modules = await getPublicModules();
+    const modulesWithoutOrder = modules.filter(m => !m.order);
+
+    if (modulesWithoutOrder.length === 0) {
+      console.log("All modules already have order values");
+      return;
+    }
+
+    // Find the highest existing order
+    const existingOrders = modules
+      .map(m => m.order || 0)
+      .filter(o => o > 0);
+    let nextOrder = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1;
+
+    // Assign orders to modules without them
+    for (const module of modulesWithoutOrder) {
+      await updateModule(module.id, { order: nextOrder });
+      console.log(`Assigned order ${nextOrder} to module "${module.title}"`);
+      nextOrder++;
+    }
+
+    console.log(`Successfully assigned orders to ${modulesWithoutOrder.length} modules`);
+  } catch (error) {
+    console.error("Error assigning orders to existing modules:", error);
+    throw error;
+  }
 };
 
 export const deleteModule = async (

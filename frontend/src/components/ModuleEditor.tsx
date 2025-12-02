@@ -26,6 +26,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    order: 1,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -38,18 +39,32 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
       setFormData({
         title: module.title,
         description: module.description,
+        order: module.order ?? 1,
       });
     } else {
+      // For new modules, find the next available order number
+      const existingOrders = modules.map(m => m.order || 0).filter(o => o > 0);
+      const nextOrder = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1;
       setFormData({
         title: "",
         description: "",
+        order: nextOrder,
       });
     }
-  }, [module]);
+  }, [module, modules]);
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
       alert("Please enter a module title");
+      return;
+    }
+
+    // Check for duplicate order numbers
+    const existingModuleWithOrder = modules.find(m =>
+      m.order === formData.order && m.id !== module?.id
+    );
+    if (existingModuleWithOrder) {
+      alert(`Order number ${formData.order} is already used by "${existingModuleWithOrder.title}". Please choose a different number.`);
       return;
     }
 
@@ -60,12 +75,14 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
         await updateModuleData(module.id, {
           title: formData.title.trim(),
           description: formData.description.trim(),
+          order: formData.order,
         });
       } else {
         // Create new module
         await createNewModule(
           formData.title.trim(),
-          formData.description.trim()
+          formData.description.trim(),
+          formData.order
         );
       }
       onClose();
@@ -224,7 +241,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                 placeholder="Enter module title"
               />
             </div>
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
@@ -238,6 +255,25 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                 rows={3}
                 placeholder="Enter module description"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Display Order *
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={formData.order}
+                onChange={(e) =>
+                  setFormData({ ...formData, order: parseInt(e.target.value) || 1 })
+                }
+                disabled={isSaving}
+                className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                placeholder="1"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Order in which modules appear on the student page
+              </p>
             </div>
           </div>
 

@@ -35,6 +35,7 @@ export interface Module {
   stepCount: number;
   publishedVersion?: number;
   thumbnailUrl?: string;
+  order?: number; // Display order on student page
 }
 
 // Quiz Question (still needed by QuizStep)

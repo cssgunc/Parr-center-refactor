@@ -60,8 +60,8 @@ interface ModuleStore {
 
   fetchModules: () => Promise<void>; // Fetch all public modules from Firebase
   fetchModuleWithSteps: (moduleId: string) => Promise<ModuleWithSteps>; // Fetch a single module with its steps
-  createNewModule: (title: string, description: string) => Promise<void>; // Create a new module in Firebase
-  updateModuleData: (moduleId: string, updates: { title?: string; description?: string }) => Promise<void>; // Update module metadata
+  createNewModule: (title: string, description: string, order: number) => Promise<void>; // Create a new module in Firebase
+  updateModuleData: (moduleId: string, updates: { title?: string; description?: string; order?: number }) => Promise<void>; // Update module metadata
   deleteModuleData: (moduleId: string) => Promise<void>; // Delete module and all its steps
   setSelectedModule: (module: ModuleWithSteps | null) => void; // Set selected module for editing
   setIsEditing: (editing: boolean) => void; // Toggle editing mode
@@ -150,7 +150,7 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
    *
    * Creates a new module in Firebase and adds it to the store.
    */
-  createNewModule: async (title: string, description: string) => {
+  createNewModule: async (title: string, description: string, order: number) => {
     const { userId } = get();
     if (!userId) {
       set({ error: 'User ID is required to create a module' });
@@ -167,6 +167,7 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
         isPublic: true,
         tags: [],
         stepCount: 0,
+        order,
       });
 
       // Add to local state with empty steps array
