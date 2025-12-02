@@ -67,8 +67,7 @@ export default function RootLayout({
 
             <main className="flex-1">
               <div
-                className="relative mx-auto border-b border-gray-500
-                           pl-24 pr-24 pt-12 pb-12 overflow-hidden"
+                className="relative w-full min-h-full overflow-hidden"
                 style={{
                   background: "linear-gradient(to bottom, white 0%, white 1%, #abd8ff 100%)",
                 }}

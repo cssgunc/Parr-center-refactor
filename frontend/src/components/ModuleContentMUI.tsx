@@ -204,6 +204,11 @@ export default function ModuleContentMUI({
                 borderRadius: "16px",
                 px: 3,
                 py: 1,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                },
               }}
             >
               Back
@@ -216,6 +221,11 @@ export default function ModuleContentMUI({
               borderRadius: "16px",
               px: 3,
               py: 1,
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+              },
             }}
           >
             Previous
@@ -234,8 +244,11 @@ export default function ModuleContentMUI({
                 px: 3,
                 py: 1,
                 bgcolor: (t) => t.palette.common.black,
+                transition: "all 0.3s ease",
                 "&:hover": {
                   bgcolor: (t) => t.palette.grey[800],
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.3)",
                 },
               }}
             >
@@ -251,9 +264,6 @@ export default function ModuleContentMUI({
                 px: 3,
                 py: 1,
                 bgcolor: (t) => t.palette.common.black,
-                "&:hover": {
-                  bgcolor: (t) => t.palette.grey[800],
-                },
               }}
             >
               Finish
@@ -268,8 +278,11 @@ export default function ModuleContentMUI({
               px: 3,
               py: 1,
               bgcolor: (t) => t.palette.common.black,
+              transition: "all 0.3s ease",
               "&:hover": {
                 bgcolor: (t) => t.palette.grey[800],
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.3)",
               },
             }}
           >
@@ -284,9 +297,6 @@ export default function ModuleContentMUI({
               px: 3,
               py: 1,
               bgcolor: (t) => t.palette.common.black,
-              "&:hover": {
-                bgcolor: (t) => t.palette.grey[800],
-              },
             }}
           >
             Next
@@ -352,125 +362,274 @@ export default function ModuleContentMUI({
       sx={{
         display: "flex",
         flexDirection: "column",
-        m: "8vw",
+        px: "4vw",
+        pt: "2vw",
+        pb: "4vw",
       }}
     >
-      <Typography
-        variant="h3"
-        component="h1"
-        sx={{
-          fontSize: "3rem",
-          fontWeight: "bold",
-          fontFamily: "var(--font-secondary)",
-          color: (t) => t.palette.error.main,
-          mb: 0.5,
-        }}
-      >
-        Welcome to Module {index + 1}
-      </Typography>
-
-      <Typography
-        variant="h3"
-        component="h2"
-        sx={{
-          fontSize: "3rem",
-          fontWeight: "bold",
-          fontFamily: "var(--font-secondary)",
-          color: (t) => t.palette.error.main,
-          mb: 4,
-        }}
-      >
-        {content?.title}
-      </Typography>
-
+      {/* Decorative Header Section */}
       <Box
         sx={{
-          display: "flex",
-          gap: 1,
+          position: "relative",
           mb: 4,
+          pb: 3,
         }}
       >
-        <Button
-          onClick={() => handleStartModule()}
-          variant="contained"
+        {/* Decorative background shape - more visible */}
+        <Box
           sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: "16px",
-            bgcolor: (t) => t.palette.common.black,
-            fontWeight: "bold",
-            color: "white",
-            fontSize: "1.25rem",
-            "&:hover": {
-              bgcolor: (t) => t.palette.common.black,
-            },
+            position: "absolute",
+            top: -40,
+            left: -40,
+            width: "200px",
+            height: "200px",
+            background: "linear-gradient(135deg, rgba(171, 216, 255, 0.5) 0%, rgba(171, 216, 255, 0.25) 100%)",
+            borderRadius: "50%",
+            filter: "blur(40px)",
+            zIndex: 0,
           }}
-        >
-          {userProgress ? "Continue Module" : "Start Module"}
-        </Button>
-      </Box>
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            top: 20,
+            right: -20,
+            width: "150px",
+            height: "150px",
+            background: "linear-gradient(135deg, rgba(171, 216, 255, 0.4) 0%, rgba(171, 216, 255, 0.15) 100%)",
+            borderRadius: "50%",
+            filter: "blur(30px)",
+            zIndex: 0,
+          }}
+        />
+        
+        <Box sx={{ position: "relative", zIndex: 1 }}>
+          <Typography
+            variant="h3"
+            component="h1"
+            sx={{
+              fontSize: "3rem",
+              fontWeight: "bold",
+              fontFamily: "var(--font-secondary)",
+              color: (t) => t.palette.error.main,
+              mb: 0.5,
+              textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            Welcome to Module {index + 1}
+          </Typography>
 
-      <Box
-        sx={{
-          mb: 4,
-        }}
-      >
-        <Typography
-          sx={{
-            fontWeight: 600,
-            fontSize: "1.125rem",
-            mb: 1,
-          }}
-        >
-          Current Progress
-        </Typography>
-        <Box className="flex flex-row gap-5 mt-5">
-          {Array.from({ length: steps.length }, (_, i) => i + 1).map((step) => (
-            <Box key={step}>
-              {userProgress && step <= userProgress.completedStepIds.length ? (
-                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-green-600 hover:bg-green-700">
-                  {step}
-                </div>
-              ) : (
-                <div className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-gray-100 hover:bg-gray-200">
-                  {step}
-                </div>
-              )}
-            </Box>
-          ))}
-          {steps.length > 0 && userProgress?.completedStepIds.length === steps.length && (
-            <CheckCircleIcon 
-              sx={{
-                color: (t) => t.palette.success.main,
-                fontSize: '2rem',
-                alignSelf: 'center',
-              }}
-            />
-          )}
+          <Typography
+            variant="h3"
+            component="h2"
+            sx={{
+              fontSize: "3rem",
+              fontWeight: "bold",
+              fontFamily: "var(--font-secondary)",
+              color: (t) => t.palette.error.main,
+              mb: 2,
+              textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            {content?.title}
+          </Typography>
+          
+          {/* Decorative divider line */}
+          <Box
+            sx={{
+              width: "80px",
+              height: "4px",
+              background: "linear-gradient(90deg, rgba(171, 216, 255, 0.8) 0%, rgba(171, 216, 255, 0.2) 100%)",
+              borderRadius: "2px",
+              mt: 2,
+            }}
+          />
         </Box>
       </Box>
 
+      {/* Card-based layout with shadows and gradient overlay */}
       <Box
         sx={{
+          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%)",
+          borderRadius: "24px",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05)",
+          p: 4,
+          mb: 4,
+          position: "relative",
+          overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "4px",
+            background: "linear-gradient(90deg, rgba(171, 216, 255, 0.6) 0%, rgba(171, 216, 255, 0.2) 50%, rgba(171, 216, 255, 0.6) 100%)",
+          },
         }}
       >
-        <Typography
+        <Box
           sx={{
-            fontWeight: 600,
-            fontSize: '1.125rem',
-            mb: 1,
+            display: "flex",
+            gap: 1,
+            mb: 4,
           }}
         >
-          Module Overview
-        </Typography>
-        <Typography
+          <Button
+            onClick={() => handleStartModule()}
+            variant="contained"
+            sx={{
+              py: 1.5,
+              px: 3,
+              borderRadius: "16px",
+              bgcolor: (t) => t.palette.common.black,
+              fontWeight: "bold",
+              color: "white",
+              fontSize: "1.25rem",
+              transition: "all 0.3s ease",
+              transform: "translateY(0)",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              "&:hover": {
+                bgcolor: (t) => t.palette.grey[800],
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.2)",
+              },
+              "&:active": {
+                transform: "translateY(0)",
+              },
+            }}
+          >
+            {userProgress ? "Continue Module" : "Start Module"}
+          </Button>
+        </Box>
+
+        <Box
           sx={{
-            color: (t) => t.palette.common.black,
-            lineHeight: '1.6',
+            mb: 4,
           }}
         >
-          {content?.description}
-        </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <Typography
+              sx={{
+                fontWeight: 600,
+                fontSize: "1.125rem",
+                position: "relative",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  bottom: -4,
+                  left: 0,
+                  width: "40px",
+                  height: "2px",
+                  background: "linear-gradient(90deg, rgba(171, 216, 255, 0.8) 0%, transparent 100%)",
+                  borderRadius: "1px",
+                },
+              }}
+            >
+              Current Progress
+            </Typography>
+          </Box>
+          <Box className="flex flex-row gap-5 mt-5 flex-wrap">
+            {Array.from({ length: steps.length }, (_, i) => i + 1).map((step) => (
+              <Box 
+                key={step}
+                sx={{
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-4px) scale(1.05)",
+                  },
+                }}
+              >
+                {userProgress && step <= userProgress.completedStepIds.length ? (
+                  <div 
+                    className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-white min-w-[32px] p-0 bg-green-600 cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg"
+                    style={{
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    {step}
+                  </div>
+                ) : (
+                  <div 
+                    className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-gray-100 cursor-pointer transition-all duration-300 hover:border-blue-300 hover:bg-blue-50"
+                    style={{
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    {step}
+                  </div>
+                )}
+              </Box>
+            ))}
+            {steps.length > 0 && userProgress?.completedStepIds.length === steps.length && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    transform: "scale(1.1)",
+                  },
+                }}
+              >
+                <CheckCircleIcon 
+                  sx={{
+                    color: (t) => t.palette.success.main,
+                    fontSize: '2rem',
+                    alignSelf: 'center',
+                    filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: -16,
+              left: 0,
+              width: "100%",
+              height: "1px",
+              background: "linear-gradient(90deg, transparent 0%, rgba(171, 216, 255, 0.3) 50%, transparent 100%)",
+            },
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2, mt: 3 }}>
+            <Typography
+              sx={{
+                fontWeight: 600,
+                fontSize: '1.125rem',
+                position: "relative",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  bottom: -4,
+                  left: 0,
+                  width: "40px",
+                  height: "2px",
+                  background: "linear-gradient(90deg, rgba(171, 216, 255, 0.8) 0%, transparent 100%)",
+                  borderRadius: "1px",
+                },
+              }}
+            >
+              Module Overview
+            </Typography>
+          </Box>
+          <Typography
+            sx={{
+              color: (t) => t.palette.common.black,
+              lineHeight: '1.6',
+              fontSize: "1rem",
+            }}
+          >
+            {content?.description}
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );
