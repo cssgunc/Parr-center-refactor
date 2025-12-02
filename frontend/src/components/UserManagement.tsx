@@ -32,7 +32,7 @@ interface UserData {
 }
 
 export default function UserManagement() {
-  const [user] = useAuthState(auth || undefined);
+  const [user] = useAuthState(auth!);
   const [users, setUsers] = useState<UserData[]>([]); //Holds Users
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(""); //search query state
@@ -46,7 +46,7 @@ export default function UserManagement() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const snapshot = await getDocs(collection(db, "users"));
+      const snapshot = await getDocs(collection(db!, "users"));
       const usersData: UserData[] = snapshot.docs.map((doc) => ({
         id: doc.id,
         email: doc.data().email || "",
@@ -64,7 +64,7 @@ export default function UserManagement() {
   //Toggles user's isAdmin status
   const toggleAdmin = async (user: UserData) => {
     try {
-      const docRef = doc(db, "users", user.id);
+      const docRef = doc(db!, "users", user.id);
       await updateDoc(docRef, {
         isAdmin: !user.isAdmin,
       });
@@ -91,7 +91,7 @@ export default function UserManagement() {
   const handlePasswordSubmit = async (passwordInput: string) => {
     try {
       // Fetch master password from Firebase config/settings document
-      const configRef = doc(db, "config", "settings");
+      const configRef = doc(db!, "config", "settings");
 
       const configSnap = await getDoc(configRef);
       console.log(configSnap);

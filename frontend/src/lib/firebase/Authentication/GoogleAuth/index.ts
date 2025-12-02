@@ -10,7 +10,7 @@ import { createUser, userSignupCheck } from "../../db-operations";
  */
 export const signInUserWithGoogleAuth = async () => {
   try {
-    const result = await signInWithPopup(auth, googleAuthProvider);
+    const result = await signInWithPopup(auth!, googleAuthProvider!);
     if (!result || !result.user) {
       throw new Error("No user found");
     }

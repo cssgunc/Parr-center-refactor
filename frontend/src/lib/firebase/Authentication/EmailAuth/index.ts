@@ -29,7 +29,7 @@ export const registerUser = async (
   try {
     //Create User
     const userCredential = await createUserWithEmailAndPassword(
-      auth,
+      auth!,
       email,
       password
     );
@@ -71,7 +71,7 @@ export const loginUserWithEmailAndPassword = async (
   try {
     //Login User
     const userCredential = await signInWithEmailAndPassword(
-      auth,
+      auth!,
       email,
       password
     );
@@ -99,7 +99,7 @@ export const updateUserPassword = async (
 ) => {
   try {
     //Check valid user
-    const user = auth.currentUser;
+    const user = auth && auth.currentUser;
     if (!user) {
       return;
     }

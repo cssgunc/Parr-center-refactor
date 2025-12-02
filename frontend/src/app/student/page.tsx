@@ -20,7 +20,7 @@ export default function StudentPage() {
 
   useEffect(() => {
     // Only access auth.currentUser in the browser
-    if (typeof window !== 'undefined' && auth.currentUser) {
+    if (typeof window !== 'undefined' && auth && auth.currentUser) {
       setUserId(auth.currentUser.uid);
     }
   }, []);

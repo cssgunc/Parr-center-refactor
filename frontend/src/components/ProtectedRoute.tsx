@@ -11,7 +11,7 @@ export default function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, loading] = useAuthState(auth || undefined);
+  const [user, loading] = useAuthState(auth!);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 

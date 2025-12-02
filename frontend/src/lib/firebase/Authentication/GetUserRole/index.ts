@@ -5,7 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 export async function getUserRole(uid: string) {
   try {
     //Edit based on layout of user storage in backend
-    const document = doc(db, "users", uid);
+    const document = doc(db!, "users", uid);
     const snapshot = await getDoc(document);
     if (!snapshot.exists) {
       return false;

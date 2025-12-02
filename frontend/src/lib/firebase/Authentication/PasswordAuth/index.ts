@@ -10,7 +10,7 @@ import { FirebaseError } from "firebase/app";
 export const forgotPassword = async (email: string) => {
   try {
     //Send Reset Password Link
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth!, email);
 
     //navigate back to Login Page
   } catch (error) {
