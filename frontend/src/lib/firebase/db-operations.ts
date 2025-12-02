@@ -532,8 +532,19 @@ export const saveFreeResponseToJournal = async (
 
     if (journalDoc.exists()) {
       const data = journalDoc.data();
-      const body =
-        (data.body as Record<string, [string, string]>) ?? {};
+      let body: Record<string, [string, string]>;
+
+      // Handle different body types
+      if (typeof data.body === 'string') {
+        // If body is a string (regular journal entry), convert to object structure
+        body = {};
+      } else if (typeof data.body === 'object' && data.body !== null) {
+        // If body is already an object (module-linked entry), use it
+        body = data.body as Record<string, [string, string]>;
+      } else {
+        // If body is null/undefined, create new object
+        body = {};
+      }
 
       // upsert this step
       body[stepId] = newEntry;

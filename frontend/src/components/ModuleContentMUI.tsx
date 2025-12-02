@@ -41,6 +41,7 @@ export default function ModuleContentMUI({
   const theme = useTheme();
 
   const handleStartModule = async () => {
+    if (!userId || !moduleId) return;
     if (!userProgress) {
       await startUserProgress(userId, moduleId);
       const newProgress = await getUserProgress(userId, moduleId);
@@ -61,13 +62,17 @@ export default function ModuleContentMUI({
     setCurrentStepIndex(0);  // Reset step navigation
 
     const fetchContent = async () => {
-      // Fetch all data in parallel and update all state together
-      // This prevents any state from being out of sync during the transition
-      const [content, moduleSteps, progress] = await Promise.all([
+      // Always fetch module content and steps
+      const [content, moduleSteps] = await Promise.all([
         getModuleById(moduleId),
-        getStepsByModuleId(moduleId),
-        getUserProgress(userId, moduleId)
+        getStepsByModuleId(moduleId)
       ]);
+
+      // Only fetch user progress if userId is available
+      let progress = null;
+      if (userId) {
+        progress = await getUserProgress(userId, moduleId);
+      }
 
       // Update all state at once - React will batch these updates
       setContent(content);
@@ -81,7 +86,7 @@ export default function ModuleContentMUI({
   }, [moduleId, userId]);
 
   useEffect(() => {
-    if (!showSteps || steps.length === 0) return;
+    if (!showSteps || steps.length === 0 || !userId) return;
   
     const currentStep = steps[currentStepIndex];
     if (currentStep.type !== "freeResponse") return;
@@ -120,6 +125,7 @@ export default function ModuleContentMUI({
 
   // Keep user progress updated
   const refreshProgress = () => {
+    if (!userId || !moduleId) return;
     getUserProgress(userId, moduleId).then((progress) => {
       setUserProgress(progress);
     });
