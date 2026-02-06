@@ -9,13 +9,12 @@
 
 import { useEffect, useState } from 'react';
 import { useModuleStore, ModuleWithSteps } from '@/store/moduleStore';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase/firebaseConfig';
+import { useAuth } from '@/hooks/useAuth';
 import ModuleEditor from './ModuleEditor';
 
 export default function ModulesPage() {
   // ===== FIREBASE AUTH =====
-  const [user, authLoading] = useAuthState(auth!);
+  const [user, authLoading] = useAuth();
 
   // ===== ZUSTAND STORE =====
   const {

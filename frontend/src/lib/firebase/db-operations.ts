@@ -25,6 +25,8 @@ import {
   StepType,
   STEP_COLLECTIONS,
   JournalEntry,
+  PollOption,
+  PollStep,
 } from "./types";
 
 // Module CRUD operations
@@ -611,5 +613,109 @@ export const saveFreeResponseToJournal = async (
   } catch (error) {
     console.error("Failed to save free response to journal:", error);
     throw new Error("Failed to save free response to journal");
+  }
+};
+
+// Poll voting operations
+
+export const submitPollVote = async (
+  moduleId: string,
+  stepId: string,
+  userId: string,
+  selectedOptionIds: string[]
+): Promise<void> => {
+  if (!db) {
+    throw new Error("Firebase database not initialized. Check environment variables.");
+  }
+
+  try {
+    // Get the current poll step
+    const pollRef = doc(db!, "modules", moduleId, "polls", stepId);
+    const pollDoc = await getDoc(pollRef);
+
+    if (!pollDoc.exists()) {
+      throw new Error("Poll not found");
+    }
+
+    const pollData = pollDoc.data() as PollStep;
+    
+    // Check if user has already voted
+    const voteRef = doc(db!, "modules", moduleId, "polls", stepId, "votes", userId);
+    const voteDoc = await getDoc(voteRef);
+
+    if (voteDoc.exists()) {
+      throw new Error("User has already voted in this poll");
+    }
+
+    // Record the user's vote
+    await setDoc(voteRef, {
+      userId,
+      optionIds: selectedOptionIds,
+      votedAt: serverTimestamp(),
+    });
+
+    // Update vote counts on the poll
+    const updatedOptions = pollData.options.map(option => {
+      if (selectedOptionIds.includes(option.id)) {
+        return { ...option, votes: option.votes + 1 };
+      }
+      return option;
+    });
+
+    await updateDoc(pollRef, {
+      options: updatedOptions,
+      updatedAt: serverTimestamp(),
+    });
+
+  } catch (error) {
+    console.error("Failed to submit poll vote:", error);
+    throw new Error("Failed to submit vote");
+  }
+};
+
+export const getUserPollVote = async (
+  moduleId: string,
+  stepId: string,
+  userId: string
+): Promise<{ optionIds: string[]; votedAt: any } | null> => {
+  if (!db) {
+    throw new Error("Firebase database not initialized. Check environment variables.");
+  }
+
+  try {
+    const voteRef = doc(db!, "modules", moduleId, "polls", stepId, "votes", userId);
+    const voteDoc = await getDoc(voteRef);
+
+    if (voteDoc.exists()) {
+      return voteDoc.data() as { optionIds: string[]; votedAt: any };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Failed to get user poll vote:", error);
+    throw new Error("Failed to get vote");
+  }
+};
+
+export const getPollResults = async (
+  moduleId: string,
+  stepId: string
+): Promise<PollStep> => {
+  if (!db) {
+    throw new Error("Firebase database not initialized. Check environment variables.");
+  }
+
+  try {
+    const pollRef = doc(db!, "modules", moduleId, "polls", stepId);
+    const pollDoc = await getDoc(pollRef);
+
+    if (!pollDoc.exists()) {
+      throw new Error("Poll not found");
+    }
+
+    return { id: pollDoc.id, ...pollDoc.data() } as PollStep;
+  } catch (error) {
+    console.error("Failed to get poll results:", error);
+    throw new Error("Failed to get poll results");
   }
 };

@@ -10,7 +10,7 @@ import {
 import { db, auth } from "@/lib/firebase/firebaseConfig";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useAuthState } from "react-firebase-hooks/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import MasterPasswordWindow from "./MasterPasswordWindow";
 import {
@@ -32,7 +32,7 @@ interface UserData {
 }
 
 export default function UserManagement() {
-  const [user] = useAuthState(auth!);
+  const [user] = useAuth();
   const [users, setUsers] = useState<UserData[]>([]); //Holds Users
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(""); //search query state

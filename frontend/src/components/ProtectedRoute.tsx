@@ -1,6 +1,5 @@
 "use client";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
@@ -11,7 +10,7 @@ export default function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, loading] = useAuthState(auth!);
+  const [user, loading] = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 

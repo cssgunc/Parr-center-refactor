@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 import {
   getModuleById,
   getStepsByModuleId,
@@ -14,14 +13,16 @@ import {
   VideoStep,
   FreeResponseStep,
   QuizStep,
+  PollStep,
 } from "@/lib/firebase/types";
 import FlashcardStep from "./FlashcardsStepView";
 import VideoStepView from "./VideoStepView";
 import FreeResponseStepView from "./FreeResponseStepView";
 import QuizStepView from "./QuizStepView";
+import PollStepView from "./PollStepView";
 
 export default function ModuleTestPage() {
-  const [user, authLoading] = useAuthState(auth!);
+  const [user, authLoading] = useAuth();
   const [module, setModule] = useState<Module | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
   const [loading, setLoading] = useState(true);
@@ -227,6 +228,14 @@ export default function ModuleTestPage() {
                     onChangeResponse={(value) =>
                       handleFreeResponseChange(currentStep.id, value)
                     }
+                  />
+                )}
+                {currentStep.type === "poll" && (
+                  <PollStepView
+                    step={currentStep as PollStep}
+                    stepId={currentStep.id}
+                    userId={user?.uid || ""}
+                    moduleId={MODULE_ID}
                   />
                 )}
               </>

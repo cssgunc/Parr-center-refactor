@@ -11,13 +11,12 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 import { getUserRole } from "@/lib/firebase/Authentication/GetUserRole";
 import { usePathname } from "next/navigation";
 
 export default function Navbar() {
-  const [user] = useAuthState(auth!);
+  const [user] = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
 

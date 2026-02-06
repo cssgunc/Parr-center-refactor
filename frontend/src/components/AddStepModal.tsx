@@ -6,6 +6,7 @@ import VideoEditorModal from "./step-editors/VideoEditorModal";
 import FlashcardsEditorModal from "./step-editors/FlashcardsEditorModal";
 import QuizEditorModal from "./step-editors/QuizEditorModal";
 import FreeResponseEditorModal from "./step-editors/FreeResponseEditorModal";
+import PollEditorModal from "./step-editors/PollEditorModal";
 
 interface AddFeatureModalProps {
   moduleId: string;
@@ -98,6 +99,26 @@ const stepTypes: {
       </svg>
     ),
   },
+  {
+    type: "poll",
+    name: "Poll",
+    description: "Create an ethical dilemma poll for voting",
+    icon: (
+      <svg
+        className="w-8 h-8 text-orange-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+        />
+      </svg>
+    ),
+  },
 ];
 
 export default function AddFeatureModal({
@@ -135,6 +156,14 @@ export default function AddFeatureModal({
       case "freeResponse":
         return (
           <FreeResponseEditorModal
+            moduleId={moduleId}
+            onClose={onClose}
+            onBack={() => setSelectedType(null)}
+          />
+        );
+      case "poll":
+        return (
+          <PollEditorModal
             moduleId={moduleId}
             onClose={onClose}
             onBack={() => setSelectedType(null)}
