@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { QuizStep, QuizQuestion } from '@/lib/firebase/types';
-import { useModuleStore } from '@/store/moduleStore';
+import { useState } from "react";
+import { QuizStep, QuizQuestion } from "@/lib/firebase/types";
+import { useModuleStore } from "@/store/moduleStore";
 
 interface QuizEditorModalProps {
   moduleId: string;
@@ -11,22 +11,28 @@ interface QuizEditorModalProps {
   step?: QuizStep;
 }
 
-export default function QuizEditorModal({ moduleId, onClose, onBack, step }: QuizEditorModalProps) {
+export default function QuizEditorModal({
+  moduleId,
+  onClose,
+  onBack,
+  step,
+}: QuizEditorModalProps) {
   const { modules, createNewStep, updateStepData, userId } = useModuleStore();
-  const module = modules.find(m => m.id === moduleId);
+  const module = modules.find((m) => m.id === moduleId);
 
   const [formData, setFormData] = useState({
-    title: step?.title || '',
+    title: step?.title || "",
     questions: step?.questions || [
       {
-        prompt: '',
-        choices: ['', '', '', ''],
+        prompt: "",
+        choices: ["", "", "", ""],
         correctIndex: 0,
+        choiceExplanations: ["", "", "", ""],
       },
     ],
     shuffle: step?.shuffle || false,
-    passingScore: step?.passingScore?.toString() || '70',
-    estimatedMinutes: step?.estimatedMinutes?.toString() || '',
+    passingScore: step?.passingScore?.toString() || "70",
+    estimatedMinutes: step?.estimatedMinutes?.toString() || "",
     isOptional: step?.isOptional || false,
   });
 
@@ -38,9 +44,10 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
       questions: [
         ...formData.questions,
         {
-          prompt: '',
-          choices: ['', '', '', ''],
+          prompt: "",
+          choices: ["", "", "", ""],
           correctIndex: 0,
+          choiceExplanations: ["", "", "", ""],
         },
       ],
     });
@@ -55,7 +62,11 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
     }
   };
 
-  const updateQuestion = (index: number, field: keyof QuizQuestion, value: any) => {
+  const updateQuestion = (
+    index: number,
+    field: keyof QuizQuestion,
+    value: any,
+  ) => {
     const newQuestions = [...formData.questions];
     newQuestions[index] = { ...newQuestions[index], [field]: value };
     setFormData({ ...formData, questions: newQuestions });
@@ -63,7 +74,15 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
   const addChoice = (questionIndex: number) => {
     const newQuestions = [...formData.questions];
-    newQuestions[questionIndex].choices.push('');
+    newQuestions[questionIndex].choices.push("");
+    if (!newQuestions[questionIndex].choiceExplanations) {
+      newQuestions[questionIndex].choiceExplanations = newQuestions[
+        questionIndex
+      ].choices
+        .slice(0, -1)
+        .map(() => "");
+    }
+    newQuestions[questionIndex].choiceExplanations.push("");
     setFormData({ ...formData, questions: newQuestions });
   };
 
@@ -74,6 +93,11 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
     if (question.choices.length > 2) {
       question.choices.splice(choiceIndex, 1);
 
+      // Also remove the corresponding explanation
+      if (question.choiceExplanations) {
+        question.choiceExplanations.splice(choiceIndex, 1);
+      }
+
       // Adjust correct index if necessary
       if (question.correctIndex >= choiceIndex) {
         question.correctIndex = Math.max(0, question.correctIndex - 1);
@@ -83,48 +107,85 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
     }
   };
 
-  const updateChoice = (questionIndex: number, choiceIndex: number, value: string) => {
+  const updateChoice = (
+    questionIndex: number,
+    choiceIndex: number,
+    value: string,
+  ) => {
     const newQuestions = [...formData.questions];
     newQuestions[questionIndex].choices[choiceIndex] = value;
     setFormData({ ...formData, questions: newQuestions });
   };
 
+  const updateChoiceExplanation = (
+    questionIndex: number,
+    choiceIndex: number,
+    value: string,
+  ) => {
+    const newQuestions = [...formData.questions];
+    if (!newQuestions[questionIndex].choiceExplanations) {
+      newQuestions[questionIndex].choiceExplanations = newQuestions[
+        questionIndex
+      ].choices.map(() => "");
+    }
+    newQuestions[questionIndex].choiceExplanations[choiceIndex] = value;
+    setFormData({ ...formData, questions: newQuestions });
+  };
+
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert('Please enter a quiz title');
+      alert("Please enter a quiz title");
       return;
     }
 
     const validQuestions = formData.questions.filter(
-      q => q.prompt.trim() && q.choices.filter(opt => opt.trim()).length >= 2
+      (q) =>
+        q.prompt.trim() && q.choices.filter((opt) => opt.trim()).length >= 2,
     );
 
     if (validQuestions.length === 0) {
-      alert('Please add at least one valid question');
+      alert("Please add at least one valid question");
       return;
     }
 
     // Clean up questions - remove empty choices and ensure correct index is valid
-    const cleanedQuestions = validQuestions.map(q => {
+    const cleanedQuestions = validQuestions.map((q) => {
+      const nonEmptyChoiceIndices = q.choices
+        .map((opt, i) => (opt.trim() ? i : -1))
+        .filter((i) => i !== -1);
+
       const question: any = {
         prompt: q.prompt.trim(),
-        choices: q.choices.filter(opt => opt.trim()),
-        correctIndex: Math.min(q.correctIndex, q.choices.filter(opt => opt.trim()).length - 1),
+        choices: q.choices.filter((opt) => opt.trim()),
+        correctIndex: Math.min(
+          q.correctIndex,
+          q.choices.filter((opt) => opt.trim()).length - 1,
+        ),
       };
       if (q.explanation) {
         question.explanation = q.explanation;
+      }
+      // Only include choiceExplanations for non-empty choices
+      if (q.choiceExplanations) {
+        const filteredExplanations = nonEmptyChoiceIndices.map(
+          (i) => q.choiceExplanations![i] || "",
+        );
+        // Only save if at least one explanation is non-empty
+        if (filteredExplanations.some((exp) => exp.trim())) {
+          question.choiceExplanations = filteredExplanations;
+        }
       }
       return question;
     });
 
     const passingScore = parseInt(formData.passingScore);
     if (isNaN(passingScore) || passingScore < 0 || passingScore > 100) {
-      alert('Please enter a valid passing score between 0 and 100');
+      alert("Please enter a valid passing score between 0 and 100");
       return;
     }
 
     if (!userId) {
-      alert('User not authenticated');
+      alert("User not authenticated");
       return;
     }
 
@@ -147,7 +208,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
         // Create new step
         const order = module?.steps.length || 0;
         const stepData: any = {
-          type: 'quiz',
+          type: "quiz",
           title: formData.title.trim(),
           questions: cleanedQuestions,
           shuffle: formData.shuffle,
@@ -163,7 +224,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
       }
       onClose();
     } catch (error: any) {
-      console.error('Error saving quiz step:', error);
+      console.error("Error saving quiz step:", error);
       alert(`Failed to save quiz step: ${error.message}`);
     } finally {
       setIsSaving(false);
@@ -181,12 +242,22 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
               disabled={isSaving}
               className="text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
             <h2 className="text-xl font-bold text-gray-900">
-              {step ? 'Edit Quiz' : 'Add Quiz'}
+              {step ? "Edit Quiz" : "Add Quiz"}
             </h2>
           </div>
           <button
@@ -194,8 +265,18 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
             disabled={isSaving}
             className="text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -210,7 +291,9 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 disabled={isSaving}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                 placeholder="Enter quiz title"
@@ -225,7 +308,9 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
                 <input
                   type="number"
                   value={formData.passingScore}
-                  onChange={(e) => setFormData({ ...formData, passingScore: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, passingScore: e.target.value })
+                  }
                   disabled={isSaving}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                   placeholder="70"
@@ -241,7 +326,12 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
                 <input
                   type="number"
                   value={formData.estimatedMinutes}
-                  onChange={(e) => setFormData({ ...formData, estimatedMinutes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      estimatedMinutes: e.target.value,
+                    })
+                  }
                   disabled={isSaving}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                   placeholder="0"
@@ -256,11 +346,16 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
                   type="checkbox"
                   id="shuffle"
                   checked={formData.shuffle}
-                  onChange={(e) => setFormData({ ...formData, shuffle: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, shuffle: e.target.checked })
+                  }
                   disabled={isSaving}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="shuffle" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="shuffle"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Shuffle questions
                 </label>
               </div>
@@ -270,11 +365,16 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
                   type="checkbox"
                   id="isOptional"
                   checked={formData.isOptional}
-                  onChange={(e) => setFormData({ ...formData, isOptional: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isOptional: e.target.checked })
+                  }
                   disabled={isSaving}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="isOptional" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="isOptional"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Optional step
                 </label>
               </div>
@@ -282,14 +382,26 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Questions</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Questions
+                </h3>
                 <button
                   onClick={addQuestion}
                   disabled={isSaving}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
                   Add Question
                 </button>
@@ -297,17 +409,32 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
               <div className="space-y-6">
                 {formData.questions.map((question, questionIndex) => (
-                  <div key={questionIndex} className="p-4 border border-gray-200 rounded-lg">
+                  <div
+                    key={questionIndex}
+                    className="p-4 border border-gray-200 rounded-lg"
+                  >
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-medium text-gray-700">Question {questionIndex + 1}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Question {questionIndex + 1}
+                      </span>
                       {formData.questions.length > 1 && (
                         <button
                           onClick={() => removeQuestion(questionIndex)}
                           disabled={isSaving}
                           className="text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                         </button>
                       )}
@@ -320,7 +447,13 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
                         </label>
                         <textarea
                           value={question.prompt}
-                          onChange={(e) => updateQuestion(questionIndex, 'prompt', e.target.value)}
+                          onChange={(e) =>
+                            updateQuestion(
+                              questionIndex,
+                              "prompt",
+                              e.target.value,
+                            )
+                          }
                           disabled={isSaving}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                           rows={2}
@@ -342,36 +475,84 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
                           </button>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {question.choices.map((choice, choiceIndex) => (
-                            <div key={choiceIndex} className="flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name={`correct-${questionIndex}`}
-                                checked={question.correctIndex === choiceIndex}
-                                onChange={() => updateQuestion(questionIndex, 'correctIndex', choiceIndex)}
-                                disabled={isSaving}
-                                className="text-blue-600 focus:ring-blue-500"
-                              />
-                              <input
-                                type="text"
-                                value={choice}
-                                onChange={(e) => updateChoice(questionIndex, choiceIndex, e.target.value)}
-                                disabled={isSaving}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                                placeholder={`Choice ${choiceIndex + 1}`}
-                              />
-                              {question.choices.length > 2 && (
-                                <button
-                                  onClick={() => removeChoice(questionIndex, choiceIndex)}
+                            <div key={choiceIndex} className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="radio"
+                                  name={`correct-${questionIndex}`}
+                                  checked={
+                                    question.correctIndex === choiceIndex
+                                  }
+                                  onChange={() =>
+                                    updateQuestion(
+                                      questionIndex,
+                                      "correctIndex",
+                                      choiceIndex,
+                                    )
+                                  }
                                   disabled={isSaving}
-                                  className="text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              )}
+                                  className="text-blue-600 focus:ring-blue-500"
+                                />
+                                <input
+                                  type="text"
+                                  value={choice}
+                                  onChange={(e) =>
+                                    updateChoice(
+                                      questionIndex,
+                                      choiceIndex,
+                                      e.target.value,
+                                    )
+                                  }
+                                  disabled={isSaving}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                                  placeholder={`Choice ${choiceIndex + 1}`}
+                                />
+                                {question.choices.length > 2 && (
+                                  <button
+                                    onClick={() =>
+                                      removeChoice(questionIndex, choiceIndex)
+                                    }
+                                    disabled={isSaving}
+                                    className="text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
+                                  >
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                      />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                              <div className="ml-6">
+                                <input
+                                  type="text"
+                                  value={
+                                    question.choiceExplanations?.[
+                                      choiceIndex
+                                    ] || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateChoiceExplanation(
+                                      questionIndex,
+                                      choiceIndex,
+                                      e.target.value,
+                                    )
+                                  }
+                                  disabled={isSaving}
+                                  className="w-full px-3 py-1 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-gray-600"
+                                  placeholder="Explanation (optional) - shown after quiz submission"
+                                />
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -401,7 +582,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
             {isSaving && (
               <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {isSaving ? 'Saving...' : (step ? 'Update Quiz' : 'Add Quiz')}
+            {isSaving ? "Saving..." : step ? "Update Quiz" : "Add Quiz"}
           </button>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { Timestamp } from "firebase/firestore";
 
-
 // User
 
 export interface User {
@@ -43,6 +42,7 @@ export interface QuizQuestion {
   choices: string[];
   correctIndex: number;
   explanation?: string;
+  choiceExplanations?: string[];
 }
 
 // Flashcard (still needed by FlashcardsStep)
@@ -74,7 +74,7 @@ export const STEP_COLLECTIONS = {
   freeResponse: "freeResponses",
 } as const;
 
-export type StepCollectionName = typeof STEP_COLLECTIONS[StepType];
+export type StepCollectionName = (typeof STEP_COLLECTIONS)[StepType];
 
 // Specific Step Interfaces
 
@@ -116,5 +116,5 @@ export interface JournalEntry {
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
   moduleId?: string; // optional - for future module association
-  stepId?: string;   // optional - for future step association
+  stepId?: string; // optional - for future step association
 }

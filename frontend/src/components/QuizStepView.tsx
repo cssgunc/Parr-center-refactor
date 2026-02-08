@@ -19,7 +19,7 @@ interface QuizStepViewProps {
 
 export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
   const [answers, setAnswers] = useState<number[]>(() =>
-    step.questions.map(() => -1)
+    step.questions.map(() => -1),
   );
   const [graded, setGraded] = useState(false);
   const questions = step.questions;
@@ -46,7 +46,7 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
   const results = useMemo(() => {
     const correctCount = questions.reduce(
       (acc, q, i) => (answers[i] === q.correctIndex ? acc + 1 : acc),
-      0
+      0,
     );
     const percent =
       questions.length > 0
@@ -57,7 +57,16 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
   }, [answers, questions, step.passingScore]);
 
   return (
-    <Box sx={{ width: "100%", maxWidth: "1400px", mt: 4, bgcolor: "background.paper", p: 3, borderRadius: 2 }}>
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: "1400px",
+        mt: 4,
+        bgcolor: "background.paper",
+        p: 3,
+        borderRadius: 2,
+      }}
+    >
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
         Quiz
       </Typography>
@@ -90,6 +99,7 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
                 {q.choices.map((choice, ci) => {
                   const showCorrect = graded && ci === q.correctIndex;
                   const userPicked = answers[qi] === ci;
+                  const choiceExplanation = q.choiceExplanations?.[ci];
 
                   return (
                     <Box
@@ -102,8 +112,8 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
                           showCorrect
                             ? `1px solid ${t.palette.success.main}`
                             : userPicked && isIncorrect
-                            ? `1px solid ${t.palette.error.main}`
-                            : "1px solid transparent",
+                              ? `1px solid ${t.palette.error.main}`
+                              : "1px solid transparent",
                         bgcolor: showCorrect
                           ? (t) => t.palette.action.hover
                           : "transparent",
@@ -114,6 +124,19 @@ export default function QuizStepView({ step, onClose }: QuizStepViewProps) {
                         control={<Radio disabled={graded} />}
                         label={<Typography>{choice}</Typography>}
                       />
+                      {graded && choiceExplanation && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            ml: 4,
+                            mt: 0.5,
+                            color: "text.secondary",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {choiceExplanation}
+                        </Typography>
+                      )}
                     </Box>
                   );
                 })}
