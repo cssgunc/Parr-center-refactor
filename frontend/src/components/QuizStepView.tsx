@@ -130,6 +130,7 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
                 {q.choices.map((choice, ci) => {
                   const showCorrect = graded && ci === q.correctIndex;
                   const userPicked = answers[qi] === ci;
+                  const explanation = q.choiceExplanations?.[ci];
 
                   return (
                     <Box
@@ -154,6 +155,19 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
                         control={<Radio disabled={graded} />}
                         label={<Typography>{choice}</Typography>}
                       />
+                      {graded && explanation && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mt: 0.5,
+                            ml: 4.5,
+                            color: (t) => t.palette.text.secondary,
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          {explanation}
+                        </Typography>
+                      )}
                     </Box>
                   );
                 })}
@@ -162,17 +176,18 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
               {graded && isIncorrect && (
                 <Box sx={{ mt: 1 }}>
                   <Alert severity="info">
-                    <strong>Correct:</strong> {q.choices[q.correctIndex]}
-                    {q.explanation ? (
+                    <strong>Correct answer:</strong> {q.choices[q.correctIndex]}
+                    {/* Show legacy explanation if no choiceExplanations exist */}
+                    {!q.choiceExplanations && q.explanation && (
                       <div style={{ marginTop: 8 }}>{q.explanation}</div>
-                    ) : null}
+                    )}
                   </Alert>
                 </Box>
               )}
 
               {graded && isCorrect && (
                 <Box sx={{ mt: 1 }}>
-                  <Alert severity="success">Correct</Alert>
+                  <Alert severity="success">Correct!</Alert>
                 </Box>
               )}
             </FormControl>

@@ -17,11 +17,15 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
   const [formData, setFormData] = useState({
     title: step?.title || '',
-    questions: step?.questions || [
+    questions: step?.questions.map(q => ({
+      ...q,
+      choiceExplanations: q.choiceExplanations || q.choices.map(() => ''),
+    })) || [
       {
         prompt: '',
         choices: ['', '', '', ''],
         correctIndex: 0,
+        choiceExplanations: ['', '', '', ''],
       },
     ],
     shuffle: step?.shuffle || false,
@@ -41,6 +45,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
           prompt: '',
           choices: ['', '', '', ''],
           correctIndex: 0,
+          choiceExplanations: ['', '', '', ''],
         },
       ],
     });
@@ -63,7 +68,13 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
   const addChoice = (questionIndex: number) => {
     const newQuestions = [...formData.questions];
-    newQuestions[questionIndex].choices.push('');
+    const question = newQuestions[questionIndex];
+    question.choices.push('');
+    if (!question.choiceExplanations) {
+      question.choiceExplanations = question.choices.map(() => '');
+    } else {
+      question.choiceExplanations.push('');
+    }
     setFormData({ ...formData, questions: newQuestions });
   };
 
@@ -73,6 +84,11 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
     if (question.choices.length > 2) {
       question.choices.splice(choiceIndex, 1);
+      
+      // Remove corresponding explanation
+      if (question.choiceExplanations) {
+        question.choiceExplanations.splice(choiceIndex, 1);
+      }
 
       // Adjust correct index if necessary
       if (question.correctIndex >= choiceIndex) {
@@ -86,6 +102,16 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
   const updateChoice = (questionIndex: number, choiceIndex: number, value: string) => {
     const newQuestions = [...formData.questions];
     newQuestions[questionIndex].choices[choiceIndex] = value;
+    setFormData({ ...formData, questions: newQuestions });
+  };
+
+  const updateChoiceExplanation = (questionIndex: number, choiceIndex: number, value: string) => {
+    const newQuestions = [...formData.questions];
+    const question = newQuestions[questionIndex];
+    if (!question.choiceExplanations) {
+      question.choiceExplanations = question.choices.map(() => '');
+    }
+    question.choiceExplanations[choiceIndex] = value;
     setFormData({ ...formData, questions: newQuestions });
   };
 
@@ -106,14 +132,41 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
     // Clean up questions - remove empty choices and ensure correct index is valid
     const cleanedQuestions = validQuestions.map(q => {
+      const nonEmptyChoices = q.choices.filter(opt => opt.trim());
+      const nonEmptyIndices: number[] = [];
+      let currentIndex = 0;
+      
+      // Track which original indices correspond to non-empty choices
+      q.choices.forEach((choice, idx) => {
+        if (choice.trim()) {
+          nonEmptyIndices.push(idx);
+        }
+      });
+
       const question: any = {
         prompt: q.prompt.trim(),
-        choices: q.choices.filter(opt => opt.trim()),
-        correctIndex: Math.min(q.correctIndex, q.choices.filter(opt => opt.trim()).length - 1),
+        choices: nonEmptyChoices,
+        correctIndex: Math.min(q.correctIndex, nonEmptyChoices.length - 1),
       };
+
+      // Process choiceExplanations - align with non-empty choices
+      if (q.choiceExplanations && q.choiceExplanations.length > 0) {
+        const cleanedExplanations = nonEmptyIndices.map(origIdx => {
+          const explanation = q.choiceExplanations?.[origIdx];
+          return explanation?.trim() || null;
+        });
+        
+        // Only include if at least one explanation exists
+        if (cleanedExplanations.some(e => e !== null)) {
+          question.choiceExplanations = cleanedExplanations;
+        }
+      }
+
+      // Keep legacy explanation for backward compatibility
       if (q.explanation) {
         question.explanation = q.explanation;
       }
+      
       return question;
     });
 
@@ -342,36 +395,48 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
                           </button>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {question.choices.map((choice, choiceIndex) => (
-                            <div key={choiceIndex} className="flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name={`correct-${questionIndex}`}
-                                checked={question.correctIndex === choiceIndex}
-                                onChange={() => updateQuestion(questionIndex, 'correctIndex', choiceIndex)}
-                                disabled={isSaving}
-                                className="text-blue-600 focus:ring-blue-500"
-                              />
-                              <input
-                                type="text"
-                                value={choice}
-                                onChange={(e) => updateChoice(questionIndex, choiceIndex, e.target.value)}
-                                disabled={isSaving}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                                placeholder={`Choice ${choiceIndex + 1}`}
-                              />
-                              {question.choices.length > 2 && (
-                                <button
-                                  onClick={() => removeChoice(questionIndex, choiceIndex)}
+                            <div key={choiceIndex} className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="radio"
+                                  name={`correct-${questionIndex}`}
+                                  checked={question.correctIndex === choiceIndex}
+                                  onChange={() => updateQuestion(questionIndex, 'correctIndex', choiceIndex)}
                                   disabled={isSaving}
-                                  className="text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              )}
+                                  className="text-blue-600 focus:ring-blue-500"
+                                />
+                                <input
+                                  type="text"
+                                  value={choice}
+                                  onChange={(e) => updateChoice(questionIndex, choiceIndex, e.target.value)}
+                                  disabled={isSaving}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                                  placeholder={`Choice ${choiceIndex + 1}`}
+                                />
+                                {question.choices.length > 2 && (
+                                  <button
+                                    onClick={() => removeChoice(questionIndex, choiceIndex)}
+                                    disabled={isSaving}
+                                    className="text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                              <div className="ml-7">
+                                <input
+                                  type="text"
+                                  value={question.choiceExplanations?.[choiceIndex] || ''}
+                                  onChange={(e) => updateChoiceExplanation(questionIndex, choiceIndex, e.target.value)}
+                                  disabled={isSaving}
+                                  className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
+                                  placeholder="Explanation (optional, shown after submission)"
+                                />
+                              </div>
                             </div>
                           ))}
                         </div>
