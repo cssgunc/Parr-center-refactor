@@ -121,6 +121,7 @@ export const deleteModule = async (
       "quiz",
       "flashcards",
       "freeResponse",
+      "additionalResources",
     ];
 
     await Promise.all(
@@ -166,6 +167,7 @@ export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
     "quiz",
     "flashcards",
     "freeResponse",
+    "additionalResources",
   ];
 
   await Promise.all(

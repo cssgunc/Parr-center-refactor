@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { AdditionalResourcesStep } from '@/lib/firebase/types';
 import { useModuleStore } from '@/store/moduleStore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '@/lib/firebase/firebaseConfig';
 
 interface AddResourcesModalProps {
   moduleId: string;
@@ -17,14 +19,14 @@ export default function AdditionalResourcesEditorModal({ moduleId, onClose, onBa
 
   const [formData, setFormData] = useState({
     title: step?.title || '',
-    link: step?.resources.link || '',
-    pdf: step?.resources.pdf || '',
+    link: step?.resources?.link || '',
+    pdf: step?.resources?.pdf || '',
     isOptional: step?.isOptional || false,
   });
-  
+
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,58 +38,69 @@ export default function AdditionalResourcesEditorModal({ moduleId, onClose, onBa
       return;
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024;
+    // Validate file size (e.g., max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > maxSize) {
       alert('PDF file size must be less than 10MB');
       return;
     }
 
     setPdfFile(file);
-    // TODO: Implement upload to storage and set the PDF URL in formData
-    setFormData({ ...formData, pdf: file.name });
   };
 
   const uploadPdfToStorage = async (file: File): Promise<string> => {
-    // TODO: Implement actual upload to storage solution and get link back
     setIsUploadingPdf(true);
     try {
-      /* Example:
-      const storageRef = ref(storage, `pdfs/${userId}/${moduleId}/${file.name}`);
+      if (!storage) {
+      throw new Error('Firebase Storage is not initialized');
+    }
+      // Create a unique filename
+      const timestamp = Date.now();
+      const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filename = `${timestamp}_${sanitizedFilename}`;
+      
+      // Create storage reference
+      const storageRef = ref(
+        storage, 
+        `modules/${moduleId}/resources/${filename}`
+      );
+      
+      // Upload file
       const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get download URL
       const downloadURL = await getDownloadURL(snapshot.ref);
+      
       return downloadURL;
-      */
-      // Placeholder - return empty string for now
-      return '';
+    } catch (error) {
+        console.error('Error uploading PDF:', error);
+        throw new Error('Failed to upload PDF. Please try again.');
     } finally {
       setIsUploadingPdf(false);
     }
   };
 
   const handleSave = async () => {
+    // Validate title
     if (!formData.title.trim()) {
       alert('Please enter a resource title');
       return;
     }
 
-    if (!formData.link.trim()) {
-      alert('Please enter a Link');
-      return;
-    }
-
-    // Resource validation: must have at least a link or a PDF
+    // Validate that at least one resource is provided
     if (!formData.link.trim() && !formData.pdf.trim() && !pdfFile) {
       alert('Please provide at least a link or PDF');
       return;
     }
 
-    // Basic URL validation
-    try {
-      new URL(formData.link);
-    } catch {
-      alert('Please enter a valid URL');
-      return;
+    // Validate URL if provided
+    if (formData.link.trim()) {
+      try {
+        new URL(formData.link);
+      } catch {
+        alert('Please enter a valid URL');
+        return;
+      }
     }
 
     if (!userId) {
@@ -103,10 +116,10 @@ export default function AdditionalResourcesEditorModal({ moduleId, onClose, onBa
       if (pdfFile) {
         pdfUrl = await uploadPdfToStorage(pdfFile);
       }
-      
+
       if (step) {
         // Update existing step
-        const updates: any = {
+        const updates: Partial<AdditionalResourcesStep> = {
           title: formData.title.trim(),
           resources: {
             link: formData.link.trim(),
@@ -116,23 +129,25 @@ export default function AdditionalResourcesEditorModal({ moduleId, onClose, onBa
         };
         await updateStepData(moduleId, step.id, updates);
       } else {
-        // Create new step
-        const order = module?.steps.length || 0;
-        const stepData: any = {
-          type: 'additionalResources',
-          title: formData.title.trim(),
-          link: formData.link.trim(),
-          pdf: formData.pdf.trim(),
-          isOptional: formData.isOptional,
-          order,
-          createdBy: userId,
-        };
-        await createNewStep(moduleId, stepData);
+          // Create new step
+          const order = module?.steps?.length || 0;
+          const stepData: any = {
+            type: 'additionalResources' as const,
+            title: formData.title.trim(),
+            resources: {
+              link: formData.link.trim(),
+              pdf: pdfUrl,
+            },
+            isOptional: formData.isOptional,
+            order,
+            createdBy: userId,
+          };
+          await createNewStep(moduleId, stepData);
       }
       onClose();
     } catch (error: any) {
         console.error('Error saving additional resources step:', error);
-        alert(`Failed to save additional resources step: ${error.message}`);
+        alert(`Failed to save resource: ${error.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -189,7 +204,7 @@ export default function AdditionalResourcesEditorModal({ moduleId, onClose, onBa
             {/* Link URL */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Link
+                External Link
               </label>
               <input
                 type="url"
@@ -200,7 +215,7 @@ export default function AdditionalResourcesEditorModal({ moduleId, onClose, onBa
                 placeholder="https://example.com"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Optional - provide an external link
+                Provide an external link
               </p>
             </div>
 
@@ -228,17 +243,19 @@ export default function AdditionalResourcesEditorModal({ moduleId, onClose, onBa
                 >
                   {isUploadingPdf ? 'Uploading...' : 'Choose PDF'}
                 </label>
-                {(formData.pdf || pdfFile) && (
-                  <span className="text-sm text-gray-600 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {(pdfFile || formData.pdf) && (
+                  <span className="text-sm text-gray-600 flex items-center gap-2 truncate max-w-[200px]">
+                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    {pdfFile?.name || formData.pdf}
+                    <span className="truncate" title={pdfFile?.name || formData.pdf}>
+                      {pdfFile?.name || (formData.pdf ? 'Existing PDF' : '')}
+                    </span>
                   </span>
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Optional - upload a PDF file (max 10MB)
+                Upload a PDF file (max 10MB)
               </p>
             </div>
 
