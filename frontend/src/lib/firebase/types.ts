@@ -65,7 +65,7 @@ export interface StepBase {
   updatedAt: Date;
 }
 
-export type StepType = "video" | "quiz" | "flashcards" | "freeResponse";
+export type StepType = "video" | "quiz" | "flashcards" | "freeResponse" | 'additionalResources';
 
 // Subcollection name mapping
 export const STEP_COLLECTIONS = {
@@ -73,6 +73,7 @@ export const STEP_COLLECTIONS = {
   quiz: "quizzes",
   flashcards: "flashcards",
   freeResponse: "freeResponses",
+  additionalResources: "additionalResources",
 } as const;
 
 export type StepCollectionName = typeof STEP_COLLECTIONS[StepType];
@@ -84,6 +85,15 @@ export interface VideoStep extends StepBase {
   youtubeUrl: string;
   thumbnailUrl?: string;
   durationSec?: number;
+}
+
+export interface AdditionalResourcesStep extends StepBase {
+  type: "additionalResources";
+  title: string;
+  resources: {
+    link: string;
+    pdf: string;
+  };
 }
 
 export interface QuizStep extends StepBase {
@@ -107,7 +117,7 @@ export interface FreeResponseStep extends StepBase {
 }
 
 // Step type used throughout the app
-export type Step = VideoStep | QuizStep | FlashcardsStep | FreeResponseStep;
+export type Step = VideoStep | QuizStep | FlashcardsStep | FreeResponseStep | AdditionalResourcesStep;
 
 // Journal
 export interface JournalEntry {

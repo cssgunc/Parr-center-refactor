@@ -15,7 +15,7 @@
  */
 export interface BaseFeature {
   id: string; // Unique identifier for the feature (auto-generated UUID)
-  type: 'video' | 'flashcards' | 'quiz' | 'journal'; // Discriminated union type for feature classification
+  type: 'video' | 'flashcards' | 'quiz' | 'journal'| 'resources'; // Discriminated union type for feature classification
   title: string; // Display name for the feature in the UI
 }
 
