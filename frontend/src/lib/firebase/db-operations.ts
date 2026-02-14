@@ -168,6 +168,7 @@ export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
     "quiz",
     "flashcards",
     "freeResponse",
+    "poll",
   ];
 
   await Promise.all(

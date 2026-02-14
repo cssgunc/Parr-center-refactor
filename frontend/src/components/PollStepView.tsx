@@ -13,6 +13,7 @@ import {
   useTheme,
   Alert,
   Chip,
+  Checkbox,
 } from "@mui/material";
 import { PollStep, PollOption } from "@/lib/firebase/types";
 import { submitPollVote, getUserPollVote } from "@/lib/firebase/db-operations";
@@ -26,12 +27,6 @@ interface PollStepViewProps {
   moduleId: string;
 }
 
-interface UserVote {
-  userId: string;
-  optionIds: string[];
-  votedAt: Date;
-}
-
 export default function PollStepView({ step, stepId, userId, moduleId }: PollStepViewProps) {
   const theme = useTheme();
   const [selectedOption, setSelectedOption] = useState<string>("");
@@ -43,6 +38,8 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  console.log("PollStepView rendered with step:", step);
 
   // Check if user has already voted
   useEffect(() => {
@@ -65,7 +62,6 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
         }
       } catch (err) {
         console.error("Error checking user vote:", err);
-        // Don't show error to user, just continue
       } finally {
         setIsLoading(false);
       }
@@ -143,37 +139,30 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
     setHasVoted(false);
     setShowResults(false);
     setError(null);
-    setSuccess(null);
   };
 
+  if (isLoading) {
+    return (
+      <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <Typography>Loading poll...</Typography>
+      </Box>
+    );
+  }
+
   return (
-    <Box
-      sx={{
-        width: "80%",
-        height: "90vh",
-        mx: "auto",
-        display: "flex",
-        flexDirection: "column",
-        bgcolor: "white",
-        borderRadius: "16px",
-        border: `1px solid ${theme.palette.grey[300]}`,
-        overflow: "hidden",
-      }}
-    >
+    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <Box
         sx={{
-          p: 4,
-          borderBottom: `1px solid ${theme.palette.grey[200]}`,
-          bgcolor: theme.palette.grey[50],
+          p: 3,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          backgroundColor: "background.paper",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <HowToVoteIcon sx={{ fontSize: 32, color: theme.palette.primary.main }} />
-          <Typography variant="h4" fontWeight="bold" color="text.primary">
-            {step.title}
-          </Typography>
-        </Box>
+        <Typography variant="h6" fontWeight="medium">
+          Poll: {step.title || "Untitled Poll"}
+        </Typography>
         
         <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
           Ethical Dilemma
@@ -192,33 +181,27 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
 
       {/* Content */}
       <Box sx={{ flex: 1, p: 4, overflow: "auto" }}>
-        {isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px" }}>
-            <Typography>Loading poll...</Typography>
-          </Box>
-        ) : (
-          <>
-            {/* Question */}
-            <Typography variant="h5" fontWeight="medium" sx={{ mb: 4 }}>
-              {step.question}
-            </Typography>
+        {/* Question */}
+        <Typography variant="h5" fontWeight="medium" sx={{ mb: 4 }}>
+          {step.question}
+        </Typography>
 
-            {/* Error/Success Messages */}
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-                {error}
-              </Alert>
-            )}
-            
-            {success && (
-              <Alert 
-                severity="success" 
-                sx={{ mb: 3 }}
-                icon={<CheckCircleIcon />}
-              >
-                {success}
-              </Alert>
-            )}
+        {/* Error/Success Messages */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+        
+        {success && (
+          <Alert 
+            severity="success" 
+            sx={{ mb: 3 }}
+            icon={<CheckCircleIcon />}
+          >
+            {success}
+          </Alert>
+        )}
 
         {/* Voting Options */}
         {!hasVoted ? (
@@ -237,40 +220,32 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
                           ? theme.palette.primary.main
                           : theme.palette.grey[300]
                       }`,
-                      borderRadius: "12px",
+                      borderRadius: "8px",
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
                       "&:hover": {
                         borderColor: theme.palette.primary.main,
-                        boxShadow: theme.shadows[2],
+                        backgroundColor: theme.palette.action.hover,
                       },
                     }}
                     onClick={() => handleOptionSelect(option.id)}
                   >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedOptions.includes(option.id)}
-                        onChange={() => handleOptionSelect(option.id)}
-                        style={{ 
-                          width: 20, 
-                          height: 20,
-                          cursor: 'pointer'
-                        }}
-                      />
-                      <Typography variant="body1" fontWeight="medium">
-                        {option.text}
-                      </Typography>
-                    </Box>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={selectedOptions.includes(option.id)}
+                          onChange={() => handleOptionSelect(option.id)}
+                          color="primary"
+                        />
+                      }
+                      label={option.text}
+                      sx={{ m: 0 }}
+                    />
                   </Paper>
                 ))}
               </Box>
             ) : (
               // Single choice radio buttons
-              <RadioGroup
-                value={selectedOption}
-                onChange={(e) => handleOptionSelect(e.target.value)}
-              >
+              <Box>
                 {currentVotes.map((option) => (
                   <Paper
                     key={option.id}
@@ -282,28 +257,29 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
                           ? theme.palette.primary.main
                           : theme.palette.grey[300]
                       }`,
-                      borderRadius: "12px",
+                      borderRadius: "8px",
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
                       "&:hover": {
                         borderColor: theme.palette.primary.main,
-                        boxShadow: theme.shadows[2],
+                        backgroundColor: theme.palette.action.hover,
                       },
                     }}
+                    onClick={() => handleOptionSelect(option.id)}
                   >
                     <FormControlLabel
-                      value={option.id}
-                      control={<Radio />}
-                      label={
-                        <Typography variant="body1" fontWeight="medium">
-                          {option.text}
-                        </Typography>
+                      control={
+                        <Radio
+                          checked={selectedOption === option.id}
+                          onChange={() => handleOptionSelect(option.id)}
+                          color="primary"
+                        />
                       }
-                      sx={{ width: "100%", margin: 0 }}
+                      label={option.text}
+                      sx={{ m: 0 }}
                     />
                   </Paper>
                 ))}
-              </RadioGroup>
+              </Box>
             )}
 
             {/* Submit Button */}
@@ -311,7 +287,7 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
               variant="contained"
               size="large"
               onClick={handleVote}
-              disabled={isSubmitting || (!selectedOption && selectedOptions.length === 0)}
+              disabled={isSubmitting}
               sx={{
                 mt: 3,
                 px: 4,
@@ -321,66 +297,47 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
                 fontSize: "16px",
                 fontWeight: "medium",
               }}
-              startIcon={<HowToVoteIcon />}
             >
               {isSubmitting ? "Submitting..." : "Submit Vote"}
             </Button>
           </Box>
         ) : (
-          /* Results View */
+          // Results view
           <Box>
-            <Typography variant="h6" fontWeight="medium" sx={{ mb: 3 }}>
-              Results ({totalVotes} total vote{totalVotes !== 1 ? 's' : ''})
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Results
             </Typography>
-            
             {currentVotes.map((option) => {
               const percentage = getPercentage(option.votes);
-              const isSelected = step.allowMultipleChoice 
-                ? selectedOptions.includes(option.id)
-                : selectedOption === option.id;
-              
               return (
-                <Paper
-                  key={option.id}
-                  sx={{
-                    p: 3,
-                    mb: 2,
-                    borderRadius: "12px",
-                    border: isSelected ? `2px solid ${theme.palette.success.main}` : `1px solid ${theme.palette.grey[300]}`,
-                    bgcolor: isSelected ? theme.palette.success.light : 'white',
-                  }}
-                >
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                      <Typography variant="body1" fontWeight="medium">
-                        {option.text}
-                      </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {isSelected && (
-                          <CheckCircleIcon sx={{ color: theme.palette.success.main, fontSize: 20 }} />
-                        )}
-                        <Typography variant="body2" color="text.secondary">
-                          {option.votes} votes ({percentage.toFixed(1)}%)
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={percentage}
-                      sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        bgcolor: theme.palette.grey[200],
-                        "& .MuiLinearProgress-bar": {
-                          borderRadius: 4,
-                          bgcolor: isSelected ? theme.palette.success.main : theme.palette.primary.main,
-                        },
-                      }}
-                    />
+                <Box key={option.id} sx={{ mb: 2 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                    <Typography variant="body1" fontWeight="medium">
+                      {option.text}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {option.votes} votes ({percentage.toFixed(1)}%)
+                    </Typography>
                   </Box>
-                </Paper>
+                  <LinearProgress
+                    variant="determinate"
+                    value={percentage}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: theme.palette.grey[200],
+                      "& .MuiLinearProgress-bar": {
+                        backgroundColor: theme.palette.primary.main,
+                        borderRadius: 4,
+                      },
+                    }}
+                  />
+                </Box>
               );
             })}
+            <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
+              Total votes: {totalVotes}
+            </Typography>
 
             {/* Reset Button */}
             <Button
@@ -400,8 +357,6 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
               Vote Again
             </Button>
           </Box>
-        )}
-          </>
         )}
       </Box>
     </Box>
