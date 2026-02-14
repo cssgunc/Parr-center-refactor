@@ -111,10 +111,10 @@ service cloud.firestore {
     return d.question is string
       && d.options is list
       && d.options.size() >= 2
+      && d.options[0].id is string
       && d.options[0].text is string
       && d.options[0].votes is int
-      && d.options[0].votes >= 0
-      && (!('allowMultipleChoice' in d) || d.allowMultipleChoice is bool);
+      && d.allowMultipleChoice is bool;
   }
 
   function validateStepUpdate() {
@@ -181,7 +181,8 @@ service cloud.firestore {
       'thumbnailUrl',
       'collaborators',
       'createdBy',
-      'createdAt'
+      'createdAt',
+      'order'
     ];
     return request.resource.data.keys().hasOnly(allowedFields)
       && request.resource.data.diff(resource.data).affectedKeys().size() > 0
@@ -208,6 +209,9 @@ service cloud.firestore {
       )
       && (
         !('collaborators' in request.resource.data) || request.resource.data.collaborators is list
+      )
+      && (
+        !('order' in request.resource.data) || request.resource.data.order is int
       )
       && resource.data.createdBy == request.resource.data.createdBy
       && resource.data.createdAt == request.resource.data.createdAt;
@@ -270,11 +274,17 @@ service cloud.firestore {
 
         // POLL VOTES SUBCOLLECTION
         match /votes/{userId} {
-          allow read: if isSignedIn() && request.auth.uid == userId;
-          allow create: if isSignedIn() && request.auth.uid == userId;
+          allow read: if isOwner() || isCollaborator() || isAdmin() || request.auth.uid == userId;
+          allow create: if isOwner() || isCollaborator() || isAdmin() || request.auth.uid == userId;
           allow update, delete: if false; // Votes cannot be modified once cast
         }
       }
+    }
+
+    // CONFIG
+    match /config/settings {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // USERS
@@ -282,6 +292,8 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update, delete: if request.auth.uid == userId;
+      allow update: if isAdmin()
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAdmin']);
 
       // PROGRESS
       match /progress/{moduleId} {
