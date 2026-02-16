@@ -318,6 +318,7 @@ export const startUserProgress = async (userId: string, moduleId: string) => {
     completedStepIds: [],
     lastViewedAt: serverTimestamp(),
     quizScores: {},
+    pollVotes: {},
     startedAt: serverTimestamp(),
     completedAt: null,
   };
@@ -338,6 +339,7 @@ export const getUserProgress = async (userId: string, moduleId: string) => {
     completedStepIds: progressData.completedStepIds || [],
     lastViewedAt: progressData.lastViewedAt || null,
     quizScores: progressData.quizScores || {},
+    pollVotes: progressData.pollVotes || {},
     startedAt: progressData.startedAt || null,
     completedAt: progressData.completedAt || null,
   } as UserProgress;
@@ -365,6 +367,7 @@ export const markStepCompleted = async (
       completedStepIds: [stepId],
       lastViewedAt: serverTimestamp(),
       quizScores: {},
+      pollVotes: {},
       startedAt: serverTimestamp(),
       completedAt: null,
     });
@@ -400,6 +403,7 @@ export const updateQuizScore = async (
       completedStepIds: [],
       lastViewedAt: serverTimestamp(),
       quizScores: quizScores,
+      pollVotes: {},
       startedAt: serverTimestamp(),
       completedAt: null,
     });
@@ -640,33 +644,64 @@ export const submitPollVote = async (
 
     const pollData = pollDoc.data() as PollStep;
     
-    // Check if user has already voted
-    const voteRef = doc(db!, "modules", moduleId, "polls", stepId, "votes", userId);
-    const voteDoc = await getDoc(voteRef);
+    // Get user progress to check if already voted
+    const progressRef = doc(db!, "users", userId, "progress", moduleId);
+    const progressDoc = await getDoc(progressRef);
 
-    if (voteDoc.exists()) {
-      throw new Error("User has already voted in this poll");
+    let progressData: any;
+    let previousVoteIds: string[] = [];
+    
+    if (progressDoc.exists()) {
+      progressData = progressDoc.data();
+      // Check if user has already voted and store previous vote
+      if (progressData.pollVotes && progressData.pollVotes[stepId]) {
+        previousVoteIds = progressData.pollVotes[stepId];
+      }
+    } else {
+      // Create new progress if none exists
+      progressData = {
+        completedStepIds: [],
+        lastViewedAt: serverTimestamp(),
+        quizScores: {},
+        pollVotes: {},
+        startedAt: serverTimestamp(),
+        completedAt: null,
+      };
     }
 
-    // Record the user's vote
-    await setDoc(voteRef, {
-      userId,
-      optionIds: selectedOptionIds,
-      votedAt: serverTimestamp(),
-    });
+    // Update poll votes in user progress
+    const currentPollVotes = progressData.pollVotes || {};
+    currentPollVotes[stepId] = selectedOptionIds;
 
-    // Update vote counts on the poll
+    // Update vote counts on the poll - remove previous vote and add new vote
     const updatedOptions = pollData.options.map(option => {
-      if (selectedOptionIds.includes(option.id)) {
-        return { ...option, votes: option.votes + 1 };
+      let voteChange = 0;
+      
+      // Remove vote from previous selection
+      if (previousVoteIds.includes(option.id)) {
+        voteChange -= 1;
       }
-      return option;
+      
+      // Add vote to new selection
+      if (selectedOptionIds.includes(option.id)) {
+        voteChange += 1;
+      }
+      
+      return { ...option, votes: Math.max(0, option.votes + voteChange) };
     });
 
-    await updateDoc(pollRef, {
-      options: updatedOptions,
-      updatedAt: serverTimestamp(),
-    });
+    // Run both operations in parallel
+    await Promise.all([
+      updateDoc(pollRef, {
+        options: updatedOptions,
+        updatedAt: serverTimestamp(),
+      }),
+      setDoc(progressRef, {
+        ...progressData,
+        pollVotes: currentPollVotes,
+        lastViewedAt: serverTimestamp(),
+      }, { merge: true })
+    ]);
 
   } catch (error) {
     console.error("Failed to submit poll vote:", error);
@@ -684,11 +719,17 @@ export const getUserPollVote = async (
   }
 
   try {
-    const voteRef = doc(db!, "modules", moduleId, "polls", stepId, "votes", userId);
-    const voteDoc = await getDoc(voteRef);
+    const progressRef = doc(db!, "users", userId, "progress", moduleId);
+    const progressDoc = await getDoc(progressRef);
 
-    if (voteDoc.exists()) {
-      return voteDoc.data() as { optionIds: string[]; votedAt: any };
+    if (progressDoc.exists()) {
+      const progressData = progressDoc.data();
+      const pollVotes = progressData.pollVotes || {};
+      const userVote = pollVotes[stepId];
+      
+      if (userVote) {
+        return { optionIds: userVote, votedAt: progressData.lastViewedAt };
+      }
     }
 
     return null;

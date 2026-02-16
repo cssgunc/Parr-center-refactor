@@ -5,19 +5,18 @@ import {
   Box,
   Typography,
   Button,
-  Paper,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
   Radio,
   RadioGroup,
-  FormControlLabel,
   LinearProgress,
   useTheme,
   Alert,
-  Chip,
   Checkbox,
 } from "@mui/material";
 import { PollStep, PollOption } from "@/lib/firebase/types";
-import { submitPollVote, getUserPollVote } from "@/lib/firebase/db-operations";
-import HowToVoteIcon from '@mui/icons-material/HowToVote';
+import { submitPollVote, getUserPollVote, getPollResults } from "@/lib/firebase/db-operations";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface PollStepViewProps {
@@ -38,6 +37,7 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCheckIcon, setShowCheckIcon] = useState(false);
 
   console.log("PollStepView rendered with step:", step);
 
@@ -54,6 +54,7 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
         if (userVote) {
           setHasVoted(true);
           setShowResults(true);
+          setShowCheckIcon(true);
           if (step.allowMultipleChoice) {
             setSelectedOptions(userVote.optionIds);
           } else {
@@ -109,18 +110,14 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
     try {
       await submitPollVote(moduleId, stepId, userId, selectedIds);
       
-      // Update local state with new vote counts
-      const updatedVotes = currentVotes.map(option => {
-        if (selectedIds.includes(option.id)) {
-          return { ...option, votes: option.votes + 1 };
-        }
-        return option;
-      });
-
-      setCurrentVotes(updatedVotes);
+      // Fetch fresh poll data to get accurate vote counts
+      const updatedPollData = await getPollResults(moduleId, stepId);
+      setCurrentVotes(updatedPollData.options);
+      
       setHasVoted(true);
       setShowResults(true);
-      setSuccess("Your vote has been recorded!");
+      setShowCheckIcon(true);
+      setSuccess(hasVoted ? "Your vote has been updated!" : "Your vote has been recorded!");
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
@@ -132,12 +129,11 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
     }
   };
 
-  // Reset form
-  const handleReset = () => {
-    setSelectedOption("");
-    setSelectedOptions([]);
+  // Reset form to allow changing vote
+  const handleChangeVote = () => {
     setHasVoted(false);
     setShowResults(false);
+    setShowCheckIcon(false);
     setError(null);
   };
 
@@ -150,41 +146,43 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
   }
 
   return (
-    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ width: "80%", maxWidth: "1400px", my: 4, bgcolor: "background.paper", p: 3, border: `1px solid ${theme.palette.grey[300]}`, borderRadius: "16px" }}>
       {/* Header */}
-      <Box
-        sx={{
-          p: 3,
-          borderBottom: "1px solid",
-          borderColor: "divider",
-          backgroundColor: "background.paper",
-        }}
-      >
-        <Typography variant="h6" fontWeight="medium">
-          Poll: {step.title || "Untitled Poll"}
+      <div className="flex items-center space-x-2 mb-4 border-b pb-6">
+        <Typography
+          variant="h4"
+          component={"h1"}
+          sx={{
+            fontSize: "2rem",
+            fontWeight: "bold",
+            fontFamily: "var(--font-primary)",
+            color: theme.palette.common.black,
+          }}
+        >
+          {step.title || "Poll"}
         </Typography>
-        
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-          Ethical Dilemma
-        </Typography>
-        
-        {step.allowMultipleChoice && (
-          <Chip 
-            label="Multiple Choice Allowed" 
-            size="small" 
-            color="primary" 
-            variant="outlined"
-            sx={{ mb: 2 }}
-          />
-        )}
-      </Box>
+        {showCheckIcon &&
+          <CheckCircleIcon 
+            sx={{
+              color: (t) => t.palette.success.main,
+              fontSize: '1.5rem',
+            }}
+          />}
+      </div>
 
-      {/* Content */}
-      <Box sx={{ flex: 1, p: 4, overflow: "auto" }}>
-        {/* Question */}
-        <Typography variant="h5" fontWeight="medium" sx={{ mb: 4 }}>
-          {step.question}
-        </Typography>
+      {/* Question */}
+      <FormControl component="fieldset" fullWidth>
+        <FormLabel>
+          <Typography sx={{ fontWeight: 600, mb: 2 }}>
+            {step.question}
+          </Typography>
+        </FormLabel>
+
+        {step.allowMultipleChoice && (
+          <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+            You may select multiple options
+          </Typography>
+        )}
 
         {/* Error/Success Messages */}
         {error && (
@@ -210,24 +208,21 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
               // Multiple choice checkboxes
               <Box>
                 {currentVotes.map((option) => (
-                  <Paper
+                  <Box
                     key={option.id}
                     sx={{
-                      p: 3,
-                      mb: 2,
-                      border: `2px solid ${
+                      mb: 1,
+                      p: 1,
+                      borderRadius: 1,
+                      border: `1px solid ${
                         selectedOptions.includes(option.id)
                           ? theme.palette.primary.main
                           : theme.palette.grey[300]
                       }`,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      "&:hover": {
-                        borderColor: theme.palette.primary.main,
-                        backgroundColor: theme.palette.action.hover,
-                      },
+                      bgcolor: selectedOptions.includes(option.id)
+                        ? theme.palette.action.hover
+                        : "transparent",
                     }}
-                    onClick={() => handleOptionSelect(option.id)}
                   >
                     <FormControlLabel
                       control={
@@ -237,74 +232,48 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
                           color="primary"
                         />
                       }
-                      label={option.text}
-                      sx={{ m: 0 }}
+                      label={<Typography>{option.text}</Typography>}
                     />
-                  </Paper>
+                  </Box>
                 ))}
               </Box>
             ) : (
               // Single choice radio buttons
-              <Box>
+              <RadioGroup
+                value={selectedOption}
+                onChange={(e) => handleOptionSelect(e.target.value)}
+              >
                 {currentVotes.map((option) => (
-                  <Paper
+                  <Box
                     key={option.id}
                     sx={{
-                      p: 3,
-                      mb: 2,
-                      border: `2px solid ${
+                      mb: 1,
+                      p: 1,
+                      borderRadius: 1,
+                      border: `1px solid ${
                         selectedOption === option.id
                           ? theme.palette.primary.main
                           : theme.palette.grey[300]
                       }`,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      "&:hover": {
-                        borderColor: theme.palette.primary.main,
-                        backgroundColor: theme.palette.action.hover,
-                      },
+                      bgcolor: selectedOption === option.id
+                        ? theme.palette.action.hover
+                        : "transparent",
                     }}
-                    onClick={() => handleOptionSelect(option.id)}
                   >
                     <FormControlLabel
-                      control={
-                        <Radio
-                          checked={selectedOption === option.id}
-                          onChange={() => handleOptionSelect(option.id)}
-                          color="primary"
-                        />
-                      }
-                      label={option.text}
-                      sx={{ m: 0 }}
+                      value={option.id}
+                      control={<Radio />}
+                      label={<Typography>{option.text}</Typography>}
                     />
-                  </Paper>
+                  </Box>
                 ))}
-              </Box>
+              </RadioGroup>
             )}
-
-            {/* Submit Button */}
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleVote}
-              disabled={isSubmitting}
-              sx={{
-                mt: 3,
-                px: 4,
-                py: 2,
-                borderRadius: "12px",
-                textTransform: "none",
-                fontSize: "16px",
-                fontWeight: "medium",
-              }}
-            >
-              {isSubmitting ? "Submitting..." : "Submit Vote"}
-            </Button>
           </Box>
         ) : (
           // Results view
           <Box>
-            <Typography variant="h6" sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
               Results
             </Typography>
             {currentVotes.map((option) => {
@@ -338,25 +307,37 @@ export default function PollStepView({ step, stepId, userId, moduleId }: PollSte
             <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
               Total votes: {totalVotes}
             </Typography>
-
-            {/* Reset Button */}
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={handleReset}
-              sx={{
-                mt: 3,
-                px: 4,
-                py: 2,
-                borderRadius: "12px",
-                textTransform: "none",
-                fontSize: "16px",
-                fontWeight: "medium",
-              }}
-            >
-              Vote Again
-            </Button>
           </Box>
+        )}
+      </FormControl>
+
+      {/* Action Buttons */}
+      <Box sx={{ display: "flex", gap: 2, mt: 4, alignItems: "center" }}>
+        {!hasVoted ? (
+          <>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleVote}
+              disabled={isSubmitting || (!step.allowMultipleChoice && !selectedOption) || (step.allowMultipleChoice && selectedOptions.length === 0)}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Vote"}
+            </Button>
+            <Typography sx={{ color: (t) => t.palette.text.secondary }}>
+              {currentVotes.length} option{currentVotes.length !== 1 ? "s" : ""}
+            </Typography>
+          </>
+        ) : (
+          <>
+            <Box sx={{ flex: 1 }}>
+              <Alert severity="success">
+                <strong>Vote submitted</strong> — Thank you for participating!
+              </Alert>
+            </Box>
+            <Button variant="contained" onClick={handleChangeVote}>
+              Change Vote
+            </Button>
+          </>
         )}
       </Box>
     </Box>

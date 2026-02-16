@@ -33,9 +33,10 @@ service cloud.firestore {
   }
 
   function validateProgress() {
-    return request.resource.data.keys().hasAll(['completedStepIds', 'lastViewedAt', 'quizScores', 'startedAt', 'completedAt'])
+    return request.resource.data.keys().hasAll(['completedStepIds', 'lastViewedAt', 'quizScores', 'pollVotes', 'startedAt', 'completedAt'])
     && request.resource.data.completedStepIds is list
     && request.resource.data.quizScores is map
+    && request.resource.data.pollVotes is map
     && request.resource.data.lastViewedAt is timestamp
     && request.resource.data.startedAt is timestamp
     && (request.resource.data.completedAt == null || request.resource.data.completedAt is timestamp);

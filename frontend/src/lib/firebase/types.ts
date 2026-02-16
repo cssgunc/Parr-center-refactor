@@ -17,6 +17,7 @@ export interface UserProgress {
   completedStepIds: string[];
   lastViewedAt: Timestamp;
   quizScores: { [stepId: string]: number };
+  pollVotes: { [stepId: string]: string[] };
   startedAt: Timestamp | Date;
   completedAt: Timestamp | Date | null;
 }
