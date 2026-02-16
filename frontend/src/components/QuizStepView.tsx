@@ -91,7 +91,7 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
           color: theme.palette.common.black,
         }}
       >
-        Quiz
+        {step.title || "Quiz"}
       </Typography>
       {showCheckIcon &&
       <CheckCircleIcon 
