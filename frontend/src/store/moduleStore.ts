@@ -73,6 +73,7 @@ interface ModuleStore {
   updateStepData: (moduleId: string, stepId: string, updates: Partial<Step>) => Promise<void>; // Update a step
   deleteStepData: (moduleId: string, stepId: string) => Promise<void>; // Delete a step
   reorderSteps: (moduleId: string, stepIds: string[]) => Promise<void>; // Reorder steps (updates order field)
+  cloneStepData: (moduleId: string, stepId: string) => Promise<void>; // Duplicate a step
 }
 
 /**
@@ -304,21 +305,21 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
         modules: state.modules.map((m) =>
           m.id === moduleId
             ? {
-                ...m,
-                steps: m.steps.map((s) =>
-                  s.id === stepId ? { ...s, ...updates } as Step : s
-                ),
-              }
+              ...m,
+              steps: m.steps.map((s) =>
+                s.id === stepId ? { ...s, ...updates } as Step : s
+              ),
+            }
             : m
         ),
         selectedModule:
           state.selectedModule?.id === moduleId
             ? {
-                ...state.selectedModule,
-                steps: state.selectedModule.steps.map((s) =>
-                  s.id === stepId ? { ...s, ...updates } as Step : s
-                ),
-              }
+              ...state.selectedModule,
+              steps: state.selectedModule.steps.map((s) =>
+                s.id === stepId ? { ...s, ...updates } as Step : s
+              ),
+            }
             : state.selectedModule,
         isLoading: false,
       }));
@@ -352,19 +353,19 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
         modules: state.modules.map((m) =>
           m.id === moduleId
             ? {
-                ...m,
-                steps: m.steps.filter((s) => s.id !== stepId),
-                stepCount: Math.max(0, m.stepCount - 1),
-              }
+              ...m,
+              steps: m.steps.filter((s) => s.id !== stepId),
+              stepCount: Math.max(0, m.stepCount - 1),
+            }
             : m
         ),
         selectedModule:
           state.selectedModule?.id === moduleId
             ? {
-                ...state.selectedModule,
-                steps: state.selectedModule.steps.filter((s) => s.id !== stepId),
-                stepCount: Math.max(0, state.selectedModule.stepCount - 1),
-              }
+              ...state.selectedModule,
+              steps: state.selectedModule.steps.filter((s) => s.id !== stepId),
+              stepCount: Math.max(0, state.selectedModule.stepCount - 1),
+            }
             : state.selectedModule,
         isLoading: false,
       }));
@@ -414,6 +415,43 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       console.error('Error reordering steps:', error);
+    }
+  },
+
+  /**
+   * CLONE STEP DATA
+   * 
+   * Duplicates an existing step and appends it to the end of the module.
+   */
+  cloneStepData: async (moduleId: string, stepId: string) => {
+    const state = get();
+    const module = state.modules.find((m) => m.id === moduleId);
+    const step = module?.steps.find((s) => s.id === stepId);
+
+    if (!step) {
+      set({ error: 'Step to clone not found' });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      // Prepare cloned data (omit ID and timestamps, set order to last)
+      const { id, createdAt, updatedAt, ...clonedData } = step;
+
+      // Set order to the end of the list
+      const nextOrder = module?.steps.length || 0;
+      const stepToSave = {
+        ...clonedData,
+        order: nextOrder,
+      };
+
+      // Reuse createNewStep logic
+      await get().createNewStep(moduleId, stepToSave as Omit<Step, 'id' | 'createdAt' | 'updatedAt'>);
+
+      console.log('Successfully cloned step:', stepId);
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error cloning step:', error);
     }
   },
 }));

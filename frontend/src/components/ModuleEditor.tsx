@@ -18,6 +18,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
     updateModuleData,
     deleteStepData,
     reorderSteps,
+    cloneStepData,
   } = useModuleStore();
 
   // Get the latest module data from store
@@ -98,6 +99,11 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
     if (!module || !confirm("Are you sure you want to delete this step?"))
       return;
     await deleteStepData(module.id, stepId);
+  };
+
+  const handleCloneStep = async (stepId: string) => {
+    if (!module) return;
+    await cloneStepData(module.id, stepId);
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -366,6 +372,25 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                           </svg>
                         </button>
                         <button
+                          onClick={() => handleCloneStep(step.id)}
+                          title="Clone step"
+                          className="text-gray-400 hover:text-green-600 transition-colors duration-200"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+                            />
+                          </svg>
+                        </button>
+                        <button
                           onClick={() => handleDeleteStep(step.id)}
                           className="text-gray-400 hover:text-red-600 transition-colors duration-200"
                         >
@@ -412,8 +437,8 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
             {isSaving
               ? "Saving..."
               : module
-              ? "Update Module"
-              : "Create Module"}
+                ? "Update Module"
+                : "Create Module"}
           </button>
         </div>
       </div>
