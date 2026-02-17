@@ -44,7 +44,7 @@ service cloud.firestore {
   function validateStep() {
     return request.resource.data.keys().hasAll(['title', 'type', 'order', 'createdBy', 'createdAt', 'updatedAt'])
     && request.resource.data.title is string
-    && request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll']
+    && request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources']
     && request.resource.data.order is int
     && request.resource.data.createdBy is string
     && hasMatchingPayloadType()
@@ -53,12 +53,22 @@ service cloud.firestore {
 
   function hasMatchingPayloadType() {
     let t = request.resource.data.type;
-    return (t == 'video' && 'youtubeUrl' in request.resource.data) || (t == 'quiz' && 'questions' in request.resource.data) || (t == 'flashcards' && 'cards' in request.resource.data) || (t == 'freeResponse' && 'prompt' in request.resource.data) || (t == 'poll' && 'question' in request.resource.data);
+    return (t == 'video' && 'youtubeUrl' in request.resource.data) 
+    || (t == 'quiz' && 'questions' in request.resource.data) 
+    || (t == 'flashcards' && 'cards' in request.resource.data) 
+    || (t == 'freeResponse' && 'prompt' in request.resource.data)
+    || (t == 'poll' && 'question' in request.resource.data)
+    || (t == 'additionalResources' && 'resources' in request.resource.data);
   }
 
   function validatePayload() {
     let t = request.resource.data.type;
-    return (t == 'video' && validateVideoPayload()) || (t == 'quiz' && validateQuizPayload()) || (t == 'flashcards' && validateFlashcardsPayload()) || (t == 'freeResponse' && validateFreeResponsePayload()) || (t == 'poll' && validatePollPayload());
+    return (t == 'video' && validateVideoPayload()) 
+    || (t == 'quiz' && validateQuizPayload()) 
+    || (t == 'flashcards' && validateFlashcardsPayload()) 
+    || (t == 'freeResponse' && validateFreeResponsePayload()) 
+    || (t == 'poll' && validatePollPayload())
+    || (t == 'additionalResources' && validateAdditionalResourcesPayload());
   }
 
   function validateVideoPayload() {
@@ -108,6 +118,13 @@ service cloud.firestore {
       && d.options[0].votes is int
       && d.allowMultipleChoice is bool;
   }
+  function validateAdditionalResourcesPayload() {
+    let d = request.resource.data;
+    return d.resources is map
+      && ('link' in d.resources || 'pdf' in d.resources)
+      && (!('link' in d.resources) || d.resources.link is string)
+      && (!('pdf' in d.resources) || d.resources.pdf is string);
+  }
 
   function validateStepUpdate() {
     let allowedFields = [
@@ -151,7 +168,7 @@ service cloud.firestore {
         !('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp
       )
       && (
-        !('type' in request.resource.data) || request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll']
+        !('type' in request.resource.data) || request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources']
       )
       && (
         resource.data.createdBy == request.resource.data.createdBy
@@ -259,6 +276,19 @@ service cloud.firestore {
 
       // POLL STEPS
       match /polls/{pollId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        // Allow users to update poll documents for voting (only vote counts and updatedAt)
+        allow update: if (isSignedIn() && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['options', 'updatedAt']) &&
+          request.resource.data.options is list &&
+          request.resource.data.updatedAt is timestamp) ||
+          isAdmin();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+      
+      // ADDITIONAL RESOURCES STEPS
+      match /additionalResources/{resourceId} {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
         allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
         allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();

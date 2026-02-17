@@ -5,6 +5,7 @@ import VideoEditorModal from "./step-editors/VideoEditorModal";
 import QuizEditorModal from "./step-editors/QuizEditorModal";
 import FlashcardsEditorModal from "./step-editors/FlashcardsEditorModal";
 import FreeResponseEditorModal from "./step-editors/FreeResponseEditorModal";
+import PollEditorModal from "./step-editors/PollEditorModal";
 
 interface StepEditorModalProps {
   moduleId: string;
@@ -52,6 +53,15 @@ export default function StepEditorModal({
     case "freeResponse":
       return (
         <FreeResponseEditorModal
+          moduleId={moduleId}
+          step={step}
+          onClose={onClose}
+          onBack={handleBack}
+        />
+      );
+    case "poll":
+      return (
+        <PollEditorModal
           moduleId={moduleId}
           step={step}
           onClose={onClose}

@@ -26,6 +26,8 @@ import {
   StepType,
   STEP_COLLECTIONS,
   JournalEntry,
+  PollOption,
+  PollStep,
 } from "./types";
 
 // Module CRUD operations
@@ -33,7 +35,9 @@ import {
 // get module by ID - DOES NOT include steps subcollection
 export const getModuleById = async (moduleId: string): Promise<Module> => {
   if (!db) {
-    throw new Error("Firebase database not initialized. Check environment variables.");
+    throw new Error(
+      "Firebase database not initialized. Check environment variables.",
+    );
   }
   const moduleDocRef = doc(db!, "modules", moduleId);
   const moduleDoc = await getDoc(moduleDocRef);
@@ -46,15 +50,15 @@ export const getModuleById = async (moduleId: string): Promise<Module> => {
 };
 
 export const createModule = async (
-  moduleData: Partial<Module>
+  moduleData: Partial<Module>,
 ): Promise<Module> => {
   // If no order is provided, find the next available order
   let order = moduleData.order;
   if (!order) {
     const existingModules = await getPublicModules();
     const existingOrders = existingModules
-      .map(m => m.order || 0)
-      .filter(o => o > 0);
+      .map((m) => m.order || 0)
+      .filter((o) => o > 0);
     order = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1;
   }
 
@@ -66,7 +70,12 @@ export const createModule = async (
     updatedAt: serverTimestamp(),
   };
   const moduleDocRef = await addDoc(collection(db!, "modules"), newModule);
-  return { id: moduleDocRef.id, ...moduleData, order, stepCount: moduleData.stepCount || 0 } as Module;
+  return {
+    id: moduleDocRef.id,
+    ...moduleData,
+    order,
+    stepCount: moduleData.stepCount || 0,
+  } as Module;
 };
 
 export const updateModule = async (moduleId: string, moduleData: any) => {
@@ -82,7 +91,7 @@ export const updateModule = async (moduleId: string, moduleData: any) => {
 export const assignOrdersToExistingModules = async (): Promise<void> => {
   try {
     const modules = await getPublicModules();
-    const modulesWithoutOrder = modules.filter(m => !m.order);
+    const modulesWithoutOrder = modules.filter((m) => !m.order);
 
     if (modulesWithoutOrder.length === 0) {
       console.log("All modules already have order values");
@@ -91,9 +100,10 @@ export const assignOrdersToExistingModules = async (): Promise<void> => {
 
     // Find the highest existing order
     const existingOrders = modules
-      .map(m => m.order || 0)
-      .filter(o => o > 0);
-    let nextOrder = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1;
+      .map((m) => m.order || 0)
+      .filter((o) => o > 0);
+    let nextOrder =
+      existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1;
 
     // Assign orders to modules without them
     for (const module of modulesWithoutOrder) {
@@ -102,7 +112,9 @@ export const assignOrdersToExistingModules = async (): Promise<void> => {
       nextOrder++;
     }
 
-    console.log(`Successfully assigned orders to ${modulesWithoutOrder.length} modules`);
+    console.log(
+      `Successfully assigned orders to ${modulesWithoutOrder.length} modules`,
+    );
   } catch (error) {
     console.error("Error assigning orders to existing modules:", error);
     throw error;
@@ -111,7 +123,7 @@ export const assignOrdersToExistingModules = async (): Promise<void> => {
 
 export const deleteModule = async (
   moduleId: string,
-  deleteSteps: boolean = true
+  deleteSteps: boolean = true,
 ) => {
   const moduleDocRef = doc(db!, "modules", moduleId);
   if (deleteSteps) {
@@ -122,6 +134,7 @@ export const deleteModule = async (
       "quiz",
       "flashcards",
       "freeResponse",
+      "poll",
     ];
 
     await Promise.all(
@@ -133,7 +146,7 @@ export const deleteModule = async (
         stepsSnapshot.docs.forEach((stepDoc) => {
           batch.delete(stepDoc.ref);
         });
-      })
+      }),
     );
 
     await batch.commit();
@@ -145,7 +158,7 @@ export const deleteModule = async (
 export const getStepById = async (
   moduleId: string,
   stepId: string,
-  type: StepType
+  type: StepType,
 ): Promise<Step> => {
   const collectionName = STEP_COLLECTIONS[type];
   const stepDocRef = doc(db!, "modules", moduleId, collectionName, stepId);
@@ -167,6 +180,7 @@ export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
     "quiz",
     "flashcards",
     "freeResponse",
+    "poll",
   ];
 
   await Promise.all(
@@ -182,7 +196,7 @@ export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
       })) as Step[];
 
       allSteps.push(...steps);
-    })
+    }),
   );
 
   // Sort all steps by order
@@ -191,7 +205,7 @@ export const getStepsByModuleId = async (moduleId: string): Promise<Step[]> => {
 
 export const createStep = async (
   moduleId: string,
-  stepData: Partial<Step>
+  stepData: Partial<Step>,
 ): Promise<Step> => {
   if (!stepData.type) {
     throw new Error("Step type is required");
@@ -225,7 +239,7 @@ export const updateStep = async (
   moduleId: string,
   stepId: string,
   type: StepType,
-  stepData: Partial<Step>
+  stepData: Partial<Step>,
 ) => {
   const collectionName = STEP_COLLECTIONS[type];
   const stepDocRef = doc(db!, "modules", moduleId, collectionName, stepId);
@@ -242,7 +256,7 @@ export const updateStep = async (
 export const deleteStep = async (
   moduleId: string,
   stepId: string,
-  type: StepType
+  type: StepType,
 ) => {
   const collectionName = STEP_COLLECTIONS[type];
   const stepDocRef = doc(db!, "modules", moduleId, collectionName, stepId);
@@ -274,7 +288,7 @@ export const deleteStep = async (
         } catch (e) {
           // Ignore if progress doc doesn't exist for this user
         }
-      })
+      }),
     );
   } catch (error) {
     console.error("Error cleaning up user progress:", error);
@@ -299,7 +313,7 @@ export const createUser = async (userData: Partial<User>) => {
       lastLoginAt: serverTimestamp(),
       isAdmin: false,
     },
-    { merge: true }
+    { merge: true },
   );
 
   // Create journal entries for all public modules
@@ -314,7 +328,7 @@ export const createUser = async (userData: Partial<User>) => {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-    })
+    }),
   );
 
   return { id: userData.id, ...userData } as User;
@@ -337,6 +351,7 @@ export const startUserProgress = async (userId: string, moduleId: string) => {
     completedStepIds: [],
     lastViewedAt: serverTimestamp(),
     quizScores: {},
+    pollVotes: {},
     startedAt: serverTimestamp(),
     completedAt: null,
   };
@@ -357,6 +372,7 @@ export const getUserProgress = async (userId: string, moduleId: string) => {
     completedStepIds: progressData.completedStepIds || [],
     lastViewedAt: progressData.lastViewedAt || null,
     quizScores: progressData.quizScores || {},
+    pollVotes: progressData.pollVotes || {},
     startedAt: progressData.startedAt || null,
     completedAt: progressData.completedAt || null,
   } as UserProgress;
@@ -365,7 +381,7 @@ export const getUserProgress = async (userId: string, moduleId: string) => {
 export const markStepCompleted = async (
   userId: string,
   moduleId: string,
-  stepId: string
+  stepId: string,
 ) => {
   const progressRef = doc(db!, "users", userId, "progress", moduleId);
   const progressDoc = await getDoc(progressRef);
@@ -384,6 +400,7 @@ export const markStepCompleted = async (
       completedStepIds: [stepId],
       lastViewedAt: serverTimestamp(),
       quizScores: {},
+      pollVotes: {},
       startedAt: serverTimestamp(),
       completedAt: null,
     });
@@ -394,7 +411,7 @@ export const updateQuizScore = async (
   userId: string,
   moduleId: string,
   stepId: string,
-  score: number
+  score: number,
 ) => {
   const progressRef = doc(db!, "users", userId, "progress", moduleId);
   const progressDoc = await getDoc(progressRef);
@@ -419,6 +436,7 @@ export const updateQuizScore = async (
       completedStepIds: [],
       lastViewedAt: serverTimestamp(),
       quizScores: quizScores,
+      pollVotes: {},
       startedAt: serverTimestamp(),
       completedAt: null,
     });
@@ -440,7 +458,7 @@ export const getPublicModules = async (): Promise<Module[]> => {
   const publicModulesQuery = query(
     modulesRef,
     where("isPublic", "==", true),
-    orderBy("createdAt", "desc")
+    orderBy("createdAt", "desc"),
   );
   const publicModulesSnapshot = await getDocs(publicModulesQuery);
 
@@ -455,7 +473,7 @@ export const getUserModules = async (userId: string) => {
   const collaboratoryQuery = query(
     modulesRef,
     where("collaborators", "array-contains", userId),
-    orderBy("updatedAt", "desc")
+    orderBy("updatedAt", "desc"),
   );
 
   const collaboratorSnapshot = await getDocs(collaboratoryQuery);
@@ -468,7 +486,7 @@ export const getUserModules = async (userId: string) => {
 // Journal CRUD operations
 
 export const getJournalEntries = async (
-  userId: string
+  userId: string,
 ): Promise<JournalEntry[]> => {
   try {
     const journalRef = collection(db!, "users", userId, "journal");
@@ -488,7 +506,7 @@ export const getJournalEntries = async (
 
 export const getJournalEntryByStepId = async (
   userId: string,
-  stepId: string
+  stepId: string,
 ): Promise<JournalEntry | null> => {
   try {
     const journalRef = collection(db!, "users", userId, "journal");
@@ -515,10 +533,9 @@ export const getJournalEntryByStepId = async (
   }
 };
 
-
 export const createJournalEntry = async (
   userId: string,
-  entryData: Partial<JournalEntry>
+  entryData: Partial<JournalEntry>,
 ): Promise<JournalEntry> => {
   try {
     // Ensure user document exists first
@@ -551,7 +568,7 @@ export const createJournalEntry = async (
 export const updateJournalEntry = async (
   userId: string,
   entryId: string,
-  updates: Partial<Omit<JournalEntry, "id">>
+  updates: Partial<Omit<JournalEntry, "id">>,
 ): Promise<void> => {
   try {
     const entryRef = doc(db!, "users", userId, "journal", entryId);
@@ -567,7 +584,7 @@ export const updateJournalEntry = async (
 
 export const deleteJournalEntry = async (
   userId: string,
-  entryId: string
+  entryId: string,
 ): Promise<void> => {
   try {
     const entryRef = doc(db!, "users", userId, "journal", entryId);
@@ -585,7 +602,7 @@ export const saveFreeResponseToJournal = async (
   moduleTitle: string,
   prompt: string,
   answer: string,
-  stepId: string
+  stepId: string,
 ): Promise<void> => {
   try {
     const journalRef = doc(db!, "users", userId, "journal", moduleId);
@@ -599,10 +616,10 @@ export const saveFreeResponseToJournal = async (
       let body: Record<string, [string, string]>;
 
       // Handle different body types
-      if (typeof data.body === 'string') {
+      if (typeof data.body === "string") {
         // If body is a string (regular journal entry), convert to object structure
         body = {};
-      } else if (typeof data.body === 'object' && data.body !== null) {
+      } else if (typeof data.body === "object" && data.body !== null) {
         // If body is already an object (module-linked entry), use it
         body = data.body as Record<string, [string, string]>;
       } else {
@@ -633,5 +650,155 @@ export const saveFreeResponseToJournal = async (
   } catch (error) {
     console.error("Failed to save free response to journal:", error);
     throw new Error("Failed to save free response to journal");
+  }
+};
+
+// Poll voting operations
+
+export const submitPollVote = async (
+  moduleId: string,
+  stepId: string,
+  userId: string,
+  selectedOptionIds: string[],
+): Promise<void> => {
+  if (!db) {
+    throw new Error(
+      "Firebase database not initialized. Check environment variables.",
+    );
+  }
+
+  try {
+    // Get the current poll step
+    const pollRef = doc(db!, "modules", moduleId, "polls", stepId);
+    const pollDoc = await getDoc(pollRef);
+
+    if (!pollDoc.exists()) {
+      throw new Error("Poll not found");
+    }
+
+    const pollData = pollDoc.data() as PollStep;
+
+    // Get user progress to check if already voted
+    const progressRef = doc(db!, "users", userId, "progress", moduleId);
+    const progressDoc = await getDoc(progressRef);
+
+    let progressData: any;
+    let previousVoteIds: string[] = [];
+
+    if (progressDoc.exists()) {
+      progressData = progressDoc.data();
+      // Check if user has already voted and store previous vote
+      if (progressData.pollVotes && progressData.pollVotes[stepId]) {
+        previousVoteIds = progressData.pollVotes[stepId];
+      }
+    } else {
+      // Create new progress if none exists
+      progressData = {
+        completedStepIds: [],
+        lastViewedAt: serverTimestamp(),
+        quizScores: {},
+        pollVotes: {},
+        startedAt: serverTimestamp(),
+        completedAt: null,
+      };
+    }
+
+    // Update poll votes in user progress
+    const currentPollVotes = progressData.pollVotes || {};
+    currentPollVotes[stepId] = selectedOptionIds;
+
+    // Update vote counts on the poll - remove previous vote and add new vote
+    const updatedOptions = pollData.options.map((option) => {
+      let voteChange = 0;
+
+      // Remove vote from previous selection
+      if (previousVoteIds.includes(option.id)) {
+        voteChange -= 1;
+      }
+
+      // Add vote to new selection
+      if (selectedOptionIds.includes(option.id)) {
+        voteChange += 1;
+      }
+
+      return { ...option, votes: Math.max(0, option.votes + voteChange) };
+    });
+
+    // Run both operations in parallel
+    await Promise.all([
+      updateDoc(pollRef, {
+        options: updatedOptions,
+        updatedAt: serverTimestamp(),
+      }),
+      setDoc(
+        progressRef,
+        {
+          ...progressData,
+          pollVotes: currentPollVotes,
+          lastViewedAt: serverTimestamp(),
+        },
+        { merge: true },
+      ),
+    ]);
+  } catch (error) {
+    console.error("Failed to submit poll vote:", error);
+    throw new Error("Failed to submit vote");
+  }
+};
+
+export const getUserPollVote = async (
+  moduleId: string,
+  stepId: string,
+  userId: string,
+): Promise<{ optionIds: string[]; votedAt: any } | null> => {
+  if (!db) {
+    throw new Error(
+      "Firebase database not initialized. Check environment variables.",
+    );
+  }
+
+  try {
+    const progressRef = doc(db!, "users", userId, "progress", moduleId);
+    const progressDoc = await getDoc(progressRef);
+
+    if (progressDoc.exists()) {
+      const progressData = progressDoc.data();
+      const pollVotes = progressData.pollVotes || {};
+      const userVote = pollVotes[stepId];
+
+      if (userVote) {
+        return { optionIds: userVote, votedAt: progressData.lastViewedAt };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Failed to get user poll vote:", error);
+    throw new Error("Failed to get vote");
+  }
+};
+
+export const getPollResults = async (
+  moduleId: string,
+  stepId: string,
+): Promise<PollStep> => {
+  if (!db) {
+    throw new Error(
+      "Firebase database not initialized. Check environment variables.",
+    );
+  }
+
+  try {
+    const pollRef = doc(db!, "modules", moduleId, "polls", stepId);
+    const pollDoc = await getDoc(pollRef);
+
+    if (!pollDoc.exists()) {
+      throw new Error("Poll not found");
+    }
+
+    return { id: pollDoc.id, ...pollDoc.data() } as PollStep;
+  } catch (error) {
+    console.error("Failed to get poll results:", error);
+    throw new Error("Failed to get poll results");
   }
 };

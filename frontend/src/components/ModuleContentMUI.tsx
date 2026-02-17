@@ -10,11 +10,12 @@ import {
   updateQuizScore,
   getJournalEntryByStepId
 } from "@/lib/firebase/db-operations";
-import { Module, Step, VideoStep, QuizStep, FlashcardsStep, FreeResponseStep, UserProgress } from "@/lib/firebase/types";
+import { Module, Step, VideoStep, QuizStep, FlashcardsStep, FreeResponseStep, PollStep, UserProgress } from "@/lib/firebase/types";
 import FreeResponseStepView from "./FreeResponseStepView";
 import VideoStepView from "./VideoStepView";
 import FlashcardsStepView from "./FlashcardsStepView";
 import QuizStepView from "./QuizStepView";
+import PollStepView from "./PollStepView";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import confetti from "canvas-confetti";
 
@@ -371,6 +372,14 @@ export default function ModuleContentMUI({
                 onChangeResponse={(value) =>
                   handleFreeResponseChange(currentStep.id, value)
                 }
+              />
+            )}
+            {currentStep.type === "poll" && (
+              <PollStepView
+                step={currentStep as PollStep}
+                stepId={currentStep.id}
+                userId={userId}
+                moduleId={moduleId}
               />
             )}
           </Box>

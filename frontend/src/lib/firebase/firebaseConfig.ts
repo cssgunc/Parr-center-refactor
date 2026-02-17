@@ -25,10 +25,21 @@ try {
     db = getFirestore(app);
     auth = getAuth(app);
     googleAuthProvider = new GoogleAuthProvider();
+  } else {
+    // Create a mock auth instance for development when env vars are missing
+    console.warn('Firebase config incomplete - app will run in development mode without authentication');
+    app = null;
+    db = null;
+    auth = null;
+    googleAuthProvider = null;
   }
 } catch (error) {
-  // If initialization fails, components will need to handle null auth
+  // If initialization fails, set everything to null
   console.warn('Firebase initialization failed:', error);
+  app = null;
+  db = null;
+  auth = null;
+  googleAuthProvider = null;
 }
 
 export { app, db, auth, googleAuthProvider };

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase/firebaseConfig";
+import { Box, Typography } from "@mui/material";
+import { useAuth } from "@/hooks/useAuth";
 import {
   getModuleById,
   getStepsByModuleId,
@@ -14,14 +14,16 @@ import {
   VideoStep,
   FreeResponseStep,
   QuizStep,
+  PollStep,
 } from "@/lib/firebase/types";
 import FlashcardStep from "./FlashcardsStepView";
 import VideoStepView from "./VideoStepView";
 import FreeResponseStepView from "./FreeResponseStepView";
 import QuizStepView from "./QuizStepView";
+import PollStepView from "./PollStepView";
 
 export default function ModuleTestPage() {
-  const [user, authLoading] = useAuthState(auth!);
+  const [user, authLoading] = useAuth();
   const [module, setModule] = useState<Module | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,9 +32,112 @@ export default function ModuleTestPage() {
   const [freeResponsesByStepId, setFreeResponsesByStepId] = useState<
     Record<string, string>
   >({});
-  const [quizPassed, setQuizPassed] = useState(false);
+  const [quizPassed, setQuizPassed] = useState<boolean>(false);
 
-  const MODULE_ID = "testmodule1";
+  const currentStep = steps[currentStepIndex];
+
+  // Get step icon function
+  const getStepIcon = (type?: Step["type"]) => {
+    if (!type) return null;
+    
+    switch (type) {
+      case "video":
+        return (
+          <svg
+            className="w-4 h-4 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+            />
+          </svg>
+        );
+      case "flashcards":
+        return (
+          <svg
+            className="w-4 h-4 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+        );
+      case "quiz":
+        return (
+          <svg
+            className="w-4 h-4 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
+      case "freeResponse":
+        return (
+          <svg
+            className="w-4 h-4 text-purple-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+        );
+      case "poll":
+        return (
+          <svg
+            className="w-4 h-4 text-orange-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const handleFreeResponseChange = (stepId: string, value: string) => {
+    setFreeResponsesByStepId((prev) => ({
+      ...prev,
+      [stepId]: value,
+    }));
+  };
+
+  const handleQuizPassedChange = (score: number) => {
+    setQuizPassed(score > 0);
+  };
+
+  const MODULE_ID = "testmodule2";
 
   useEffect(() => {
     const fetchModuleData = async () => {
@@ -44,6 +149,7 @@ export default function ModuleTestPage() {
       try {
         console.log("Fetching module:", MODULE_ID);
         const moduleData = await getModuleById(MODULE_ID);
+        console.log("Module fetched:", moduleData);
         setModule(moduleData);
 
         console.log("Fetching steps for module:", MODULE_ID);
@@ -127,18 +233,6 @@ export default function ModuleTestPage() {
     );
   }
 
-  const currentStep = steps[currentStepIndex];
-
-  const handleFreeResponseChange = (stepId: string, value: string) => {
-    setFreeResponsesByStepId((prev) => ({
-      ...prev,
-      [stepId]: value,
-    }));
-  };
-
-  const handleQuizPassedChange = (score: number) => {
-    setQuizPassed(score > 0);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -146,11 +240,11 @@ export default function ModuleTestPage() {
       <div className="bg-white border-b border-gray-200 p-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {module.title}
+            {module?.title || "No Module"}
           </h1>
-          <p className="text-gray-600">{module.description}</p>
+          <p className="text-gray-600">{module?.description || "No description"}</p>
           <p className="text-sm text-gray-400 mt-2">
-            Module ID: {module.id} | Steps: {steps.length}
+            Module ID: {MODULE_ID} | Steps: {steps.length}
           </p>
         </div>
       </div>
@@ -173,9 +267,12 @@ export default function ModuleTestPage() {
               <p className="text-sm text-gray-600">
                 Step {currentStepIndex + 1} of {steps.length}
               </p>
-              <p className="text-xs text-gray-400 capitalize">
-                {currentStep?.type || "unknown"}
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                {getStepIcon(currentStep?.type)}
+                <p className="text-xs text-gray-400 capitalize">
+                  {currentStep?.type || "unknown"}
+                </p>
+              </div>
             </div>
 
             <button
@@ -229,33 +326,18 @@ export default function ModuleTestPage() {
                     }
                   />
                 )}
+                {currentStep.type === "poll" && (
+                  <PollStepView
+                    step={currentStep as PollStep}
+                    stepId={currentStep.id}
+                    userId={user?.uid || ""}
+                    moduleId={MODULE_ID}
+                  />
+                )}
               </>
             )}
           </div>
         )}
-      </div>
-
-      {/* Debug Info */}
-      <div className="max-w-7xl mx-auto p-6">
-        <details className="bg-gray-100 rounded-lg p-4">
-          <summary className="cursor-pointer font-semibold text-gray-700">
-            Debug: Module & Steps Data
-          </summary>
-          <div className="mt-4 space-y-4">
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Module:</h3>
-              <pre className="p-4 bg-white rounded text-sm overflow-auto">
-                {JSON.stringify(module, null, 2)}
-              </pre>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Steps:</h3>
-              <pre className="p-4 bg-white rounded text-sm overflow-auto">
-                {JSON.stringify(steps, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </details>
       </div>
     </div>
   );
