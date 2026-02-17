@@ -279,10 +279,11 @@ service cloud.firestore {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
         allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
         // Allow users to update poll documents for voting (only vote counts and updatedAt)
-        allow update: if isSignedIn() && 
+        allow update: if (isSignedIn() && 
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['options', 'updatedAt']) &&
           request.resource.data.options is list &&
-          request.resource.data.updatedAt is timestamp;
+          request.resource.data.updatedAt is timestamp) ||
+          isAdmin();
         allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
       
