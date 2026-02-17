@@ -16,6 +16,7 @@ import {
   serverTimestamp,
   writeBatch,
   orderBy,
+  arrayRemove,
 } from "firebase/firestore";
 import {
   User,
@@ -259,6 +260,27 @@ export const deleteStep = async (
       stepCount: Math.max(0, currentCount - 1), // Don't go below 0
       updatedAt: serverTimestamp(),
     });
+  }
+
+  // Remove stepId from all users' progress
+  try {
+    const usersRef = collection(db!, "users");
+    const usersSnapshot = await getDocs(usersRef);
+
+    await Promise.all(
+      usersSnapshot.docs.map(async (userDoc) => {
+        const progressRef = doc(db!, "users", userDoc.id, "progress", moduleId);
+        try {
+          await updateDoc(progressRef, {
+            completedStepIds: arrayRemove(stepId),
+          });
+        } catch (e) {
+          // Ignore if progress doc doesn't exist for this user
+        }
+      })
+    );
+  } catch (error) {
+    console.error("Error cleaning up user progress:", error);
   }
 };
 

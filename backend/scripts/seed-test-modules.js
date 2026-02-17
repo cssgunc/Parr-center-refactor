@@ -72,13 +72,25 @@ async function seedTestModules() {
         prompt: 'What is the capital of France?',
         choices: ['London', 'Berlin', 'Paris', 'Madrid'],
         correctIndex: 2,
-        explanation: 'Paris is the capital and largest city of France.'
+        choiceExplanations: [
+          'London is the capital of England, not France.',
+          'Berlin is the capital of Germany, not France.',
+          'Paris is the capital and largest city of France.',
+          'Madrid is the capital of Spain, not France.'
+        ],
+        explanation: 'Paris is the capital and largest city of France.' // Legacy field for backward compatibility
       },
       {
         prompt: 'Which of the following is a programming language?',
         choices: ['HTML', 'CSS', 'JavaScript', 'All of the above'],
         correctIndex: 2,
-        explanation: 'JavaScript is a programming language, while HTML and CSS are markup and styling languages.'
+        choiceExplanations: [
+          'HTML is a markup language used to structure web content, not a programming language.',
+          'CSS is a styling language used to style web pages, not a programming language.',
+          'JavaScript is a full-featured programming language that can be used for both frontend and backend development.',
+          'Not all options are programming languages - only JavaScript qualifies.'
+        ],
+        explanation: 'JavaScript is a programming language, while HTML and CSS are markup and styling languages.' // Legacy field
       }
     ],
     passingScore: 70,
@@ -177,13 +189,25 @@ async function seedTestModules() {
           'High Text Transfer Process'
         ],
         correctIndex: 0,
-        explanation: 'HTTP stands for HyperText Transfer Protocol, the foundation of data communication on the web.'
+        choiceExplanations: [
+          'Correct! HTTP stands for HyperText Transfer Protocol, the foundation of data communication on the web.',
+          'This is incorrect. The correct acronym is HyperText Transfer Protocol, not High Transfer Text Protocol.',
+          'This is incorrect. HTTP uses "Transfer" not "Transmission", and "Protocol" not "Process".',
+          'This is incorrect. HTTP uses "HyperText" not "High Text", and "Transfer Protocol" not "Transfer Process".'
+        ],
+        explanation: 'HTTP stands for HyperText Transfer Protocol, the foundation of data communication on the web.' // Legacy field
       },
       {
         prompt: 'Which HTTP method is used to retrieve data?',
         choices: ['POST', 'GET', 'PUT', 'DELETE'],
         correctIndex: 1,
-        explanation: 'GET is used to retrieve data from a server.'
+        choiceExplanations: [
+          'POST is used to create or submit data to a server, not retrieve it.',
+          'Correct! GET is the HTTP method used to retrieve data from a server without side effects.',
+          'PUT is used to update existing resources on a server, not retrieve them.',
+          'DELETE is used to remove resources from a server, not retrieve them.'
+        ],
+        explanation: 'GET is used to retrieve data from a server.' // Legacy field
       },
       {
         prompt: 'What is REST?',
@@ -194,7 +218,13 @@ async function seedTestModules() {
           'A web browser'
         ],
         correctIndex: 2,
-        explanation: 'REST (Representational State Transfer) is an architectural style for designing networked applications.'
+        choiceExplanations: [
+          'REST is not a database type. It\'s an architectural style for designing web services.',
+          'REST is not a programming language. It\'s a set of principles for API design.',
+          'Correct! REST (Representational State Transfer) is an architectural style for designing networked applications and APIs.',
+          'REST is not a web browser. It\'s a design pattern for building web services.'
+        ],
+        explanation: 'REST (Representational State Transfer) is an architectural style for designing networked applications.' // Legacy field
       }
     ],
     passingScore: 80,

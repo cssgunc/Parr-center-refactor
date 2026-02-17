@@ -53,6 +53,23 @@ export default function ModuleContentMUI({
     setCurrentStepIndex(0);
   };
 
+  const handleNavigateToStep = async (stepIndex: number) => {
+    if (!userId || !moduleId) return;
+    
+    // Check if step is navigable (completed or next)
+    const completedCount = userProgress?.completedStepIds.length || 0;
+    if (stepIndex > completedCount) return;
+
+    if (!userProgress) {
+      await startUserProgress(userId, moduleId);
+      const newProgress = await getUserProgress(userId, moduleId);
+      setUserProgress(newProgress);
+    }
+
+    setShowSteps(true);
+    setCurrentStepIndex(stepIndex);
+  };
+
   useEffect(() => {
     if (!moduleId) return;
 
@@ -545,37 +562,47 @@ export default function ModuleContentMUI({
             </Typography>
           </Box>
           <Box className="flex flex-row gap-5 mt-5 flex-wrap">
-            {Array.from({ length: steps.length }, (_, i) => i + 1).map((step) => (
-              <Box 
-                key={step}
-                sx={{
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-4px) scale(1.05)",
-                  },
-                }}
-              >
-                {userProgress && step <= userProgress.completedStepIds.length ? (
-                  <div 
-                    className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-white min-w-[32px] p-0 bg-green-600 cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg"
-                    style={{
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    {step}
-                  </div>
-                ) : (
-                  <div 
-                    className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-800 min-w-[32px] p-0 bg-gray-100 cursor-pointer transition-all duration-300 hover:border-blue-300 hover:bg-blue-50"
-                    style={{
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    {step}
-                  </div>
-                )}
-              </Box>
-            ))}
+            {Array.from({ length: steps.length }, (_, i) => i + 1).map((step, idx) => {
+              const isCompleted = userProgress && step <= userProgress.completedStepIds.length;
+              const isNext = userProgress ? step === userProgress.completedStepIds.length + 1 : step === 1;
+              const navigable = isCompleted || isNext;
+
+              return (
+                <Box 
+                  key={step}
+                  onClick={() => navigable && handleNavigateToStep(idx)}
+                  sx={{
+                    transition: "all 0.3s ease",
+                    cursor: navigable ? "pointer" : "default",
+                    "&:hover": navigable ? {
+                      transform: "translateY(-4px) scale(1.05)",
+                    } : {},
+                  }}
+                >
+                  {isCompleted ? (
+                    <div 
+                      className="w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold text-white min-w-[32px] p-0 bg-green-600 transition-all duration-300 shadow-md hover:shadow-lg"
+                      style={{
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      {step}
+                    </div>
+                  ) : (
+                    <div 
+                      className={`w-[50px] h-[50px] rounded-full border border-gray-300 flex items-center justify-center font-bold min-w-[32px] p-0 transition-all duration-300 ${
+                        navigable ? "text-gray-800 bg-gray-100 hover:border-blue-300 hover:bg-blue-50" : "text-gray-400 bg-gray-50 opacity-60"
+                      }`}
+                      style={{
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      {step}
+                    </div>
+                  )}
+                </Box>
+              );
+            })}
             {steps.length > 0 && userProgress?.completedStepIds.length === steps.length && (
               <Box
                 sx={{

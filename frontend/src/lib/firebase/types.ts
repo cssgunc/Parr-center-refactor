@@ -44,6 +44,9 @@ export interface QuizQuestion {
   prompt: string;
   choices: string[];
   correctIndex: number;
+  // Optional explanations for each choice (aligned by index with choices array)
+  choiceExplanations?: (string | null)[];
+  // Legacy: question-level explanation (kept for backward compatibility)
   explanation?: string;
 }
 
