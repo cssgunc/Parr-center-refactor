@@ -271,9 +271,14 @@ service cloud.firestore {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
         allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
         allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        // Allow users to update poll documents for voting (only vote counts and updatedAt)
+        allow update: if isSignedIn() && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['options', 'updatedAt']) &&
+          request.resource.data.options is list &&
+          request.resource.data.updatedAt is timestamp;
         allow delete: if isOwner() || isCollaborator() || isAdmin();
 
-        // POLL VOTES SUBCOLLECTION
+        // POLL VOTES SUBCOLLECTION (deprecated - kept for backward compatibility)
         match /votes/{userId} {
           allow read: if isOwner() || isCollaborator() || isAdmin() || request.auth.uid == userId;
           allow create: if isOwner() || isCollaborator() || isAdmin() || request.auth.uid == userId;
