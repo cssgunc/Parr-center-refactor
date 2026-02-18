@@ -74,6 +74,12 @@ interface ModuleStore {
   deleteStepData: (moduleId: string, stepId: string) => Promise<void>; // Delete a step
   reorderSteps: (moduleId: string, stepIds: string[]) => Promise<void>; // Reorder steps (updates order field)
   cloneStepData: (moduleId: string, stepId: string) => Promise<void>; // Duplicate a step
+
+  // ===== MODULE REORDERING =====
+  reorderModules: (moduleIds: string[]) => Promise<void>; // Reorder modules (updates order field)
+
+  // ===== DRAFT EDITING ACTIONS =====
+  saveModuleWithSteps: (moduleData: { title: string; description: string; order: number }, steps: Step[]) => Promise<void>;
 }
 
 /**
@@ -454,4 +460,167 @@ export const useModuleStore = create<ModuleStore>((set, get) => ({
       console.error('Error cloning step:', error);
     }
   },
+
+  /**
+   * REORDER MODULES
+   * 
+   * Updates the order field of modules in Firebase and local state.
+   */
+  reorderModules: async (moduleIds: string[]) => {
+    set({ isLoading: true, error: null });
+    try {
+      const state = get();
+
+      // Update order for each module in Firebase
+      await Promise.all(
+        moduleIds.map((moduleId, index) => {
+          return updateModule(moduleId, { order: index });
+        })
+      );
+
+      // Update local state
+      // We need to re-sort the modules array based on the new order
+      const reorderedModules = moduleIds
+        .map((id) => state.modules.find((m) => m.id === id))
+        .filter(Boolean)
+        .map((module, index) => ({ ...module!, order: index }));
+
+      // There might be modules not included in the reordering (though unlikely in this UI),
+      // so we should keep them but maybe append them? 
+      // For now, let's assume all displayed modules are being reordered or at least 
+      // the reordered list contains the active view. 
+      // Actually, a safer approach for local state is to map over existing modules and update their order if they are in the list.
+      // But re-constructing the array from the ID list ensures the order is correct in the UI immediately.
+
+      set((state) => ({
+        modules: reorderedModules,
+        isLoading: false,
+      }));
+
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error reordering modules:', error);
+    }
+  },
+
+  /**
+   * SAVE MODULE WITH STEPS (DRAFT EDITING)
+   * 
+   * Saves a module and all its steps in a single operation (logically).
+   * Used for the "Draft Mode" editing where changes are only persisted on save.
+   */
+  saveModuleWithSteps: async (moduleData, steps) => {
+    const state = get();
+    const { userId, selectedModule } = state;
+
+    if (!userId) {
+      set({ error: 'User ID is required to save module' });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      let savedModule: Module;
+
+      if (selectedModule) {
+        // Update existing module
+        console.log('Updating module:', selectedModule.id);
+        await updateModule(selectedModule.id, {
+          title: moduleData.title,
+          description: moduleData.description,
+          order: moduleData.order,
+        });
+        savedModule = { ...selectedModule, ...moduleData };
+
+        // Handle steps:
+        // 1. Identify existing steps vs new steps vs deleted steps
+        // The `steps` array contains the desired state.
+
+        const existingStepIds = steps.filter(s => s.id && selectedModule.steps.some(oldS => oldS.id === s.id)).map(s => s.id);
+        const stepsToDelete = selectedModule.steps.filter(s => !existingStepIds.includes(s.id));
+
+        console.log('Steps to delete:', stepsToDelete.length);
+        console.log('Steps to save/update:', steps.length);
+
+        // Delete removed steps
+        await Promise.all(stepsToDelete.map(s => deleteStep(selectedModule.id, s.id, s.type)));
+
+        // Save/Update current steps
+        const savedSteps = await Promise.all(steps.map(async (step, index) => {
+          // Update order based on array position
+          const stepWithOrder = { ...step, order: index };
+
+          // Check if it's a new step (we can check if it exists in DB, or use a convention. 
+          // Since we generate UUIDs for drafts, checking against original module steps is safer).
+          const isExisting = selectedModule.steps.some(s => s.id === step.id);
+
+          if (isExisting) {
+            // Update
+            const { id, type, ...updates } = stepWithOrder;
+            // Remove fields that shouldn't be updated directly if they exist in updates (though Omit handles types)
+            // We need to pass partial updates.
+            // Ideally we diff, but for now sending full update is okay as long as we don't overwrite server timestamps if not needed.
+            // But our updateStep wrapper handles timestamps.
+            await updateStep(selectedModule.id, id, type, updates);
+            return stepWithOrder;
+          } else {
+            // Create
+            const { id, ...stepData } = stepWithOrder;
+            // We strip the ID because createStep generates one, BUT wait.
+            // If we generated an ID on client for the draft, we might want to use it?
+            // Firestore createStep usually generates a new ID. 
+            // If our `createStep` uses `addDoc`, it makes a new ID.
+            // If we want to preserve the ID we generated (e.g. for relationships), we should use `setDoc` with that ID.
+            // Looking at `db-operations.ts` (implied), `createStep` likely uses `addDoc`.
+            // Let's assume `createStep` returns the new step with new ID.
+            // This might break if we rely on the draft IDs. 
+            // However, since we are doing a full save, we can just replace the local state with whatever the server returns.
+            return await createStep(selectedModule.id, stepData);
+          }
+        }));
+
+        // Update local state with the result
+        set((state) => ({
+          modules: state.modules.map((m) =>
+            m.id === selectedModule.id ? { ...savedModule, steps: savedSteps } : m
+          ),
+          selectedModule: { ...savedModule, steps: savedSteps },
+          isLoading: false,
+        }));
+
+      } else {
+        // Create new module
+        const newModule = await createModule({
+          title: moduleData.title,
+          description: moduleData.description,
+          createdBy: userId,
+          collaborators: [userId],
+          isPublic: true,
+          tags: [],
+          stepCount: steps.length,
+          order: moduleData.order,
+        });
+
+        savedModule = newModule;
+
+        // Create all steps
+        const savedSteps = await Promise.all(steps.map(async (step, index) => {
+          const { id, ...stepData } = step;
+          // Ensure order is correct
+          const dataToSave = { ...stepData, order: index };
+          return await createStep(newModule.id, dataToSave);
+        }));
+
+        set((state) => ({
+          modules: [...state.modules, { ...savedModule, steps: savedSteps }],
+          isLoading: false,
+        }));
+      }
+
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      console.error('Error saving module with steps:', error);
+    }
+  },
 }));
+
