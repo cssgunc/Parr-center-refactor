@@ -11,8 +11,11 @@ interface FreeResponseEditorModalProps {
   step?: FreeResponseStep;
 }
 
+import { useAlert } from '@/context/AlertContext';
+
 export default function FreeResponseEditorModal({ moduleId, onClose, onBack, step }: FreeResponseEditorModalProps) {
   const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+  const { showAlert } = useAlert();
   const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
@@ -28,17 +31,17 @@ export default function FreeResponseEditorModal({ moduleId, onClose, onBack, ste
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert('Please enter a free response prompt title');
+      await showAlert('Validation Error', 'Please enter a free response prompt title', 'error');
       return;
     }
 
     if (!formData.prompt.trim()) {
-      alert('Please enter a prompt');
+      await showAlert('Validation Error', 'Please enter a prompt', 'error');
       return;
     }
 
     if (!userId) {
-      alert('User not authenticated');
+      await showAlert('Authentication Error', 'User not authenticated', 'error');
       return;
     }
 
@@ -86,7 +89,7 @@ export default function FreeResponseEditorModal({ moduleId, onClose, onBack, ste
       onClose();
     } catch (error: any) {
       console.error('Error saving free response step:', error);
-      alert(`Failed to save free response step: ${error.message}`);
+      await showAlert('Error', `Failed to save free response step: ${error.message}`, 'error');
     } finally {
       setIsSaving(false);
     }

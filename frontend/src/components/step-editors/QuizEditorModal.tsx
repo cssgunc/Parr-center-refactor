@@ -11,8 +11,11 @@ interface QuizEditorModalProps {
   step?: QuizStep;
 }
 
+import { useAlert } from '@/context/AlertContext';
+
 export default function QuizEditorModal({ moduleId, onClose, onBack, step }: QuizEditorModalProps) {
   const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+  const { showAlert } = useAlert();
   const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
@@ -21,13 +24,13 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
       ...q,
       choiceExplanations: q.choiceExplanations || q.choices.map(() => ''),
     })) || [
-      {
-        prompt: '',
-        choices: ['', '', '', ''],
-        correctIndex: 0,
-        choiceExplanations: ['', '', '', ''],
-      },
-    ],
+        {
+          prompt: '',
+          choices: ['', '', '', ''],
+          correctIndex: 0,
+          choiceExplanations: ['', '', '', ''],
+        },
+      ],
     shuffle: step?.shuffle || false,
     passingScore: step?.passingScore?.toString() || '70',
     estimatedMinutes: step?.estimatedMinutes?.toString() || '',
@@ -84,7 +87,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
     if (question.choices.length > 2) {
       question.choices.splice(choiceIndex, 1);
-      
+
       // Remove corresponding explanation
       if (question.choiceExplanations) {
         question.choiceExplanations.splice(choiceIndex, 1);
@@ -117,7 +120,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert('Please enter a quiz title');
+      await showAlert('Validation Error', 'Please enter a quiz title', 'error');
       return;
     }
 
@@ -126,7 +129,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
     );
 
     if (validQuestions.length === 0) {
-      alert('Please add at least one valid question');
+      await showAlert('Validation Error', 'Please add at least one valid question', 'error');
       return;
     }
 
@@ -135,7 +138,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
       const nonEmptyChoices = q.choices.filter(opt => opt.trim());
       const nonEmptyIndices: number[] = [];
       let currentIndex = 0;
-      
+
       // Track which original indices correspond to non-empty choices
       q.choices.forEach((choice, idx) => {
         if (choice.trim()) {
@@ -155,7 +158,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
           const explanation = q.choiceExplanations?.[origIdx];
           return explanation?.trim() || null;
         });
-        
+
         // Only include if at least one explanation exists
         if (cleanedExplanations.some(e => e !== null)) {
           question.choiceExplanations = cleanedExplanations;
@@ -166,18 +169,18 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
       if (q.explanation) {
         question.explanation = q.explanation;
       }
-      
+
       return question;
     });
 
     const passingScore = parseInt(formData.passingScore);
     if (isNaN(passingScore) || passingScore < 0 || passingScore > 100) {
-      alert('Please enter a valid passing score between 0 and 100');
+      await showAlert('Validation Error', 'Please enter a valid passing score between 0 and 100', 'error');
       return;
     }
 
     if (!userId) {
-      alert('User not authenticated');
+      await showAlert('Authentication Error', 'User not authenticated', 'error');
       return;
     }
 
@@ -217,7 +220,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step }: Qui
       onClose();
     } catch (error: any) {
       console.error('Error saving quiz step:', error);
-      alert(`Failed to save quiz step: ${error.message}`);
+      await showAlert('Error', `Failed to save quiz step: ${error.message}`, 'error');
     } finally {
       setIsSaving(false);
     }

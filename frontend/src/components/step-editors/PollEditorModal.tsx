@@ -11,8 +11,11 @@ interface PollEditorModalProps {
   step?: PollStep;
 }
 
+import { useAlert } from '@/context/AlertContext';
+
 export default function PollEditorModal({ moduleId, onClose, onBack, step }: PollEditorModalProps) {
   const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+  const { showAlert } = useAlert();
   const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
@@ -34,23 +37,23 @@ export default function PollEditorModal({ moduleId, onClose, onBack, step }: Pol
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert('Please enter a poll title');
+      await showAlert('Validation Error', 'Please enter a poll title', 'error');
       return;
     }
 
     if (!formData.question.trim()) {
-      alert('Please enter a question');
+      await showAlert('Validation Error', 'Please enter a question', 'error');
       return;
     }
 
     const validOptions = options.filter(opt => opt.text.trim());
     if (validOptions.length < 2) {
-      alert('Please provide at least 2 options');
+      await showAlert('Validation Error', 'Please provide at least 2 options', 'error');
       return;
     }
 
     if (!userId) {
-      alert('User not authenticated');
+      await showAlert('Authentication Error', 'User not authenticated', 'error');
       return;
     }
 
@@ -85,7 +88,7 @@ export default function PollEditorModal({ moduleId, onClose, onBack, step }: Pol
       onClose();
     } catch (error) {
       console.error('Error saving poll step:', error);
-      alert('Error saving poll step. Please try again.');
+      await showAlert('Error', 'Error saving poll step. Please try again.', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -107,7 +110,7 @@ export default function PollEditorModal({ moduleId, onClose, onBack, step }: Pol
   };
 
   const updateOption = (id: string, text: string) => {
-    setOptions(options.map(opt => 
+    setOptions(options.map(opt =>
       opt.id === id ? { ...opt, text } : opt
     ));
   };
