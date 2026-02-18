@@ -11,8 +11,11 @@ interface FlashcardsEditorModalProps {
   step?: FlashcardsStep;
 }
 
+import { useAlert } from '@/context/AlertContext';
+
 export default function FlashcardsEditorModal({ moduleId, onClose, onBack, step }: FlashcardsEditorModalProps) {
   const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+  const { showAlert } = useAlert();
   const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
@@ -49,18 +52,18 @@ export default function FlashcardsEditorModal({ moduleId, onClose, onBack, step 
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert('Please enter a flashcard set title');
+      await showAlert('Validation Error', 'Please enter a flashcard set title', 'error');
       return;
     }
 
     const validCards = formData.cards.filter(card => card.front.trim() && card.back.trim());
     if (validCards.length === 0) {
-      alert('Please add at least one flashcard');
+      await showAlert('Validation Error', 'Please add at least one flashcard', 'error');
       return;
     }
 
     if (!userId) {
-      alert('User not authenticated');
+      await showAlert('Authentication Error', 'User not authenticated', 'error');
       return;
     }
 
@@ -104,7 +107,7 @@ export default function FlashcardsEditorModal({ moduleId, onClose, onBack, step 
       onClose();
     } catch (error: any) {
       console.error('Error saving flashcards step:', error);
-      alert(`Failed to save flashcards step: ${error.message}`);
+      await showAlert('Error', `Failed to save flashcards step: ${error.message}`, 'error');
     } finally {
       setIsSaving(false);
     }

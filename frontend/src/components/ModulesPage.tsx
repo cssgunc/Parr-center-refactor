@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { useModuleStore, ModuleWithSteps } from '@/store/moduleStore';
 import { useAuth } from '@/hooks/useAuth';
+import { useAlert } from '@/context/AlertContext';
 import ModuleEditor from './ModuleEditor';
 
 export default function ModulesPage() {
@@ -27,6 +28,7 @@ export default function ModulesPage() {
     setIsEditing,
     setUserId,
   } = useModuleStore();
+  const { showConfirm } = useAlert();
 
   // ===== LOCAL STATE =====
   const [showModuleEditor, setShowModuleEditor] = useState(false);
@@ -60,7 +62,8 @@ export default function ModulesPage() {
   };
 
   const handleDeleteModule = async (moduleId: string) => {
-    if (confirm('Are you sure you want to delete this module? This will also delete all its steps.')) {
+    const confirmed = await showConfirm('Delete Module', 'Are you sure you want to delete this module? This will also delete all its steps.');
+    if (confirmed) {
       await deleteModuleData(moduleId);
     }
   };

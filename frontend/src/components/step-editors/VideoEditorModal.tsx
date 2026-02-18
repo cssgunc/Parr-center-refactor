@@ -11,8 +11,11 @@ interface VideoEditorModalProps {
   step?: VideoStep;
 }
 
+import { useAlert } from '@/context/AlertContext';
+
 export default function VideoEditorModal({ moduleId, onClose, onBack, step }: VideoEditorModalProps) {
   const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+  const { showAlert } = useAlert();
   const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
@@ -26,12 +29,12 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step }: Vi
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert('Please enter a video title');
+      await showAlert('Validation Error', 'Please enter a video title', 'error');
       return;
     }
 
     if (!formData.youtubeUrl.trim()) {
-      alert('Please enter a YouTube URL');
+      await showAlert('Validation Error', 'Please enter a YouTube URL', 'error');
       return;
     }
 
@@ -39,12 +42,12 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step }: Vi
     try {
       new URL(formData.youtubeUrl);
     } catch {
-      alert('Please enter a valid URL');
+      await showAlert('Validation Error', 'Please enter a valid URL', 'error');
       return;
     }
 
     if (!userId) {
-      alert('User not authenticated');
+      await showAlert('Authentication Error', 'User not authenticated', 'error');
       return;
     }
 
@@ -80,7 +83,7 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step }: Vi
       onClose();
     } catch (error: any) {
       console.error('Error saving video step:', error);
-      alert(`Failed to save video step: ${error.message}`);
+      await showAlert('Error', `Failed to save video step: ${error.message}`, 'error');
     } finally {
       setIsSaving(false);
     }
