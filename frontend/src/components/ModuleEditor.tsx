@@ -5,6 +5,7 @@ import { useModuleStore, ModuleWithSteps } from "@/store/moduleStore";
 import { Step } from "@/lib/firebase/types";
 import AddFeatureModal from "./AddStepModal";
 import StepEditorModal from "./StepEditorModal";
+import { useAlert } from "@/context/AlertContext";
 
 interface ModuleEditorProps {
   moduleId: string | null;
@@ -20,6 +21,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
     reorderSteps,
     cloneStepData,
   } = useModuleStore();
+  const { showAlert, showConfirm } = useAlert();
 
   // Get the latest module data from store
   const module = moduleId ? modules.find((m) => m.id === moduleId) : null;
@@ -56,8 +58,10 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      alert("Please enter a module title");
-      return;
+      if (!formData.title.trim()) {
+        await showAlert("Validation Error", "Please enter a module title", "error");
+        return;
+      }
     }
 
     // Check for duplicate order numbers
@@ -65,8 +69,10 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
       m.order === formData.order && m.id !== module?.id
     );
     if (existingModuleWithOrder) {
-      alert(`Order number ${formData.order} is already used by "${existingModuleWithOrder.title}". Please choose a different number.`);
-      return;
+      if (existingModuleWithOrder) {
+        await showAlert("Validation Error", `Order number ${formData.order} is already used by "${existingModuleWithOrder.title}". Please choose a different number.`, "error");
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -89,15 +95,19 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
       onClose();
     } catch (error) {
       console.error("Error saving module:", error);
-      alert("Failed to save module. Please try again.");
+      console.error("Error saving module:", error);
+      await showAlert("Error", "Failed to save module. Please try again.", "error");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteStep = async (stepId: string) => {
-    if (!module || !confirm("Are you sure you want to delete this step?"))
-      return;
+    if (!module) return;
+
+    const confirmed = await showConfirm("Delete Step", "Are you sure you want to delete this step?");
+    if (!confirmed) return;
+
     await deleteStepData(module.id, stepId);
   };
 
