@@ -3,20 +3,20 @@
 import { useState } from 'react';
 import { VideoStep } from '@/lib/firebase/types';
 import { useModuleStore } from '@/store/moduleStore';
+import { useAlert } from '@/context/AlertContext';
+import { v4 as uuidv4 } from 'uuid';
 
 interface VideoEditorModalProps {
   moduleId: string;
   onClose: () => void;
   onBack: () => void;
   step?: VideoStep;
+  onSave: (step: VideoStep) => void;
 }
 
-import { useAlert } from '@/context/AlertContext';
-
-export default function VideoEditorModal({ moduleId, onClose, onBack, step }: VideoEditorModalProps) {
-  const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+export default function VideoEditorModal({ moduleId, onClose, onBack, step, onSave }: VideoEditorModalProps) {
+  const { userId } = useModuleStore();
   const { showAlert } = useAlert();
-  const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
     title: step?.title || '',
@@ -53,33 +53,20 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step }: Vi
 
     setIsSaving(true);
     try {
-      if (step) {
-        // Update existing step
-        const updates: any = {
-          title: formData.title.trim(),
-          youtubeUrl: formData.youtubeUrl.trim(),
-          isOptional: formData.isOptional,
-        };
-        if (formData.estimatedMinutes) {
-          updates.estimatedMinutes = parseInt(formData.estimatedMinutes);
-        }
-        await updateStepData(moduleId, step.id, updates);
-      } else {
-        // Create new step
-        const order = module?.steps.length || 0;
-        const stepData: any = {
-          type: 'video',
-          title: formData.title.trim(),
-          youtubeUrl: formData.youtubeUrl.trim(),
-          isOptional: formData.isOptional,
-          order,
-          createdBy: userId,
-        };
-        if (formData.estimatedMinutes) {
-          stepData.estimatedMinutes = parseInt(formData.estimatedMinutes);
-        }
-        await createNewStep(moduleId, stepData);
-      }
+      const stepData: VideoStep = {
+        id: step?.id || uuidv4(),
+        type: 'video',
+        title: formData.title.trim(),
+        youtubeUrl: formData.youtubeUrl.trim(),
+        isOptional: formData.isOptional,
+        order: step?.order ?? 0, // Order will be managed by parent
+        createdBy: step?.createdBy || userId,
+        createdAt: step?.createdAt || new Date(),
+        updatedAt: new Date(),
+        estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
+      };
+
+      onSave(stepData);
       onClose();
     } catch (error: any) {
       console.error('Error saving video step:', error);

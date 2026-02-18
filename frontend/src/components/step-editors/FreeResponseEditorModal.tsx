@@ -3,20 +3,20 @@
 import { useState } from 'react';
 import { FreeResponseStep } from '@/lib/firebase/types';
 import { useModuleStore } from '@/store/moduleStore';
+import { useAlert } from '@/context/AlertContext';
+import { v4 as uuidv4 } from 'uuid';
 
 interface FreeResponseEditorModalProps {
   moduleId: string;
   onClose: () => void;
   onBack: () => void;
   step?: FreeResponseStep;
+  onSave: (step: FreeResponseStep) => void;
 }
 
-import { useAlert } from '@/context/AlertContext';
-
-export default function FreeResponseEditorModal({ moduleId, onClose, onBack, step }: FreeResponseEditorModalProps) {
-  const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+export default function FreeResponseEditorModal({ moduleId, onClose, onBack, step, onSave }: FreeResponseEditorModalProps) {
+  const { userId } = useModuleStore();
   const { showAlert } = useAlert();
-  const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
     title: step?.title || '',
@@ -47,45 +47,22 @@ export default function FreeResponseEditorModal({ moduleId, onClose, onBack, ste
 
     setIsSaving(true);
     try {
-      if (step) {
-        // Update existing step
-        const updates: any = {
-          title: formData.title.trim(),
-          prompt: formData.prompt.trim(),
-          isOptional: formData.isOptional,
-        };
-        if (formData.sampleAnswer.trim()) {
-          updates.sampleAnswer = formData.sampleAnswer.trim();
-        }
-        if (formData.maxLength) {
-          updates.maxLength = parseInt(formData.maxLength);
-        }
-        if (formData.estimatedMinutes) {
-          updates.estimatedMinutes = parseInt(formData.estimatedMinutes);
-        }
-        await updateStepData(moduleId, step.id, updates);
-      } else {
-        // Create new step
-        const order = module?.steps.length || 0;
-        const stepData: any = {
-          type: 'freeResponse',
-          title: formData.title.trim(),
-          prompt: formData.prompt.trim(),
-          isOptional: formData.isOptional,
-          order,
-          createdBy: userId,
-        };
-        if (formData.sampleAnswer.trim()) {
-          stepData.sampleAnswer = formData.sampleAnswer.trim();
-        }
-        if (formData.maxLength) {
-          stepData.maxLength = parseInt(formData.maxLength);
-        }
-        if (formData.estimatedMinutes) {
-          stepData.estimatedMinutes = parseInt(formData.estimatedMinutes);
-        }
-        await createNewStep(moduleId, stepData);
-      }
+      const stepData: FreeResponseStep = {
+        id: step?.id || uuidv4(),
+        type: 'freeResponse',
+        title: formData.title.trim(),
+        prompt: formData.prompt.trim(),
+        sampleAnswer: formData.sampleAnswer.trim() || undefined,
+        maxLength: formData.maxLength ? parseInt(formData.maxLength) : undefined,
+        estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
+        isOptional: formData.isOptional,
+        order: step?.order ?? 0, // Assigned by parent
+        createdBy: step?.createdBy || userId,
+        createdAt: step?.createdAt || new Date(),
+        updatedAt: new Date(),
+      };
+
+      onSave(stepData);
       onClose();
     } catch (error: any) {
       console.error('Error saving free response step:', error);

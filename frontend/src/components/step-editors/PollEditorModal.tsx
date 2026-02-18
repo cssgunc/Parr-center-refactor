@@ -3,20 +3,20 @@
 import { useState } from 'react';
 import { PollStep, PollOption } from '@/lib/firebase/types';
 import { useModuleStore } from '@/store/moduleStore';
+import { useAlert } from '@/context/AlertContext';
+import { v4 as uuidv4 } from 'uuid';
 
 interface PollEditorModalProps {
   moduleId: string;
   onClose: () => void;
   onBack: () => void;
   step?: PollStep;
+  onSave: (step: PollStep) => void;
 }
 
-import { useAlert } from '@/context/AlertContext';
-
-export default function PollEditorModal({ moduleId, onClose, onBack, step }: PollEditorModalProps) {
-  const { modules, createNewStep, updateStepData, userId } = useModuleStore();
+export default function PollEditorModal({ moduleId, onClose, onBack, step, onSave }: PollEditorModalProps) {
+  const { userId } = useModuleStore();
   const { showAlert } = useAlert();
-  const module = modules.find(m => m.id === moduleId);
 
   const [formData, setFormData] = useState({
     title: step?.title || '',
@@ -59,32 +59,22 @@ export default function PollEditorModal({ moduleId, onClose, onBack, step }: Pol
 
     setIsSaving(true);
     try {
-      const stepData: any = {
+      const stepData: PollStep = {
+        id: step?.id || uuidv4(),
+        type: 'poll',
         title: formData.title.trim(),
         question: formData.question.trim(),
         options: validOptions,
         allowMultipleChoice: formData.allowMultipleChoice,
         isOptional: formData.isOptional,
-        type: 'poll',
-        order: step?.order || (module?.stepCount || 0) + 1,
-        createdBy: userId,
+        order: step?.order ?? 0, // Assigned by parent
+        createdBy: step?.createdBy || userId,
         createdAt: step?.createdAt || new Date(),
         updatedAt: new Date(),
+        estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
       };
 
-      // Only add estimatedMinutes if it has a value
-      if (formData.estimatedMinutes) {
-        stepData.estimatedMinutes = parseInt(formData.estimatedMinutes);
-      }
-
-      if (step) {
-        // Update existing step
-        await updateStepData(moduleId, step.id, stepData);
-      } else {
-        // Create new step
-        await createNewStep(moduleId, stepData);
-      }
-
+      onSave(stepData);
       onClose();
     } catch (error) {
       console.error('Error saving poll step:', error);
