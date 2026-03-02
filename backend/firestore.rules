@@ -153,6 +153,7 @@ service cloud.firestore {
       'createdAt',
       'estimatedMinutes',
       'isOptional',
+      'moduleId',
       // Video fields
       'youtubeUrl',
       'thumbnailUrl',

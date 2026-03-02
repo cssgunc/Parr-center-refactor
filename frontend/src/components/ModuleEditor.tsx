@@ -69,15 +69,6 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
       return;
     }
 
-    // Check for duplicate order numbers
-    const existingModuleWithOrder = modules.find(m =>
-      m.order === formData.order && m.id !== module?.id
-    );
-    if (existingModuleWithOrder) {
-      await showAlert("Validation Error", `Order number ${formData.order} is already used by "${existingModuleWithOrder.title}". Please choose a different number.`, "error");
-      return;
-    }
-
     setIsSaving(true);
     try {
       // Use the new atomic save action
