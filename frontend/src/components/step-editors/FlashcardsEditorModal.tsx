@@ -341,7 +341,7 @@ export default function FlashcardsEditorModal({ moduleId, onClose, onBack, step,
             {isSaving && (
               <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {isSaving ? 'Saving...' : (step ? 'Update Flashcards' : 'Add Flashcards')}
+            {isSaving ? 'Saving...' : (step ? 'Done' : 'Add Flashcards')}
           </button>
         </div>
       </div>

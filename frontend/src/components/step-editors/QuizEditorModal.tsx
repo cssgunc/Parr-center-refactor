@@ -520,7 +520,7 @@ export default function QuizEditorModal({ moduleId, onClose, onBack, step, onSav
             {isSaving && (
               <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {isSaving ? 'Saving...' : (step ? 'Update Quiz' : 'Add Quiz')}
+            {isSaving ? 'Saving...' : (step ? 'Done' : 'Add Quiz')}
           </button>
         </div>
       </div>

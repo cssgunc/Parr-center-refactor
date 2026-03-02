@@ -175,7 +175,7 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step, onSa
             {isSaving && (
               <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {isSaving ? 'Saving...' : (step ? 'Update Video' : 'Add Video')}
+            {isSaving ? 'Saving...' : (step ? 'Done' : 'Add Video')}
           </button>
         </div>
       </div>

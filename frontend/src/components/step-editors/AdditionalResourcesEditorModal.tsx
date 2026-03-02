@@ -486,7 +486,7 @@ const handleSave = async () => {
               {isSaving && (
                 <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              {isSaving ? 'Saving...' : (step ? 'Update Step' : 'Add Step')}
+              {isSaving ? 'Saving...' : (step ? 'Done' : 'Add Step')}
             </button>
           </div>
         </div>

@@ -490,7 +490,7 @@ export default function SortingEditorModal({
                   : "bg-black text-white hover:bg-gray-800"
               }`}
             >
-              Save
+              {step ? 'Done' : 'Add Sorting'}
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useModuleStore, ModuleWithSteps } from "@/store/moduleStore";
 import { Step } from "@/lib/firebase/types";
 import AddFeatureModal from "./AddStepModal";
@@ -38,26 +38,55 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
   const [editingStep, setEditingStep] = useState<Step | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+  // Track the initial state to detect unsaved changes
+  const initialFormData = useRef({ title: "", description: "", order: 1 });
+  const initialSteps = useRef<Step[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
+
   useEffect(() => {
     if (module) {
-      setFormData({
+      const fd = {
         title: module.title,
         description: module.description,
         order: module.order ?? 1,
-      });
-      // Initialize steps from module
+      };
+      setFormData(fd);
       setSteps(module.steps || []);
+      initialFormData.current = fd;
+      initialSteps.current = module.steps || [];
     } else {
-      // For new modules, find the next available order number
       const nextOrder = modules.length + 1;
-      setFormData({
-        title: "",
-        description: "",
-        order: nextOrder,
-      });
+      const fd = { title: "", description: "", order: nextOrder };
+      setFormData(fd);
       setSteps([]);
+      initialFormData.current = fd;
+      initialSteps.current = [];
     }
-  }, [module, modules]); // modules dependency is okay if we want to update if store changes, but for draft we might want to isolate. 
+    setIsDirty(false);
+  }, [module, modules]);
+
+  // Detect changes
+  useEffect(() => {
+    const formChanged =
+      formData.title !== initialFormData.current.title ||
+      formData.description !== initialFormData.current.description;
+
+    const stepsChanged =
+      JSON.stringify(steps) !== JSON.stringify(initialSteps.current);
+
+    setIsDirty(formChanged || stepsChanged);
+  }, [formData, steps]);
+
+  const handleClose = useCallback(async () => {
+    if (isDirty) {
+      const confirmed = await showConfirm(
+        "Unsaved Changes",
+        "You have unsaved changes. Are you sure you want to close without saving?"
+      );
+      if (!confirmed) return;
+    }
+    onClose();
+  }, [isDirty, showConfirm, onClose]); // modules dependency is okay if we want to update if store changes, but for draft we might want to isolate. 
   // However, `module` changes when store updates, so keeping it is fine.
   // Actually, if we are editing, we might not want to overwrite local changes if `module` updates from background?
   // But here we only set on mount or if module ID changes essentially (or if module object ref changes).
@@ -283,7 +312,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
             {module ? "Edit Module" : "Create New Module"}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSaving}
             className="text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50"
           >
@@ -475,7 +504,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSaving}
             className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
           >

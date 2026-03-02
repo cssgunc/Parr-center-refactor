@@ -252,7 +252,7 @@ export default function FreeResponseEditorModal({ moduleId, onClose, onBack, ste
             {isSaving && (
               <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {isSaving ? 'Saving...' : (step ? 'Update Free Response' : 'Add Free Response')}
+            {isSaving ? 'Saving...' : (step ? 'Done' : 'Add Free Response')}
           </button>
         </div>
       </div>

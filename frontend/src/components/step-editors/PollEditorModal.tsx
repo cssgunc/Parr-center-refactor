@@ -247,7 +247,7 @@ export default function PollEditorModal({ moduleId, onClose, onBack, step, onSav
             disabled={isSaving}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isSaving ? 'Saving...' : (step ? 'Update Poll' : 'Create Poll')}
+            {isSaving ? 'Saving...' : (step ? 'Done' : 'Create Poll')}
           </button>
         </div>
       </div>
