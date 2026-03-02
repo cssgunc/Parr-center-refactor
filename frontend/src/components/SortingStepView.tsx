@@ -13,6 +13,7 @@ import {
 import {
   DndContext,
   PointerSensor,
+  TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -207,6 +208,7 @@ function DraggableCard({
         opacity: isDragging ? 0.35 : 1,
         cursor: canInteract ? "grab" : "default",
         userSelect: "none",
+        touchAction: "none",
         transition:
           "transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease",
         "&:hover": canInteract
@@ -238,10 +240,13 @@ export default function SortingStepView({
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  // DnD sensors (same pattern as ModulesPage)
+  // DnD sensors — PointerSensor for desktop, TouchSensor for mobile
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
     }),
     useSensor(KeyboardSensor),
   );
