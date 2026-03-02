@@ -184,7 +184,7 @@ export default function ModuleContentMUI({
   };
 
   const handleQuizPassedChange = (score: number) => {
-    if (score > 0) {
+    if (score >= 0) {
       setNextEnabled(true);
       updateQuizScore(userId, moduleId, steps[currentStepIndex].id, score);
     } else {
