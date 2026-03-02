@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, IconButton } from "@mui/material";
+import { Box, Typography, Skeleton } from "@mui/material";
 import { normalizeYouTubeEmbedUrl } from "@/utils/youtube";
 import { VideoStep } from "@/lib/firebase/types";
 
@@ -10,6 +10,12 @@ interface VideoStepProps {
 export default function VideoStepView({ step }: VideoStepProps) {
   const videoData = step;
   const embedUrl = normalizeYouTubeEmbedUrl(videoData.youtubeUrl) ?? videoData.youtubeUrl;
+  const [loading, setLoading] = useState(true);
+
+  // Reset loading state when navigating between video steps
+  useEffect(() => {
+    setLoading(true);
+  }, [step.id]);
 
   if (videoData) {
     return (
@@ -46,7 +52,7 @@ export default function VideoStepView({ step }: VideoStepProps) {
             mb: 3,
           }}
         >
-         
+
         </Typography>
 
         {/* YouTube Video Embed */}
@@ -67,9 +73,24 @@ export default function VideoStepView({ step }: VideoStepProps) {
             },
           }}
         >
+          {loading && (
+            <Skeleton
+              variant="rectangular"
+              animation="wave"
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                borderRadius: "8px",
+              }}
+            />
+          )}
           <Box
             component="iframe"
             src={embedUrl}
+            onLoad={() => setLoading(false)}
             sx={{
               position: "absolute",
               top: 0,
@@ -77,6 +98,8 @@ export default function VideoStepView({ step }: VideoStepProps) {
               width: "100%",
               height: "100%",
               border: "none",
+              opacity: loading ? 0 : 1,
+              transition: "opacity 0.4s ease-in-out",
             }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

@@ -67,7 +67,7 @@ export default function PollEditorModal({ moduleId, onClose, onBack, step, onSav
         question: formData.question.trim(),
         options: validOptions,
         allowMultipleChoice: formData.allowMultipleChoice,
-        isOptional: formData.isOptional,
+        isOptional: true,
         order: step?.order ?? 0, // Assigned by parent
         createdBy: step?.createdBy || userId,
         createdAt: step?.createdAt || new Date(),
@@ -230,19 +230,6 @@ export default function PollEditorModal({ moduleId, onClose, onBack, step, onSav
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., 5"
               />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isOptional"
-                checked={formData.isOptional}
-                onChange={(e) => setFormData({ ...formData, isOptional: e.target.checked })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isOptional" className="ml-2 text-sm text-gray-700">
-                Optional step
-              </label>
             </div>
           </div>
         </div>
