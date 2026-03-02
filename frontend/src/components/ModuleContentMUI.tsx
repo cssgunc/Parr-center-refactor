@@ -162,7 +162,7 @@ export default function ModuleContentMUI({
     const alreadyCompleted = userProgress?.completedStepIds?.includes(s.id);
 
     if (s.type === "sorting") {
-      setNextEnabled(alreadyCompleted ? true : false);
+      setNextEnabled(alreadyCompleted || s.isOptional ? true : false);
     } else if (s.type !== "quiz") {
       setNextEnabled(true);
     }
@@ -184,7 +184,7 @@ export default function ModuleContentMUI({
   };
 
   const handleQuizPassedChange = (score: number) => {
-    if (score > 0) {
+    if (score >= 0) {
       setNextEnabled(true);
       updateQuizScore(userId, moduleId, steps[currentStepIndex].id, score);
     } else {
@@ -410,6 +410,7 @@ export default function ModuleContentMUI({
               <SortingStepView
                 step={currentStep as SortingStep}
                 onSubmittedChange={(ok) => {
+                  if (currentStep.isOptional) return;
                   if (!ok && userProgress?.completedStepIds?.includes(currentStep.id)) return;
                   setNextEnabled(ok);
                 }}

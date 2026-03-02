@@ -218,11 +218,14 @@ export const updateStep = async (
   type: StepType,
   stepData: Partial<Step>,
 ) => {
+  const { createdAt, createdBy, id: _id, moduleId: _mid, ...safeData } =
+    stepData as Record<string, unknown>;
+
   const collectionName = STEP_COLLECTIONS[type];
   const stepDocRef = doc(db!, "modules", moduleId, collectionName, stepId);
 
   await updateDoc(stepDocRef, {
-    ...stepData,
+    ...safeData,
     updatedAt: serverTimestamp(),
   });
 

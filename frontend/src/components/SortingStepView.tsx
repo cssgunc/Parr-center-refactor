@@ -13,6 +13,7 @@ import {
 import {
   DndContext,
   PointerSensor,
+  TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -24,6 +25,7 @@ import {
   pointerWithin,
 } from "@dnd-kit/core";
 import type { SortingStep } from "@/lib/firebase/types";
+import StepContent from "@/components/StepContent";
 
 type ContainerId = "bank" | string; // "bank" or bucketId
 type Placements = Record<string /*cardId*/, ContainerId>;
@@ -207,6 +209,7 @@ function DraggableCard({
         opacity: isDragging ? 0.35 : 1,
         cursor: canInteract ? "grab" : "default",
         userSelect: "none",
+        touchAction: "none",
         transition:
           "transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease",
         "&:hover": canInteract
@@ -238,10 +241,13 @@ export default function SortingStepView({
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  // DnD sensors (same pattern as ModulesPage)
+  // DnD sensors — PointerSensor for desktop, TouchSensor for mobile
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
     }),
     useSensor(KeyboardSensor),
   );
@@ -384,8 +390,8 @@ export default function SortingStepView({
         <Typography variant="h5" sx={{ fontWeight: 900, mb: 0.5 }}>
           Sorting Question
         </Typography>
-        <Typography sx={{ color: "grey.700", fontSize: "1.05rem" }}>
-          {step.prompt}
+        <Typography component="div" sx={{ color: "grey.700", fontSize: "1.05rem" }}>
+          <StepContent content={step.prompt} />
         </Typography>
       </Box>
 

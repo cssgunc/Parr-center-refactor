@@ -7,7 +7,7 @@ import {
   ArrowForward,
   OpenInNew,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,20 +21,28 @@ export default function HomepagePage() {
   // Placeholder images - replace with actual images later
   const carouselImages = [
     "/save-one.jpg",
+    "/jojo.png",
     "/animal-rescue.jpg",
+    "/privacy.png",
     "/living.jpg",
     "/believe.jpg",
   ];
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
-  };
+  }, [carouselImages.length]);
 
   const prevSlide = () => {
     setCurrentSlide(
       (prev) => (prev - 1 + carouselImages.length) % carouselImages.length,
     );
   };
+
+  // Auto-advance every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, [currentSlide, nextSlide]);
 
   return (
     <Container
@@ -110,16 +118,18 @@ export default function HomepagePage() {
                   gap: { xs: 1.5, md: 2 },
                 }}
               >
-                <Box
-                  component="img"
-                  src="/philosophy_logo_white_horizontal.png"
-                  alt="Parr Center for Ethics"
-                  sx={{
-                    height: { xs: "28px", md: "36px" },
-                    width: "auto",
-                    filter: "invert(1) brightness(0.3)",
-                  }}
-                />
+                <a href = "https://parrcenter.unc.edu/">
+                  <Box
+                    component="img"
+                    src="/philosophy_logo_white_horizontal.png"
+                    alt="Parr Center for Ethics"
+                    sx={{
+                      height: { xs: "28px", md: "36px" },
+                      width: "auto",
+                      filter: "invert(1) brightness(0.3)",
+                    }}
+                  />
+                </a>
                 <Typography
                   sx={{
                     fontSize: { xs: "1.2rem", md: "1.5rem" },
@@ -130,15 +140,17 @@ export default function HomepagePage() {
                 >
                   ×
                 </Typography>
-                <Box
-                  component="img"
-                  src="/teded.png"
-                  alt="TED-Ed"
-                  sx={{
-                    height: { xs: "24px", md: "30px" },
-                    width: "auto",
-                  }}
-                />
+                <a href = "https://ed.ted.com/">
+                  <Box
+                    component="img"
+                    src="/teded.png"
+                    alt="TED-Ed"
+                    sx={{
+                      height: { xs: "24px", md: "30px" },
+                      width: "auto",
+                    }}
+                  />
+                </a>
               </Box>
             </Box>
 
@@ -155,7 +167,7 @@ export default function HomepagePage() {
               }}
             >
               Build critical thinking and ethical reasoning skills through
-              interactive modules and structured debate preparation
+              interactive modules
             </Typography>
 
             <Button
@@ -184,16 +196,31 @@ export default function HomepagePage() {
               }}
             >
               <Box
-                component="img"
-                src={carouselImages[currentSlide]}
-                alt={`Slide ${currentSlide + 1}`}
                 sx={{
+                  position: "relative",
                   width: "100%",
                   height: { xs: "200px", md: "400px" },
-                  objectFit: "cover",
-                  transition: "opacity 0.3s ease-in-out",
                 }}
-              />
+              >
+                {carouselImages.map((src, index) => (
+                  <Box
+                    key={src}
+                    component="img"
+                    src={src}
+                    alt={`Slide ${index + 1}`}
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      opacity: index === currentSlide ? 1 : 0,
+                      transition: "opacity 0.8s ease-in-out",
+                    }}
+                  />
+                ))}
+              </Box>
 
               {/* Previous Button */}
               <IconButton
@@ -320,8 +347,9 @@ export default function HomepagePage() {
                     mb: 2,
                   }}
                 >
-                  Interactive videos, knowledge quizzes, digital flashcards, and
-                  reflective writing prompts.
+                  Video lessons, knowledge quizzes, digital flashcards, 
+                  reflective writing prompts, drag-and-drop sorting questions, 
+                  and public polls
                 </Typography>
 
                 {/* TED-Ed Partnership */}
@@ -343,20 +371,22 @@ export default function HomepagePage() {
                   >
                     Powered by
                   </Typography>
-                  <Box
-                    component="img"
-                    src="/teded.png"
-                    alt="TED-Ed"
-                    sx={{
-                      height: "32px",
-                      width: "auto",
-                      opacity: 0.8,
-                      transition: "opacity 0.2s ease",
-                      "&:hover": {
-                        opacity: 1,
-                      },
-                    }}
-                  />
+                  <a href = "https://ed.ted.com/">
+                    <Box
+                      component="img"
+                      src="/teded.png"
+                      alt="TED-Ed"
+                      sx={{
+                        height: "32px",
+                        width: "auto",
+                        opacity: 0.8,
+                        transition: "opacity 0.2s ease",
+                        "&:hover": {
+                          opacity: 1,
+                        },
+                      }}
+                    />
+                  </a>
                 </Box>
               </Box>
 

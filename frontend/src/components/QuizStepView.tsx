@@ -62,9 +62,9 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
     return { correctCount, percent, passed };
   }, [answers, questions, step.passingScore]);
 
-  // Initialize passed score to 0 (fail) on mount
+  // Initialize as fail on mount
   useEffect(() => {
-    onPassedChange(0);
+    onPassedChange(-1);
   }, []);
 
   useEffect(() => {
@@ -72,10 +72,10 @@ export default function QuizStepView({ step, quizPassed, onPassedChange }: QuizS
   }, [quizPassed]);
 
   useEffect(() => {
-    if (graded) {
-      results.passed && onPassedChange(results.percent);
-    } else {
-      onPassedChange(0);
+    if (graded && results.passed) {
+      onPassedChange(results.percent);
+    } else if (!graded) {
+      onPassedChange(-1);
     }
   }, [graded, results.passed, onPassedChange]);
 

@@ -18,6 +18,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
+import StepContent from '@/components/StepContent';
 import { useState, useEffect, useCallback } from 'react';
 import { useAlert } from '@/context/AlertContext';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -385,36 +386,48 @@ export function Journal() {
 
               <Divider />
 
-              <TextField
-                value={getEntryBodyText(activeEntry)}
-                onChange={(e) => {
-                  if (!isLocked) {
-                    updateEntry(activeId!, { body: e.target.value });
-                  }
-                }}
-                placeholder={
-                  isLocked
-                    ? 'This note is locked because it is linked to a module.'
-                    : 'Start writing...'
-                }
-                multiline
-                fullWidth
-                inputProps={{ readOnly: isLocked }}
-                minRows={10}
-                sx={{
-                  flex: 1,
-                  width: '100%',
-                  '& .MuiInputBase-root': {
-                    height: '100%',
-                    alignItems: 'flex-start'
-                  },
-                  '& textarea': {
-                    height: '100% !important',
-                    resize: 'none',
+              {isLocked && typeof activeEntry.body === 'object' ? (
+                <Box sx={{ flex: 1, width: '100%', overflowY: 'auto', p: 1 }}>
+                  {Object.values(activeEntry.body as Record<string, [string, string]>).map(
+                    ([prompt, answer], idx) => (
+                      <Box key={idx} sx={{ mb: 3 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }} component="div">
+                          <StepContent content={prompt.trim()} />
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', fontSize: '1.15rem', lineHeight: 1.7 }}>
+                          - {answer.trim()}
+                        </Typography>
+                      </Box>
+                    )
+                  )}
+                </Box>
+              ) : (
+                <TextField
+                  value={getEntryBodyText(activeEntry)}
+                  onChange={(e) => {
+                    if (!isLocked) {
+                      updateEntry(activeId!, { body: e.target.value });
+                    }
+                  }}
+                  placeholder="Start writing..."
+                  multiline
+                  fullWidth
+                  minRows={10}
+                  sx={{
+                    flex: 1,
+                    width: '100%',
+                    '& .MuiInputBase-root': {
+                      height: '100%',
+                      alignItems: 'flex-start'
+                    },
+                    '& textarea': {
+                      height: '100% !important',
+                      resize: 'none',
                     width: '100%'
-                  }
-                }}
-              />
+                    }
+                  }}
+                />
+              )}
             </>
           ) : (
             <Box display="flex" alignItems="center" justifyContent="center" height="100%">

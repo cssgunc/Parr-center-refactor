@@ -289,6 +289,19 @@ export default function SortingEditorModal({
               minRows={2}
             />
 
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isOptional"
+                checked={isOptional}
+                onChange={(e) => setIsOptional(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="isOptional" className="text-sm font-medium text-gray-700">
+                Optional step
+              </label>
+            </div>
+
             <Divider />
 
             {/* Buckets */}
@@ -477,7 +490,7 @@ export default function SortingEditorModal({
                   : "bg-black text-white hover:bg-gray-800"
               }`}
             >
-              Save
+              {step ? 'Done' : 'Add Sorting'}
             </button>
           </div>
         </div>

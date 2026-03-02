@@ -68,17 +68,15 @@ export async function uploadStepImage(
   try {
     if (db && userId) {
       await addDoc(collection(db, 'uploadedFiles'), {
-        filename: file.name,
-        sanitizedName,
-        storagePath,
-        downloadURL: url,
-        moduleId,
-        ...(stepId ? { stepId } : {}),
-        stepType,
+        fileName: file.name,
+        fileSize: file.size,
+        contentType: file.type,
         userId,
-        size: file.size,
-        type: file.type,
         uploadedAt: serverTimestamp(),
+        url,
+        moduleId,
+        stepType,
+        ...(stepId ? { stepId } : {}),
       });
     }
   } catch (metadataError) {

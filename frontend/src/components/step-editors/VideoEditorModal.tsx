@@ -59,7 +59,7 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step, onSa
         type: 'video',
         title: formData.title.trim(),
         youtubeUrl: formData.youtubeUrl.trim(),
-        isOptional: formData.isOptional,
+        isOptional: false,
         order: step?.order ?? 0, // Order will be managed by parent
         createdBy: step?.createdBy || userId,
         createdAt: step?.createdAt || new Date(),
@@ -155,20 +155,6 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step, onSa
                 min="0"
               />
             </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isOptional"
-                checked={formData.isOptional}
-                onChange={(e) => setFormData({ ...formData, isOptional: e.target.checked })}
-                disabled={isSaving}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isOptional" className="text-sm font-medium text-gray-700">
-                Optional step
-              </label>
-            </div>
           </div>
         </div>
 
@@ -189,7 +175,7 @@ export default function VideoEditorModal({ moduleId, onClose, onBack, step, onSa
             {isSaving && (
               <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {isSaving ? 'Saving...' : (step ? 'Update Video' : 'Add Video')}
+            {isSaving ? 'Saving...' : (step ? 'Done' : 'Add Video')}
           </button>
         </div>
       </div>

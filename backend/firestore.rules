@@ -44,7 +44,7 @@ service cloud.firestore {
   function validateStep() {
     return request.resource.data.keys().hasAll(['title', 'type', 'order', 'createdBy', 'createdAt', 'updatedAt'])
     && request.resource.data.title is string
-    && request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources']
+    && request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources', 'sorting']
     && request.resource.data.order is int
     && request.resource.data.createdBy is string
     && hasMatchingPayloadType()
@@ -53,22 +53,24 @@ service cloud.firestore {
 
   function hasMatchingPayloadType() {
     let t = request.resource.data.type;
-    return (t == 'video' && 'youtubeUrl' in request.resource.data) 
-    || (t == 'quiz' && 'questions' in request.resource.data) 
-    || (t == 'flashcards' && 'cards' in request.resource.data) 
+    return (t == 'video' && 'youtubeUrl' in request.resource.data)
+    || (t == 'quiz' && 'questions' in request.resource.data)
+    || (t == 'flashcards' && 'cards' in request.resource.data)
     || (t == 'freeResponse' && 'prompt' in request.resource.data)
     || (t == 'poll' && 'question' in request.resource.data)
-    || (t == 'additionalResources' && 'resources' in request.resource.data);
+    || (t == 'additionalResources' && 'resources' in request.resource.data)
+    || (t == 'sorting' && 'prompt' in request.resource.data);
   }
 
   function validatePayload() {
     let t = request.resource.data.type;
-    return (t == 'video' && validateVideoPayload()) 
-    || (t == 'quiz' && validateQuizPayload()) 
-    || (t == 'flashcards' && validateFlashcardsPayload()) 
-    || (t == 'freeResponse' && validateFreeResponsePayload()) 
+    return (t == 'video' && validateVideoPayload())
+    || (t == 'quiz' && validateQuizPayload())
+    || (t == 'flashcards' && validateFlashcardsPayload())
+    || (t == 'freeResponse' && validateFreeResponsePayload())
     || (t == 'poll' && validatePollPayload())
-    || (t == 'additionalResources' && validateAdditionalResourcesPayload());
+    || (t == 'additionalResources' && validateAdditionalResourcesPayload())
+    || (t == 'sorting' && validateSortingPayload());
   }
 
   function validateVideoPayload() {
@@ -118,6 +120,21 @@ service cloud.firestore {
       && d.options[0].votes is int
       && d.allowMultipleChoice is bool;
   }
+
+  function validateSortingPayload() {
+    let d = request.resource.data;
+    return d.prompt is string
+      && d.buckets is list
+      && d.buckets.size() >= 2
+      && d.buckets[0].id is string
+      && d.buckets[0].label is string
+      && d.cards is list
+      && d.cards.size() > 0
+      && d.cards[0].id is string
+      && d.cards[0].text is string
+      && (!('answerKey' in d) || d.answerKey is map);
+  }
+
   function validateAdditionalResourcesPayload() {
     let d = request.resource.data;
     return d.resources is map
@@ -136,6 +153,7 @@ service cloud.firestore {
       'createdAt',
       'estimatedMinutes',
       'isOptional',
+      'moduleId',
       // Video fields
       'youtubeUrl',
       'thumbnailUrl',
@@ -154,7 +172,12 @@ service cloud.firestore {
       // Poll fields
       'question',
       'options',
-      'allowMultipleChoice'
+      'allowMultipleChoice',
+      // Additional Resources fields
+      'resources',
+      // Sorting fields
+      'buckets',
+      'answerKey'
     ];
     return request.resource.data.keys().hasOnly(allowedFields)
       && request.resource.data.diff(resource.data).affectedKeys().size() > 0
@@ -168,7 +191,7 @@ service cloud.firestore {
         !('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp
       )
       && (
-        !('type' in request.resource.data) || request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources']
+        !('type' in request.resource.data) || request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources', 'sorting']
       )
       && (
         resource.data.createdBy == request.resource.data.createdBy
@@ -235,6 +258,24 @@ service cloud.firestore {
           && get(userDocPath).data.isAdmin == true;
       }
 
+    // UPLOADED FILES
+    match /uploadedFiles/{fileId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+                   && request.resource.data.userId == request.auth.uid
+                   && request.resource.data.keys().hasAll(['fileName', 'fileSize', 'contentType', 'userId', 'uploadedAt'])
+                   && request.resource.data.fileName is string
+                   && request.resource.data.fileSize is int
+                   && request.resource.data.contentType is string
+                   && request.resource.data.userId is string
+                   && request.resource.data.uploadedAt is timestamp
+                   && (!('moduleId' in request.resource.data) || request.resource.data.moduleId is string)
+                   && (!('stepType' in request.resource.data) || request.resource.data.stepType is string)
+                   && (!('url' in request.resource.data) || request.resource.data.url is string);
+      allow delete: if isSignedIn()
+                   && resource.data.userId == request.auth.uid;
+    }
+
     // MODULES
     match /modules/{moduleId} {
       allow read: if (resource.data.isPublic != null && resource.data.isPublic == true) || isOwner() || isCollaborator();
@@ -274,19 +315,28 @@ service cloud.firestore {
         allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
 
+      // SORTING STEPS
+      match /sorting/{sortingId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
       // POLL STEPS
       match /polls/{pollId} {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
         allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
-        // Allow users to update poll documents for voting (only vote counts and updatedAt)
-        allow update: if (isSignedIn() && 
+        // Allow owner/collaborator/admin to do full step updates (reorder, edit, etc.)
+        // Also allow any signed-in user to update poll votes (only options + updatedAt)
+        allow update: if ((isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate())
+          || (isSignedIn() &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['options', 'updatedAt']) &&
           request.resource.data.options is list &&
-          request.resource.data.updatedAt is timestamp) ||
-          isAdmin();
+          request.resource.data.updatedAt is timestamp);
         allow delete: if isOwner() || isCollaborator() || isAdmin();
       }
-      
+
       // ADDITIONAL RESOURCES STEPS
       match /additionalResources/{resourceId} {
         allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();

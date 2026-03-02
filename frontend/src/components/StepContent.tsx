@@ -44,6 +44,23 @@ export default function StepContent({ content, inline = false }: StepContentProp
     parts.push(content.slice(lastIndex));
   }
 
+  // Convert newlines in text segments to <br> elements
+  const expanded: React.ReactNode[] = [];
+  parts.forEach((part, i) => {
+    if (typeof part === 'string') {
+      const lines = part.split('\n');
+      lines.forEach((line, j) => {
+        if (j > 0) expanded.push(<br key={`br-${i}-${j}`} />);
+        expanded.push(line);
+      });
+    } else {
+      expanded.push(part);
+    }
+  });
+
+  parts.length = 0;
+  parts.push(...expanded);
+
   if (parts.length === 0) {
     return <>{content}</>;
   }
