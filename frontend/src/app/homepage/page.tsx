@@ -347,8 +347,9 @@ export default function HomepagePage() {
                     mb: 2,
                   }}
                 >
-                  Interactive videos, knowledge quizzes, digital flashcards, and
-                  reflective writing prompts
+                  Video lessons, knowledge quizzes, digital flashcards, 
+                  reflective writing prompts, drag-and-drop sorting questions, 
+                  and public polls
                 </Typography>
 
                 {/* TED-Ed Partnership */}
