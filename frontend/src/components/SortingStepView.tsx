@@ -25,6 +25,7 @@ import {
   pointerWithin,
 } from "@dnd-kit/core";
 import type { SortingStep } from "@/lib/firebase/types";
+import StepContent from "@/components/StepContent";
 
 type ContainerId = "bank" | string; // "bank" or bucketId
 type Placements = Record<string /*cardId*/, ContainerId>;
@@ -389,8 +390,8 @@ export default function SortingStepView({
         <Typography variant="h5" sx={{ fontWeight: 900, mb: 0.5 }}>
           Sorting Question
         </Typography>
-        <Typography sx={{ color: "grey.700", fontSize: "1.05rem" }}>
-          {step.prompt}
+        <Typography component="div" sx={{ color: "grey.700", fontSize: "1.05rem" }}>
+          <StepContent content={step.prompt} />
         </Typography>
       </Box>
 
