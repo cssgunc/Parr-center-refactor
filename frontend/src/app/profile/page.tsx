@@ -118,7 +118,7 @@ export default function ProfilePage() {
         {/* HEADER */}
         <SectionHeader
           title="Your Profile"
-          subtitle="Your learning journey across Parr Center modules"
+          subtitle="Track your progress across modules"
         />
 
         {/* USER INFO */}

@@ -346,25 +346,6 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                 placeholder="Enter module description"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Display Order *
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.order}
-                onChange={(e) =>
-                  setFormData({ ...formData, order: parseInt(e.target.value) || 1 })
-                }
-                disabled={isSaving}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                placeholder="1"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Order in which modules appear on the student page
-              </p>
-            </div>
           </div>
 
           {/* Steps Section - Show for both new and existing modules if we have steps */}
