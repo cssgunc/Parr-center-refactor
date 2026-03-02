@@ -18,23 +18,23 @@ export default function HomepagePage() {
   const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Placeholder images - replace with actual images later
-  const carouselImages = [
-    "/save-one.jpg",
-    "/jojo.png",
-    "/animal-rescue.jpg",
-    "/privacy.png",
-    "/living.jpg",
-    "/believe.jpg",
+  // Carousel images with their corresponding text overlays
+  const carouselItems = [
+    { src: "/save-one.jpg", text: "Module 1: Ethics of Rescue" },
+    { src: "/believe.jpg", text: "Module 3: Ethics of Belief" },
+    { src: "/animal-rescue.jpg", text: "Module 4: Ethics of Animal Research" },
+    { src: "/living.jpg", text: "Module 5: Ethics of Human Flourishing" },
+    { src: "/privacy.png", text: "Module 9: Ethics of Privacy" },
+    { src: "/jojo.png", text: "Module 14: Ethics of Moral Responsibility" },
   ];
 
   const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
-  }, [carouselImages.length]);
+    setCurrentSlide((prev) => (prev + 1) % carouselItems.length);
+  }, [carouselItems.length]);
 
   const prevSlide = () => {
     setCurrentSlide(
-      (prev) => (prev - 1 + carouselImages.length) % carouselImages.length,
+      (prev) => (prev - 1 + carouselItems.length) % carouselItems.length,
     );
   };
 
@@ -202,23 +202,63 @@ export default function HomepagePage() {
                   height: { xs: "200px", md: "400px" },
                 }}
               >
-                {carouselImages.map((src, index) => (
+                {carouselItems.map((item, index) => (
                   <Box
-                    key={src}
-                    component="img"
-                    src={src}
-                    alt={`Slide ${index + 1}`}
+                    key={item.src}
+                    onClick={() => router.push("/student")}
                     sx={{
                       position: "absolute",
                       top: 0,
                       left: 0,
                       width: "100%",
                       height: "100%",
-                      objectFit: "cover",
                       opacity: index === currentSlide ? 1 : 0,
                       transition: "opacity 0.8s ease-in-out",
+                      cursor: "pointer",
                     }}
-                  />
+                  >
+                    {/* Background Image */}
+                    <Box
+                      component="img"
+                      src={item.src}
+                      alt={item.text}
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+
+                    {/* Text Overlay */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: "linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0.3) 70%, transparent 100%)",
+                        pt: { xs: 3, md: 4 },
+                        pb: { xs: "48px", md: "52px" },
+                        px: { xs: 2, md: 3 },
+                        display: "flex",
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: "white",
+                          fontWeight: 600,
+                          fontSize: { xs: "1.4rem", md: "1.8rem" },
+                          fontFamily: "Georgia, 'Times New Roman', Times, serif",
+                          textShadow: "0 2px 4px rgba(0, 0, 0, 0.8)",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {item.text}
+                      </Typography>
+                    </Box>
+                  </Box>
                 ))}
               </Box>
 
@@ -279,7 +319,7 @@ export default function HomepagePage() {
                   gap: 1,
                 }}
               >
-                {carouselImages.map((_, index) => (
+                {carouselItems.map((_, index) => (
                   <Box
                     key={index}
                     onClick={() => setCurrentSlide(index)}
