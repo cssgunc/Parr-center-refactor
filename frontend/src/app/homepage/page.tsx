@@ -170,19 +170,49 @@ export default function HomepagePage() {
               interactive modules
             </Typography>
 
-            <Button
-              variant="contained"
-              onClick={() => router.push(user ? "/student" : "/login")}
-              endIcon={<ArrowForward sx={{ fontSize: 20, color: "inherit" }} />}
+            <Box
               sx={{
-                fontSize: { xs: "1rem", md: "1.1rem" },
-                px: { xs: 3, md: 4 },
-                py: { xs: 1.2, md: 1.5 },
-                borderRadius: "16px",
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: 2,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Start Learning
-            </Button>
+              <Button
+                variant="contained"
+                onClick={() => router.push(user ? "/student" : "/login")}
+                endIcon={<ArrowForward sx={{ fontSize: 20, color: "inherit" }} />}
+                sx={{
+                  fontSize: { xs: "1rem", md: "1.1rem" },
+                  px: { xs: 3, md: 4 },
+                  py: { xs: 1.2, md: 1.5 },
+                  borderRadius: "16px",
+                }}
+              >
+                Start Learning
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => router.push("/about")}
+                sx={{
+                  fontSize: { xs: "1rem", md: "1.1rem" },
+                  px: { xs: 3, md: 4 },
+                  py: { xs: 1.2, md: 1.5 },
+                  borderRadius: "16px",
+                  borderWidth: 2,
+                  borderColor: "primary.main",
+                  color: "primary.main",
+                  backgroundColor: "rgba(255, 255, 255, 0.72)",
+                  "&:hover": {
+                    borderWidth: 2,
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  },
+                }}
+              >
+                Learn About the Academy
+              </Button>
+            </Box>
 
             {/* Image Carousel */}
             <Box

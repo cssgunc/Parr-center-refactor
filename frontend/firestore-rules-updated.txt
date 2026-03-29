@@ -1,0 +1,363 @@
+rules_version = '2';
+
+service cloud.firestore {
+
+  // HELPERS
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner() {
+    return isSignedIn() && (
+      (resource != null && resource.data.createdBy == request.auth.uid) ||
+      (request.resource != null && request.resource.data.createdBy == request.auth.uid)
+    );
+  }
+
+  function isCollaborator() {
+    return isSignedIn() &&
+      ((resource != null && resource.data.collaborators != null && request.auth.uid in resource.data.collaborators) ||
+      (request.resource != null && request.resource.data.collaborators != null && request.auth.uid in request.resource.data.collaborators));
+  }
+
+  function validateModule() {
+    return request.resource.data.keys().hasAll(['title', 'description', 'createdBy', 'isPublic', 'tags', 'createdAt', 'updatedAt', 'stepCount'])
+    && request.resource.data.title is string
+    && request.resource.data.description is string
+    && request.resource.data.isPublic is bool
+    && request.resource.data.tags is list
+    && request.resource.data.stepCount is int
+    && (!('collaborators' in request.resource.data) || request.resource.data.collaborators is list)
+    && (!('publishedVersion' in request.resource.data) || request.resource.data.publishedVersion is int)
+    && (!('thumbnailUrl' in request.resource.data) || request.resource.data.thumbnailUrl is string);
+  }
+
+  function validateProgress() {
+    return request.resource.data.keys().hasAll(['completedStepIds', 'lastViewedAt', 'quizScores', 'startedAt', 'completedAt'])
+    && request.resource.data.completedStepIds is list
+    && request.resource.data.quizScores is map
+    && request.resource.data.lastViewedAt is timestamp
+    && request.resource.data.startedAt is timestamp
+    && (request.resource.data.completedAt == null || request.resource.data.completedAt is timestamp);
+  }
+
+  function validateStep() {
+    return request.resource.data.keys().hasAll(['title', 'type', 'order', 'createdBy', 'createdAt', 'updatedAt'])
+    && request.resource.data.title is string
+    && request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources', 'sorting']
+    && request.resource.data.order is int
+    && request.resource.data.createdBy is string
+    && hasMatchingPayloadType()
+    && validatePayload();
+  }
+
+  function hasMatchingPayloadType() {
+    let t = request.resource.data.type;
+    return (t == 'video' && 'youtubeUrl' in request.resource.data)
+    || (t == 'quiz' && 'questions' in request.resource.data)
+    || (t == 'flashcards' && 'cards' in request.resource.data)
+    || (t == 'freeResponse' && 'prompt' in request.resource.data)
+    || (t == 'poll' && 'question' in request.resource.data)
+    || (t == 'additionalResources' && 'resources' in request.resource.data)
+    || (t == 'sorting' && 'prompt' in request.resource.data);
+  }
+
+  function validatePayload() {
+    let t = request.resource.data.type;
+    return (t == 'video' && validateVideoPayload())
+    || (t == 'quiz' && validateQuizPayload())
+    || (t == 'flashcards' && validateFlashcardsPayload())
+    || (t == 'freeResponse' && validateFreeResponsePayload())
+    || (t == 'poll' && validatePollPayload())
+    || (t == 'additionalResources' && validateAdditionalResourcesPayload())
+    || (t == 'sorting' && validateSortingPayload());
+  }
+
+  function validateVideoPayload() {
+    let d = request.resource.data;
+    return d.youtubeUrl is string
+      && (!('thumbnailUrl' in d) || d.thumbnailUrl is string)
+      && (!('durationSec' in d) || d.durationSec is int);
+  }
+
+  function validateQuizPayload() {
+    let d = request.resource.data;
+    return d.shuffle is bool
+      && d.questions is list
+      && d.questions.size() > 0
+      && d.questions[0].prompt is string
+      && d.questions[0].choices is list
+      && d.questions[0].correctIndex is int
+      && (!('explanation' in d.questions[0]) || d.questions[0].explanation is string)
+      && d.passingScore is int
+      && d.passingScore >= 0
+      && d.passingScore <= 100;
+  }
+
+  function validateFlashcardsPayload() {
+    let d = request.resource.data;
+    return d.cards is list
+      && d.cards.size() > 0
+      && d.cards[0].front is string
+      && d.cards[0].back is string
+      && (!('studyMode' in d) || d.studyMode in ['spaced', 'random']);
+  }
+
+  function validateFreeResponsePayload() {
+    let d = request.resource.data;
+    return d.prompt is string
+      && (!('sampleAnswer' in d) || d.sampleAnswer is string)
+      && (!('maxLength' in d) || (d.maxLength is int && d.maxLength > 0 && d.maxLength <= 10000));
+  }
+
+  function validatePollPayload() {
+    let d = request.resource.data;
+    return d.question is string
+      && d.options is list
+      && d.options.size() >= 2
+      && d.options[0].id is string
+      && d.options[0].text is string
+      && d.options[0].votes is int
+      && d.allowMultipleChoice is bool;
+  }
+
+  function validateSortingPayload() {
+    let d = request.resource.data;
+    return d.prompt is string
+      && d.buckets is list
+      && d.buckets.size() >= 2
+      && d.buckets[0].id is string
+      && d.buckets[0].label is string
+      && d.cards is list
+      && d.cards.size() > 0
+      && d.cards[0].id is string
+      && d.cards[0].text is string
+      && (!('answerKey' in d) || d.answerKey is map);
+  }
+
+  function validateAdditionalResourcesPayload() {
+    let d = request.resource.data;
+    return d.resources is map
+      && ('link' in d.resources || 'pdf' in d.resources)
+      && (!('link' in d.resources) || d.resources.link is string)
+      && (!('pdf' in d.resources) || d.resources.pdf is string);
+  }
+
+  function validateStepUpdate() {
+    let allowedFields = [
+      'title',
+      'type',
+      'order',
+      'updatedAt',
+      'createdBy',
+      'createdAt',
+      'estimatedMinutes',
+      'isOptional',
+      // Video fields
+      'youtubeUrl',
+      'thumbnailUrl',
+      'durationSec',
+      // Quiz fields
+      'shuffle',
+      'questions',
+      'passingScore',
+      // Flashcards fields
+      'cards',
+      'studyMode',
+      // FreeResponse fields
+      'prompt',
+      'sampleAnswer',
+      'maxLength',
+      // Poll fields
+      'question',
+      'options',
+      'allowMultipleChoice',
+      // Additional Resources fields
+      'resources',
+      // Sorting fields
+      'buckets',
+      'answerKey'
+    ];
+    return request.resource.data.keys().hasOnly(allowedFields)
+      && request.resource.data.diff(resource.data).affectedKeys().size() > 0
+      && (
+        !('title' in request.resource.data) || request.resource.data.title is string
+      )
+      && (
+        !('order' in request.resource.data) || request.resource.data.order is int
+      )
+      && (
+        !('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp
+      )
+      && (
+        !('type' in request.resource.data) || request.resource.data.type in ['video', 'quiz', 'flashcards', 'freeResponse', 'poll', 'additionalResources', 'sorting']
+      )
+      && (
+        resource.data.createdBy == request.resource.data.createdBy
+      )
+      && (
+        resource.data.createdAt == request.resource.data.createdAt
+      );
+  }
+
+  function validateModuleUpdate() {
+    let allowedFields = [
+      'title',
+      'description',
+      'isPublic',
+      'tags',
+      'updatedAt',
+      'stepCount',
+      'publishedVersion',
+      'thumbnailUrl',
+      'collaborators',
+      'createdBy',
+      'createdAt',
+      'order'
+    ];
+    return request.resource.data.keys().hasOnly(allowedFields)
+      && request.resource.data.diff(resource.data).affectedKeys().size() > 0
+      && (
+        !('title' in request.resource.data) || request.resource.data.title is string
+      )
+      && (
+        !('description' in request.resource.data) || request.resource.data.description is string
+      )
+      && (
+        !('isPublic' in request.resource.data) || request.resource.data.isPublic is bool
+      )
+      && (
+        !('tags' in request.resource.data) || request.resource.data.tags is list
+      )
+      && (
+        !('stepCount' in request.resource.data) || request.resource.data.stepCount is int
+      )
+      && (
+        !('publishedVersion' in request.resource.data) || request.resource.data.publishedVersion is int
+      )
+      && (
+        !('thumbnailUrl' in request.resource.data) || request.resource.data.thumbnailUrl is string
+      )
+      && (
+        !('collaborators' in request.resource.data) || request.resource.data.collaborators is list
+      )
+      && (
+        !('order' in request.resource.data) || request.resource.data.order is int
+      )
+      && resource.data.createdBy == request.resource.data.createdBy
+      && resource.data.createdAt == request.resource.data.createdAt;
+  }
+
+  match /databases/{database}/documents {
+
+      function isAdmin() {
+        let userDocPath = /databases/$(database)/documents/users/$(request.auth.uid);
+        return request.auth != null
+          && exists(userDocPath)
+          && get(userDocPath).data.isAdmin == true;
+      }
+
+    // MODULES
+    match /modules/{moduleId} {
+      allow read: if (resource.data.isPublic != null && resource.data.isPublic == true) || isOwner() || isCollaborator();
+      allow create: if isSignedIn() && validateModule() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateModuleUpdate();
+      allow delete: if isOwner() || isCollaborator() || isAdmin();
+
+      // VIDEO STEPS
+      match /videos/{videoId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // QUIZ STEPS
+      match /quizzes/{quizId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // FLASHCARD STEPS
+      match /flashcards/{flashcardId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // FREE RESPONSE STEPS
+      match /freeResponses/{freeResponseId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // SORTING STEPS
+      match /sorting/{sortingId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // POLL STEPS
+      match /polls/{pollId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        // Allow users to update poll documents for voting (only vote counts and updatedAt)
+        allow update: if (isSignedIn() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['options', 'updatedAt']) &&
+          request.resource.data.options is list &&
+          request.resource.data.updatedAt is timestamp) ||
+          isAdmin();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+
+      // ADDITIONAL RESOURCES STEPS
+      match /additionalResources/{resourceId} {
+        allow read: if get(/databases/$(database)/documents/modules/$(moduleId)).data.isPublic == true || isOwner() || isCollaborator() || isAdmin();
+        allow create: if (isOwner() || isCollaborator() || isAdmin()) && validateStep();
+        allow update: if (isOwner() || isCollaborator() || isAdmin()) && validateStepUpdate();
+        allow delete: if isOwner() || isCollaborator() || isAdmin();
+      }
+    }
+
+    // CONFIG
+    match /config/settings {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // USERS
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update, delete: if request.auth.uid == userId;
+      allow update: if isAdmin()
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAdmin']);
+
+      // PROGRESS
+      match /progress/{moduleId} {
+        allow write: if isSignedIn() && request.auth.uid == userId && validateProgress();
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isAdmin();
+      }
+
+      // JOURNAL
+      match /journal/{entryId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+    match /uploadedFiles/{fileId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+                   && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn()
+                   && resource.data.userId == request.auth.uid;
+      }
+  }
+}
